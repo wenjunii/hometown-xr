@@ -21,7 +21,7 @@ Install Git, Git LFS, Python 3.10+, and a current NVIDIA driver. Then open Power
 
 ```powershell
 git lfs install
-git clone https://github.com/WenjunII/hometown-xr.git
+git clone https://github.com/wenjunii/hometown-xr.git
 cd hometown-xr
 git lfs pull
 git status --short --branch

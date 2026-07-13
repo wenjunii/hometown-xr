@@ -92,7 +92,7 @@ Supports **all 122+ Common Crawl datasets** from 2008 to present:
 
 ```powershell
 git lfs install
-git clone https://github.com/WenjunII/hometown-xr.git
+git clone https://github.com/wenjunii/hometown-xr.git
 cd hometown-xr
 git lfs pull
 
@@ -439,9 +439,9 @@ No, you do not need AWS credentials for the 119+ modern WET format datasets. How
 
 This extractor is the data foundation for a broader immersive installation. Check out the other components:
 
-*   **[Voice-to-Visual SDTD](https://github.com/WenjunII/voice-to-visual-sdtd)**: Real-time bridge turning spoken language into generative visuals using OpenAI Whisper and StreamDiffusionTD.
-*   **[SHARP-TD Bridge](https://github.com/WenjunII/sharp-td-bridge)**: Real-time 3D Gaussian Splatting pipeline that transforms 2D generated frames into 3D particles within TouchDesigner.
-*   **[Home Podcast Generator](https://github.com/WenjunII/home-podcast-generator)**: AI-powered system that transforms extracted personal narratives into synthetic podcast conversations.
+*   **[Voice-to-Visual SDTD](https://github.com/wenjunii/voice-to-visual-sdtd)**: Real-time bridge turning spoken language into generative visuals using OpenAI Whisper and StreamDiffusionTD.
+*   **[SHARP-TD Bridge](https://github.com/wenjunii/sharp-td-bridge)**: Real-time 3D Gaussian Splatting pipeline that transforms 2D generated frames into 3D particles within TouchDesigner.
+*   **[Home Podcast Generator](https://github.com/wenjunii/home-podcast-generator)**: AI-powered system that transforms extracted personal narratives into synthetic podcast conversations.
 
 ---
 
