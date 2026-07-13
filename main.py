@@ -60,7 +60,7 @@ def _init_worker(shutdown_event):
     _worker_shutdown_event = shutdown_event
     
     # Stagger initialization to prevent VRAM spikes on Windows
-    # (prevents all 8 workers from grabbing 700MB at once)
+    # (prevents all workers from grabbing 700MB at once)
     time.sleep(random.uniform(0, 5))
     
     import warnings

@@ -25,7 +25,7 @@ WET/ARC File → Split into Paragraphs → Keyword Pre-Filter → Semantic Scori
 
 No LLM is used. The two ML models are local and high-performance:
 - **GPU Accelerated**: If an NVIDIA GPU (RTX 3080/4090, etc.) is detected, semantic matches run on CUDA for massive throughput.
-- **Optimized Multiprocessing**: Uses staggered worker initialization and adaptive batching; the RTX 3080 profile is configured for 8 parallel workers.
+- **Optimized Multiprocessing**: Uses staggered worker initialization and adaptive batching; the RTX 3080 profile is configured for 7 parallel workers.
 
 | Model | Size | Purpose |
 |-------|------|---------|
@@ -50,7 +50,7 @@ If you just want to read the extracted multilingual paragraphs, **you do not nee
 
 This repository is optimized for dual-workstation high-performance extraction.
 
-- **Root Version (RTX 3080)**: Optimized for 3080 GPUs (`MAX_WORKERS = 8`).
+- **Root Version (RTX 3080)**: Optimized for 3080 GPUs (`MAX_WORKERS = 7`).
 - **[RTX 4090 Version](./4090/)**: Optimized for 4090 GPUs (`MAX_WORKERS = 7`).
 
 ### 🔄 Cross-Workstation Checkpoint Handoff
@@ -96,16 +96,16 @@ git clone https://github.com/WenjunII/Hometown-XR.git
 cd Hometown-XR
 git lfs pull
 
-py -3.10 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 
-# For an NVIDIA GPU, install the currently documented CUDA 12.1 build first.
-python -m pip install torch --index-url https://download.pytorch.org/whl/cu121
+# For an NVIDIA GPU, install the tested CUDA 12.1 build first.
+python -m pip install "torch==2.1.0+cu121" --index-url https://download.pytorch.org/whl/cu121
 python -m pip install -r requirements.txt
 ```
 
-For CPU-only use, skip the CUDA-specific command and install `requirements.txt`. If CUDA 12.1 does not suit the receiving PC's driver, choose the current Windows/Pip/CUDA command from the [official PyTorch installer](https://pytorch.org/get-started/locally/) and run it before `requirements.txt`. The FastText and sentence-transformer models are downloaded automatically on first use and are intentionally not stored in Git.
+For CPU-only use, skip the CUDA-specific command and install `requirements.txt`. The direct dependencies are pinned to the versions tested on both workstation profiles; update both requirements files together when changing the ML stack. The FastText and sentence-transformer models are downloaded automatically on first use and are intentionally not stored in Git.
 
 Dependencies:
 - `warcio` — WARC/ARC file parsing
@@ -399,17 +399,17 @@ Recommended workflow: run with `--limit 10`, inspect output with `python review.
 ## Performance
 
 - **Streaming Matcher Pipeline**: Processes paragraphs as they are read from the network, providing near-instant feedback and low memory overhead.
-- **Parallel GPU Acceleration**: The RTX 3080 profile distributes work across 8 worker processes.
+- **Parallel GPU Acceleration**: The RTX 3080 profile distributes work across 7 worker processes.
 - **Three-Stage Filtering**: Combines fast keyword pre-filtering (Stage 1), deep semantic matching (Stage 2), and narrative voice detection with **hard exclusion for song lyrics (choruses), advertisements, and non-narrative copy** (Stage 3).
 
 | Metric | Historical estimate (RTX 3080; hardware/network dependent) |
 |--------|----------|
 | **Matching Startup** | **Near-instant** (via Streaming + Batched DB) |
 | **Throughput** | ~20,000–40,000 pages/minute |
-| **Worker Profile** | 8 workers (`MAX_WORKERS = 8`) |
+| **Worker Profile** | 7 workers (`MAX_WORKERS = 7`) |
 | **RAM Usage** | Stable (via Keyword Pre-filtering) |
 
-> **Requirement:** Use `numpy<2.0.0` to ensure compatibility with `sentence-transformers`.
+> **Requirement:** This profile pins `numpy==1.26.4` for the tested `sentence-transformers` stack.
 
 ---
 

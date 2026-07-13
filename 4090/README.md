@@ -77,15 +77,15 @@ git clone https://github.com/WenjunII/Hometown-XR.git
 cd Hometown-XR
 git lfs pull
 
-py -3.10 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install torch --index-url https://download.pytorch.org/whl/cu121
+python -m pip install "torch==2.1.0+cu121" --index-url https://download.pytorch.org/whl/cu121
 python -m pip install -r 4090/requirements.txt
 cd 4090
 ```
 
-For CPU-only use, skip the CUDA-specific command. If CUDA 12.1 does not suit the receiving PC's driver, select the current Windows/Pip/CUDA command from the [official PyTorch installer](https://pytorch.org/get-started/locally/). The model caches download automatically on first use and remain machine-local.
+For CPU-only use, skip the CUDA-specific command. The direct dependencies are pinned to the versions tested on both workstation profiles; update both requirements files together when changing the ML stack. The model caches download automatically on first use and remain machine-local.
 
 Dependencies:
 - `warcio` — WARC/ARC file parsing
@@ -391,7 +391,7 @@ Recommended workflow: run with `--limit 10`, inspect output with `python review.
 | **VRAM Usage** | ~22 GB (7 workers) |
 | **RAM Usage** | Stable (via Keyword Pre-filtering) |
 
-> **Requirement:** Use `numpy<2.0.0` to ensure compatibility with `sentence-transformers`.
+> **Requirement:** This profile pins `numpy==1.26.4` for the tested `sentence-transformers` stack.
 
 ---
 

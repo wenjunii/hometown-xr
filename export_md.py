@@ -13,9 +13,15 @@ import logging
 from pathlib import Path
 from collections import defaultdict
 
+from config import DATA_DIR, OUTPUT_DIR
+
 logger = logging.getLogger(__name__)
 
-def export_to_markdown(output_dir="data/output", export_dir="data/exports"):
+DEFAULT_OUTPUT_DIR = OUTPUT_DIR
+DEFAULT_EXPORT_DIR = DATA_DIR / "exports"
+
+
+def export_to_markdown(output_dir=DEFAULT_OUTPUT_DIR, export_dir=DEFAULT_EXPORT_DIR):
     """
     Export all .jsonl.gz files to formatted Markdown files.
     """
@@ -31,7 +37,7 @@ def export_to_markdown(output_dir="data/output", export_dir="data/exports"):
     logger.info("Scanning for extracted records...")
     records_by_lang = defaultdict(list)
     
-    file_pattern = f"{output_dir}/**/*.jsonl.gz"
+    file_pattern = str(output_path / "**" / "*.jsonl.gz")
     files = glob.glob(file_pattern, recursive=True)
     
     if not files:
@@ -90,8 +96,8 @@ def export_to_markdown(output_dir="data/output", export_dir="data/exports"):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description="Export JSONL results to Markdown.")
-    parser.add_argument("--output", default="data/output", help="Directory with .jsonl.gz files")
-    parser.add_argument("--export", default="data/exports", help="Directory to save .md files")
+    parser.add_argument("--output", default=DEFAULT_OUTPUT_DIR, help="Directory with .jsonl.gz files")
+    parser.add_argument("--export", default=DEFAULT_EXPORT_DIR, help="Directory to save .md files")
     args = parser.parse_args()
     
     export_to_markdown(args.output, args.export)

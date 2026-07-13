@@ -13,11 +13,13 @@ import logging
 from pathlib import Path
 from collections import defaultdict
 
+from config import DATA_DIR, OUTPUT_DIR
+
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).parent
-DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "output"
-DEFAULT_EXPORT_DIR = PROJECT_ROOT / "data" / "exports"
+DEFAULT_OUTPUT_DIR = OUTPUT_DIR
+DEFAULT_EXPORT_DIR = DATA_DIR / "exports"
+
 
 def export_to_markdown(output_dir=DEFAULT_OUTPUT_DIR, export_dir=DEFAULT_EXPORT_DIR):
     """

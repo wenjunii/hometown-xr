@@ -4,10 +4,12 @@ import json
 import os
 import sys
 
+from config import OUTPUT_DIR
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 results = []
-output_dir = os.path.join(os.path.dirname(__file__), "data", "output")
+output_dir = OUTPUT_DIR
 
 for root, dirs, files in os.walk(output_dir):
     for f in files:
