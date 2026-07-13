@@ -2,9 +2,9 @@
 
 A local, resumable Python application that extracts multilingual paragraphs about **home**, **hometown**, **belonging**, **roots**, **childhood**, **diaspora**, and **nostalgia** from Common Crawl web archive datasets spanning 2008–2026.
 
-## 📊 Project Status (May 12, 2026)
-- **Files Completed**: 138,860
-- **Pages Processed**: ~6.15 Billion
+## 📊 Project Status (May 18, 2026)
+- **Files Completed**: 176,012
+- **Pages Processed**: ~7.89 Billion
 - **Filtering Logic**: High-Precision Narrative Filter (Threshold 0.45, Narrative 8+, Strict Negative Scrubbing)
 - **Output Quality**: Verified 100% clean of institutional noise and commercial metadata.
 
@@ -25,7 +25,7 @@ WET/ARC File → Split into Paragraphs → Keyword Pre-Filter → Semantic Scori
 
 No LLM is used. The two ML models are local and high-performance:
 - **GPU Accelerated**: If an NVIDIA GPU (RTX 3080/4090, etc.) is detected, semantic matches run on CUDA for massive throughput.
-- **Optimized Multiprocessing**: (Enhanced) Uses staggered worker initialization and adaptive batching to ensure stability on Windows even with 12+ parallel processes.
+- **Optimized Multiprocessing**: Uses staggered worker initialization and adaptive batching; the RTX 3080 profile is configured for 8 parallel workers.
 
 | Model | Size | Purpose |
 |-------|------|---------|
@@ -53,11 +53,13 @@ This repository is optimized for dual-workstation high-performance extraction.
 - **Root Version (RTX 3080)**: Optimized for 3080 GPUs (`MAX_WORKERS = 8`).
 - **[RTX 4090 Version](./4090/)**: Optimized for 4090 GPUs (`MAX_WORKERS = 7`).
 
-### 🔄 Cross-Workstation Synchronization (Handoff)
-The project is configured with a **Unified Data Store**. Both the 3080 and 4090 environments share the same `data/progress.db` and output results. This allows you to:
-1. Start a crawl on your 3080.
-2. Sync to GitHub.
-3. Pull and resume immediately on your 4090 without losing progress.
+### 🔄 Cross-Workstation Checkpoint Handoff
+GitHub carries a resumable checkpoint containing `data/progress.db`, extracted output, exports, code, and configuration. Stop the active crawler, push the stable checkpoint, then pull it (including Git LFS) on the receiving workstation before resuming.
+
+> [!IMPORTANT]
+> This is a **serial handoff**, not a live shared database. Only one workstation may run the crawler from the synchronized checkpoint at a time. SQLite/LFS database changes cannot be merged after two machines diverge, even if they process different crawl IDs.
+
+Both RTX 3080 PCs use the root `main.py`; only the RTX 4090 uses `4090/main.py`.
 
 See **[HANDOFF.md](./HANDOFF.md)** for the step-by-step synchronization guide.
 
@@ -88,13 +90,22 @@ Supports **all 122+ Common Crawl datasets** from 2008 to present:
 
 ### Installation
 
-```bash
-cd cc-home-extractor
-# For CPU-only:
-pip install -r requirements.txt
-# For GPU (CUDA 12.1):
-pip install torch --index-url https://download.pytorch.org/whl/cu121
+```powershell
+git lfs install
+git clone https://github.com/WenjunII/Hometown-XR.git
+cd Hometown-XR
+git lfs pull
+
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+
+# For an NVIDIA GPU, install the currently documented CUDA 12.1 build first.
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu121
+python -m pip install -r requirements.txt
 ```
+
+For CPU-only use, skip the CUDA-specific command and install `requirements.txt`. If CUDA 12.1 does not suit the receiving PC's driver, choose the current Windows/Pip/CUDA command from the [official PyTorch installer](https://pytorch.org/get-started/locally/) and run it before `requirements.txt`. The FastText and sentence-transformer models are downloaded automatically on first use and are intentionally not stored in Git.
 
 Dependencies:
 - `warcio` — WARC/ARC file parsing
@@ -176,14 +187,9 @@ This safely deletes `progress.db` and the `data/output/` directory while preserv
 
 ### Stop and Resume
 
-Press `Ctrl+C` at any time. The application will:
-1. Finish processing the current file
-2. Save all progress to the SQLite database
-3. Exit cleanly
+Press `Ctrl+C` once, then wait for the main process and workers to exit. Before a GitHub handoff, run `python main.py status` and require `Processing: 0`.
 
-To resume, just run the same command again. It picks up exactly where it left off.
-
-If the application crashes or is killed abruptly, any file that was mid-processing will be reset to "pending" on the next startup and re-processed from scratch. **Nothing is ever skipped or duplicated.**
+An abrupt exit can leave files marked as `processing`. Entries older than one hour are recovered to `pending` when the progress tracker is next opened. Keep the crawler stopped during recovery, and do not push or resume on another workstation until the checkpoint has no active processing rows.
 
 ---
 
@@ -383,7 +389,7 @@ The application is pre-configured with 20 anchor sentences organized into 7 them
 
 - **`0.30`** — More permissive. Catches loosely related content. Good for exploration.
 - **`0.35`** — Balanced precision/recall.
-- **`0.40`** — Default (Strict). Higher relevance, preferred for personal narratives.
+- **`0.45`** — Default (High Precision). Higher relevance, preferred for personal narratives.
 - **`0.50+`** — Very strict. Only strong matches pass.
 
 Recommended workflow: run with `--limit 10`, inspect output with `python review.py`, adjust threshold, repeat.
@@ -393,14 +399,14 @@ Recommended workflow: run with `--limit 10`, inspect output with `python review.
 ## Performance
 
 - **Streaming Matcher Pipeline**: Processes paragraphs as they are read from the network, providing near-instant feedback and low memory overhead.
-- **Parallel GPU Acceleration**: Distributes file processing across 20+ workers for massive throughput.
+- **Parallel GPU Acceleration**: The RTX 3080 profile distributes work across 8 worker processes.
 - **Three-Stage Filtering**: Combines fast keyword pre-filtering (Stage 1), deep semantic matching (Stage 2), and narrative voice detection with **hard exclusion for song lyrics (choruses), advertisements, and non-narrative copy** (Stage 3).
 
-| Metric | Estimate (RTX 3080 + 12 Workers) |
+| Metric | Historical estimate (RTX 3080; hardware/network dependent) |
 |--------|----------|
 | **Matching Startup** | **Near-instant** (via Streaming + Batched DB) |
 | **Throughput** | ~20,000–40,000 pages/minute |
-| **VRAM Usage** | ~14 GB (12 workers) |
+| **Worker Profile** | 8 workers (`MAX_WORKERS = 8`) |
 | **RAM Usage** | Stable (via Keyword Pre-filtering) |
 
 > **Requirement:** Use `numpy<2.0.0` to ensure compatibility with `sentence-transformers`.
@@ -419,7 +425,7 @@ No. Everything runs locally. The only network traffic is downloading WET/ARC fil
 ~700 MB for models (one-time download). Output is small — a few MB per 1,000 files processed. No raw data is stored locally.
 
 **Q: Can I run this on multiple machines?**
-Yes, but each machine tracks its own progress independently. To avoid duplicate work, assign different crawl IDs to different machines.
+Use multiple machines as a serial checkpoint handoff: stop and push from one, then pull and resume on the other. Do not run two clones concurrently from the same checkpoint; `progress.db` is a binary Git LFS object and cannot be merged. Assigning different crawl IDs does not make the shared database mergeable. True simultaneous multi-PC processing requires separate databases plus an explicit reconciliation or centralized coordination workflow.
 
 **Q: What if a WET/ARC file fails to download?**
 It's marked as "failed" in the database and skipped. Failed files can be retried by resetting their status in the SQLite database. If an entire crawl's index is unavailable or returns a 404, the application logs a warning and gracefully skips to the next crawl without crashing.

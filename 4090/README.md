@@ -2,9 +2,9 @@
 
 A local, resumable Python application that extracts multilingual paragraphs about **home**, **hometown**, **belonging**, **roots**, **childhood**, **diaspora**, and **nostalgia** from Common Crawl web archive datasets spanning 2008–2026.
 
-## 📊 Project Status (May 12, 2026)
-- **Files Completed**: 138,860
-- **Pages Processed**: ~6.15 Billion
+## 📊 Project Status (May 18, 2026)
+- **Files Completed**: 176,012
+- **Pages Processed**: ~7.89 Billion
 - **Filtering Logic**: High-Precision Narrative Filter (Threshold 0.45, Narrative 8+, Strict Negative Scrubbing)
 - **Output Quality**: Verified 100% clean of institutional noise and commercial metadata.
 
@@ -71,13 +71,21 @@ Supports **all 122+ Common Crawl datasets** from 2008 to present:
 
 ### Installation
 
-```bash
-cd cc-home-extractor
-# For CPU-only:
-pip install -r requirements.txt
-# For GPU (CUDA 12.1):
-pip install torch --index-url https://download.pytorch.org/whl/cu121
+```powershell
+git lfs install
+git clone https://github.com/WenjunII/Hometown-XR.git
+cd Hometown-XR
+git lfs pull
+
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu121
+python -m pip install -r 4090/requirements.txt
+cd 4090
 ```
+
+For CPU-only use, skip the CUDA-specific command. If CUDA 12.1 does not suit the receiving PC's driver, select the current Windows/Pip/CUDA command from the [official PyTorch installer](https://pytorch.org/get-started/locally/). The model caches download automatically on first use and remain machine-local.
 
 Dependencies:
 - `warcio` — WARC/ARC file parsing
@@ -133,7 +141,7 @@ python main.py run --crawl CC-MAIN-2026-12 --limit 5
 python main.py status
 ```
 
-Shows overall and per-crawl progress including files completed, matches found, and percentage done. **Update (April 2026):** Status checks are now non-destructive and can be run safely while a crawl is in progress without interfering with active workers. Includes a new **Processing** indicator to track real-time task distribution.
+Shows overall and per-crawl progress including files completed, matches found, percentage done, and active processing rows. Opening the progress tracker can recover `processing` entries older than one hour, so run status only against the active workstation's database and never against a second divergent clone.
 
 > [!NOTE]
 > **Match Count Discrepancy:** The `Matches found` number reported by the status command reflects the historical count of matches found during the raw crawl. Because we retroactively applied an ultra-strict, high-precision narrative filter to the exported data, the actual number of high-quality records in the `data/exports/` Markdown files will be significantly lower than the raw database count.
@@ -142,7 +150,7 @@ Shows overall and per-crawl progress including files completed, matches found, a
 
 - **Resumable Tracking**: Uses SQLite to track every file. If interrupted, just run the same command to resume.
 - **Auto-Recovery**: Tasks stuck in "Processing" for over 1 hour (due to a crash or force-quit) are automatically reset to "Pending" on the next run.
-- **Safe Signal Handling**: Cleanly handles `Ctrl+C` to ensure database integrity and process cleanup.
+- **Shutdown Check**: After `Ctrl+C`, wait for every worker to exit and verify `Processing: 0` before creating a GitHub handoff checkpoint.
 
 ### Adjust Semantic Threshold
 
@@ -154,7 +162,7 @@ python main.py run --crawl CC-MAIN-2026-12 --threshold 0.45
 python main.py run --crawl CC-MAIN-2026-12 --threshold 0.30
 ```
 
-Default threshold is `0.40`.
+Default threshold is `0.45`.
 
 ### Wipe Data and Reset
 If you want to delete all extracted results and start a crawl over from scratch:
@@ -165,14 +173,9 @@ This safely deletes `progress.db` and the `data/output/` directory while preserv
 
 ### Stop and Resume
 
-Press `Ctrl+C` at any time. The application will:
-1. Finish processing the current file
-2. Save all progress to the SQLite database
-3. Exit cleanly
+Press `Ctrl+C` once, then wait for the main process and workers to exit. Before a GitHub handoff, run `python main.py status` and require `Processing: 0`.
 
-To resume, just run the same command again. It picks up exactly where it left off.
-
-If the application crashes or is killed abruptly, any file that was mid-processing will be reset to "pending" on the next startup and re-processed from scratch. **Nothing is ever skipped or duplicated.**
+An abrupt exit can leave files marked as `processing`. Entries older than one hour are recovered to `pending` when the progress tracker is next opened. Keep the crawler stopped during recovery, and do not push or resume on another workstation until the checkpoint has no active processing rows.
 
 ---
 
@@ -259,10 +262,10 @@ python review.py
 ## 🚀 4090 Optimized Version
 This version is pre-tuned for the **NVIDIA RTX 4090**, utilizing 22GB+ VRAM and 7 parallel workers for maximum stable throughput.
 
-### 🔄 Unified Data Store
-This environment is linked to the **root `data/` folder**. 
-- It shares the same `progress.db` as the 3080 workstation.
-- You can switch between workstations by syncing via GitHub.
+### 🔄 Shared Checkpoint Path
+This environment uses the **root `data/` folder** within a checkout.
+- GitHub transfers the checkpoint between workstations; it is not a live shared database.
+- Only one workstation may crawl from the synchronized checkpoint at a time because `progress.db` cannot be merged after concurrent runs.
 - See **[HANDOFF.md](../HANDOFF.md)** for instructions.
 
 ---
@@ -404,7 +407,7 @@ No. Everything runs locally. The only network traffic is downloading WET/ARC fil
 ~700 MB for models (one-time download). Output is small — a few MB per 1,000 files processed. No raw data is stored locally.
 
 **Q: Can I run this on multiple machines?**
-Yes, but each machine tracks its own progress independently. To avoid duplicate work, assign different crawl IDs to different machines.
+Use multiple machines as a serial checkpoint handoff: stop and push from one, then pull and resume on the other. Do not run two clones concurrently from the same checkpoint; `progress.db` is a binary Git LFS object and cannot be merged. Assigning different crawl IDs does not make the shared database mergeable. True simultaneous multi-PC processing requires separate databases plus an explicit reconciliation or centralized coordination workflow.
 
 **Q: What if a WET/ARC file fails to download?**
 It's marked as "failed" in the database and skipped. Failed files can be retried by resetting their status in the SQLite database. If an entire crawl's index is unavailable or returns a 404, the application logs a warning and gracefully skips to the next crawl without crashing.

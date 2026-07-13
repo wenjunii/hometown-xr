@@ -3,12 +3,24 @@ data/models/
 
 # Python
 __pycache__/
+.venv/
+venv/
 *.pyc
 *.pyo
 *.egg-info/
 dist/
 build/
 *.egg
+
+# Machine-local settings and logs
+.env
+.env.local
+*.log
+
+# SQLite runtime sidecars (never sync a live database)
+data/progress.db-wal
+data/progress.db-shm
+data/progress.db-journal
 
 # IDE
 .vscode/
