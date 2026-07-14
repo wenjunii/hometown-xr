@@ -132,6 +132,7 @@ def test_annotation_sample_fills_from_real_output_without_live_rejects(tmp_path)
         output_dir=output_dir,
         candidate_path=tmp_path / "missing-candidates.jsonl",
         annotation_path=annotation_path,
+        replay_path=tmp_path / "missing-replay.jsonl.gz",
     )
     assert result["samples"] == 4
     assert result["predicted_positive"] == 4
