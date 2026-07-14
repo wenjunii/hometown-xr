@@ -96,6 +96,17 @@ files changed. Resume with:
 
 Use profile `4090` on the other PC.
 
+`data/parquet/` is derived and remains local to each workstation. To rebuild it
+from the received checkpoint while safely dry-running the current filters, use:
+
+```powershell
+.\scripts\handoff.ps1 -Direction pull -Profile 3080 -RefreshResults
+```
+
+The equivalent standalone command is `.\scripts\refresh-results.ps1`. Neither
+form reprocesses completed Common Crawl sources or replaces accepted JSONL
+output unless `refresh-results.ps1` is separately given `-ApplyRefilter`.
+
 ## After A Crash
 
 A normal `Ctrl+C` releases source claims immediately. After power loss, wait

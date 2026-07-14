@@ -193,6 +193,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\run.ps1 -Profile 3080 run --all` | Start or resume using the selected hardware profile |
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
+| `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 
@@ -302,6 +303,41 @@ manifest reports concentration and diversity diagnostics plus every file
 checksum. Adjust the research-view limit with `--domain-story-cap`.
 
 `data/parquet/` is ignored because it is reproducible and can be large.
+
+## Refreshing Historical Results
+
+Runtime tuning does not require a historical recrawl. Worker counts, inference
+batches, adaptive batching, caching, and an audited FP16 profile change
+throughput rather than the matching policy. Refresh the useful research view
+from every accepted capture with:
+
+```powershell
+.\scripts\refresh-results.ps1
+```
+
+By default this command safely simulates the current semantic and narrative
+rules without replacing tracked JSONL output, then rebuilds `data/parquet/`
+with near deduplication (distance `3`) and a `100`-story per-domain research
+cap. The full canonical table and provenance remain available; the domain cap
+is represented by `within_domain_cap` rather than deleting rows.
+
+Use `-SkipParquet` for only the filter simulation. `-Dedupe exact` disables
+near-duplicate grouping. `-DomainStoryCap 200` changes only the research-view
+flag. `-SemanticThreshold` and `-NarrativeThreshold` can audit proposed values.
+Actual replacement of accepted JSONL output requires the explicit
+`-ApplyRefilter` switch, a clean checkpoint, and should follow human evaluation;
+applied output is verified again before the canonical dataset is rebuilt.
+
+The July 14, 2026 baseline keeps all `3,416` accepted captures under the
+semantic threshold `0.45` and narrative threshold `8`. Near deduplication
+produces `1,356` canonical stories; `1,183` are within the default domain cap.
+
+Reprocess completed Common Crawl sources only after a recall-affecting change,
+such as broader keywords or concept anchors, a lower threshold, a new model
+revision, or different paragraph extraction. Rejected candidates were not all
+retained, so those changes cannot be applied retrospectively to accepted output
+alone. Before a full recrawl, compare a representative sample of completed
+sources in an isolated audit. Do not use `reset` merely to refresh results.
 
 ## Evaluation
 

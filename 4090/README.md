@@ -24,6 +24,10 @@ Before resuming a checkpoint from the 3080 PC, receive and verify it with:
 .\scripts\handoff.ps1 -Direction pull -Profile 4090
 ```
 
+Add `-RefreshResults` to rebuild this PC's ignored canonical Parquet dataset
+after receiving a checkpoint. This dry-runs current filters and does not recrawl
+completed Common Crawl sources.
+
 The tracked `4090` profile uses seven CPU parser workers feeding one shared GPU
 model with candidate/inference/encoding batches of `150`/`1600`/`256`. Run
 `.\scripts\benchmark.ps1 -Profile 4090` on that PC to create its ignored local

@@ -10,7 +10,9 @@ param(
 
     [switch]$ForceVacuum,
 
-    [switch]$SkipVerify
+    [switch]$SkipVerify,
+
+    [switch]$RefreshResults
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,6 +58,14 @@ try {
             & $Python (Join-Path $Root "main.py") verify-output
             if ($LASTEXITCODE -ne 0) {
                 throw "Output verification failed with exit code $LASTEXITCODE."
+            }
+        }
+
+        if ($RefreshResults) {
+            $Refresh = Join-Path $PSScriptRoot "refresh-results.ps1"
+            & $Refresh
+            if ($LASTEXITCODE -ne 0) {
+                throw "Local result refresh failed with exit code $LASTEXITCODE."
             }
         }
     }
