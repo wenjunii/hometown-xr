@@ -14,6 +14,7 @@ class FakeModel:
 
 def test_low_confidence_language_routes_to_unknown():
     detector = LanguageDetector(threshold=0.5, model=FakeModel("en", 0.49))
+    assert detector.predict("Some ambiguous text") == ("en", 0.49)
     assert detector.detect("Some ambiguous text") == ("unknown", 0.49)
 
 

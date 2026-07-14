@@ -3,7 +3,7 @@ import json
 import pyarrow.dataset as ds
 
 from dedupe import DedupIndex
-from evaluation import build_annotation_sample
+from evaluation import build_annotation_sample, decision_uncertainty, evaluation_report
 from matcher import Match
 from output import OutputWriter
 from parquet_export import export_parquet
@@ -70,14 +70,22 @@ def test_partitioned_parquet_export_is_staged_and_deduplicated(tmp_path):
     manifest = export_parquet(output_dir, target, dedupe="near")
 
     assert manifest["rows"] == 1
-    assert manifest["duplicates"]["near"] == 1
-    assert ds.dataset(target, format="parquet", partitioning="hive").count_rows() == 1
+    assert manifest["duplicates"]["exact"] == 1
+    assert ds.dataset(target / "stories", format="parquet", partitioning="hive").count_rows() == 1
+    assert (
+        ds.dataset(target / "provenance", format="parquet", partitioning="hive").count_rows()
+        == 2
+    )
     saved = json.loads((target / "_manifest.json").read_text(encoding="utf-8"))
     assert saved["files"][0]["sha256"]
+    assert saved["tables"]["provenance"]["rows"] == 2
 
     replacement = export_parquet(output_dir, target, dedupe="exact")
-    assert replacement["rows"] == 2
-    assert ds.dataset(target, format="parquet", partitioning="hive").count_rows() == 2
+    assert replacement["rows"] == 1
+    assert (
+        ds.dataset(target / "stories", format="parquet", partitioning="hive").count_rows()
+        == 1
+    )
 
 
 def test_annotation_sample_fills_from_real_output_without_live_rejects(tmp_path):
@@ -117,3 +125,37 @@ def test_annotation_sample_fills_from_real_output_without_live_rejects(tmp_path)
     assert result["predicted_positive"] == 4
     rows = [json.loads(line) for line in annotation_path.read_text(encoding="utf-8").splitlines()]
     assert any(row["sample_id"] == "previously-labeled" for row in rows)
+    assert all("uncertainty_score" in row for row in rows)
+
+
+def test_evaluation_report_marks_small_threshold_search_as_exploratory(tmp_path):
+    annotation_path = tmp_path / "annotations.jsonl"
+    rows = [
+        {
+            "sample_id": "positive",
+            "language": "en",
+            "semantic_score": 0.55,
+            "narrative_score": 12,
+            "predicted_accept": True,
+            "label": "positive",
+        },
+        {
+            "sample_id": "negative",
+            "language": "en",
+            "semantic_score": 0.46,
+            "narrative_score": 8,
+            "predicted_accept": True,
+            "label": "negative",
+        },
+    ]
+    annotation_path.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+    report = evaluation_report(annotation_path, tmp_path / "report.json")
+    assert not report["baseline"]["ready"]
+    assert report["recommended_thresholds"]["exploratory"]
+    assert report["overall"]["precision_ci95"]
+    assert report["semantic_calibration"]
+    assert decision_uncertainty(0.45, 20) == 1.0

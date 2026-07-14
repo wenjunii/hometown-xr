@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import hashlib
+import io
 import json
 import logging
 import os
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _SAFE_LANGUAGE = re.compile(r"^[A-Za-z0-9_-]{1,20}$")
+_MANIFEST_CATALOG = "_manifest-catalog.jsonl.gz"
 
 
 def _source_digest(source_path: str) -> str:
@@ -36,6 +38,17 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _write_gzip_jsonl(path: Path, rows: list[dict]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with temporary.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
+                for row in rows:
+                    handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+    os.replace(temporary, path)
 
 
 def _legacy_filename(source_path: str) -> str:
@@ -162,6 +175,14 @@ class SourceOutputTransaction:
                 json.dumps(self._manifest(stage_paths), ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
+        elif self.writer.get_manifest(self.source_path) is not None:
+            manifest_stage = self.staging_dir / "_manifest.json"
+            tombstone = self._manifest([])
+            tombstone["tombstone"] = True
+            manifest_stage.write_text(
+                json.dumps(tombstone, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
 
         try:
             for existing in self.writer.find_source_artifacts(self.source_path):
@@ -210,6 +231,8 @@ class OutputWriter:
         self.output_dir = Path(output_dir)
         self.staging_root = self.output_dir / ".staging"
         self.manifests_dir = self.output_dir / "_manifests"
+        self.catalog_path = self.output_dir / _MANIFEST_CATALOG
+        self._catalog_cache: dict[str, dict] | None = None
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.staging_root.mkdir(parents=True, exist_ok=True)
         self.manifests_dir.mkdir(parents=True, exist_ok=True)
@@ -224,6 +247,79 @@ class OutputWriter:
 
     def manifest_path(self, source_path: str) -> Path:
         return self.manifests_dir / f"{_source_digest(source_path)}.json"
+
+    def _load_catalog(self) -> dict[str, dict]:
+        if self._catalog_cache is not None:
+            return self._catalog_cache
+        catalog = {}
+        if self.catalog_path.exists():
+            with gzip.open(self.catalog_path, "rt", encoding="utf-8") as handle:
+                for line in handle:
+                    if not line.strip():
+                        continue
+                    manifest = json.loads(line)
+                    catalog[str(manifest["source_file"])] = manifest
+        self._catalog_cache = catalog
+        return catalog
+
+    def get_manifest(self, source_path: str) -> dict | None:
+        """Resolve a loose override first, then the compact catalog."""
+        loose_path = self.manifest_path(source_path)
+        if loose_path.exists():
+            manifest = json.loads(loose_path.read_text(encoding="utf-8"))
+        else:
+            manifest = self._load_catalog().get(source_path)
+        if manifest is None or manifest.get("tombstone"):
+            return None
+        return manifest
+
+    def iter_manifests(self):
+        """Yield the effective manifest set after applying loose overrides."""
+        manifests = dict(self._load_catalog())
+        for path in sorted(self.manifests_dir.glob("*.json")):
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            source_file = str(manifest["source_file"])
+            if manifest.get("tombstone"):
+                manifests.pop(source_file, None)
+            else:
+                manifests[source_file] = manifest
+        for source_file in sorted(manifests):
+            yield manifests[source_file]
+
+    def compact_manifest_catalog(self) -> dict:
+        """Merge loose manifests into one deterministic compressed catalog."""
+        loose_paths = sorted(self.manifests_dir.glob("*.json"))
+        manifests = dict(self._load_catalog())
+        tombstones = 0
+        for path in loose_paths:
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            source_file = str(manifest["source_file"])
+            if manifest.get("tombstone"):
+                manifests.pop(source_file, None)
+                tombstones += 1
+            else:
+                manifests[source_file] = manifest
+
+        before_bytes = self.catalog_path.stat().st_size if self.catalog_path.exists() else 0
+        if manifests:
+            _write_gzip_jsonl(
+                self.catalog_path,
+                [manifests[source_file] for source_file in sorted(manifests)],
+            )
+        else:
+            self.catalog_path.unlink(missing_ok=True)
+        for path in loose_paths:
+            path.unlink()
+        self._catalog_cache = manifests
+        return {
+            "manifests": len(manifests),
+            "loose_manifests_compacted": len(loose_paths),
+            "tombstones_applied": tombstones,
+            "catalog_bytes_before": before_bytes,
+            "catalog_bytes_after": (
+                self.catalog_path.stat().st_size if self.catalog_path.exists() else 0
+            ),
+        }
 
     def find_source_outputs(self, source_path: str) -> list[Path]:
         """Find both legacy and collision-resistant shards for one source."""
@@ -260,10 +356,9 @@ class OutputWriter:
 
     def verify_source(self, source_path: str) -> list[str]:
         """Return integrity errors for a committed source manifest."""
-        manifest_path = self.manifest_path(source_path)
-        if not manifest_path.exists():
+        manifest = self.get_manifest(source_path)
+        if manifest is None:
             return ["manifest is missing"]
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         errors = []
         total_records = 0
         if manifest.get("source_file") != source_path:

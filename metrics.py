@@ -44,6 +44,7 @@ class MetricsRecorder:
         self.inference_batch_size = inference_batch_size
         self.gpu_name = gpu_name
         self.target_files = 0
+        self.encoding_batch_size = 0
         self.counters: dict[str, float] = {
             "files_completed": 0,
             "files_failed": 0,
@@ -55,16 +56,40 @@ class MetricsRecorder:
             "parse_seconds": 0.0,
             "inference_seconds": 0.0,
             "inference_batches": 0,
+            "semantic_cache_hits": 0,
+            "semantic_cache_misses": 0,
+            "embedding_cache_hits": 0,
+            "embedding_cache_misses": 0,
+            "semantic_prefiltered": 0,
+            "language_cache_hits": 0,
+            "language_cache_misses": 0,
+            "cuda_oom_retries": 0,
+            "batch_reductions": 0,
         }
 
     def add_target_files(self, count: int) -> None:
         self.target_files += max(0, count)
         self.flush()
 
-    def record_inference(self, candidates: int, matches: int, seconds: float) -> None:
+    def record_inference(
+        self,
+        candidates: int,
+        matches: int,
+        seconds: float,
+        cache_stats: dict[str, int] | None = None,
+        runtime_stats: dict[str, int] | None = None,
+    ) -> None:
         self.counters["keyword_candidates"] += candidates
         self.counters["inference_seconds"] += seconds
         self.counters["inference_batches"] += 1
+        for key, value in (cache_stats or {}).items():
+            if key in self.counters:
+                self.counters[key] += value
+        runtime_stats = runtime_stats or {}
+        self.counters["cuda_oom_retries"] += runtime_stats.get("oom_retries", 0)
+        self.counters["batch_reductions"] += runtime_stats.get("batch_reductions", 0)
+        if runtime_stats.get("encoding_batch_size"):
+            self.encoding_batch_size = int(runtime_stats["encoding_batch_size"])
         # Matches become durable only when their source transaction commits.
         del matches
         self.flush()
@@ -101,7 +126,7 @@ class MetricsRecorder:
         remaining = max(self.target_files - finished, 0)
         eta = remaining / rate if rate > 0 else None
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "session_id": self.session_id,
             "started_at": self.started_at,
             "updated_at": _utc_now(),
@@ -110,6 +135,7 @@ class MetricsRecorder:
             "gpu": self.gpu_name,
             "workers": self.workers,
             "inference_batch_size": self.inference_batch_size,
+            "encoding_batch_size": self.encoding_batch_size or None,
             "target_files": self.target_files,
             "elapsed_seconds": round(elapsed, 3),
             **{
@@ -127,6 +153,15 @@ class MetricsRecorder:
                 ),
                 "megabytes_per_second": round(
                     self.counters["bytes_read"] / 1_000_000 / elapsed, 3
+                ),
+                "semantic_cache_hit_rate": round(
+                    self.counters["semantic_cache_hits"]
+                    / max(
+                        self.counters["semantic_cache_hits"]
+                        + self.counters["semantic_cache_misses"],
+                        1,
+                    ),
+                    4,
                 ),
             },
             "eta_seconds": round(eta, 1) if eta is not None else None,

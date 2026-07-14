@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class LanguageDetector:
+    cache_namespace = "fasttext:lid.176.bin:v1"
+
     def __init__(
         self,
         threshold: float = LANG_DETECTION_THRESHOLD,
@@ -48,7 +50,8 @@ class LanguageDetector:
             temporary_path.unlink(missing_ok=True)
             raise
 
-    def detect(self, text: str) -> tuple[str, float]:
+    def predict(self, text: str) -> tuple[str, float]:
+        """Return the model's raw top language and confidence."""
         clean = text[:LANG_DETECT_CHARS].replace("\n", " ").strip()
         if not clean:
             return "unknown", 0.0
@@ -56,6 +59,14 @@ class LanguageDetector:
         labels, probabilities = self.model.predict(clean, k=1)
         label = labels[0].replace("__label__", "")
         confidence = float(probabilities[0])
+        return label, confidence
+
+    def apply_threshold(self, prediction: tuple[str, float]) -> tuple[str, float]:
+        """Apply the runtime confidence threshold to a raw prediction."""
+        label, confidence = prediction
         if confidence < self.threshold:
             return "unknown", confidence
         return label, confidence
+
+    def detect(self, text: str) -> tuple[str, float]:
+        return self.apply_threshold(self.predict(text))

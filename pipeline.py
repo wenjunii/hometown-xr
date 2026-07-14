@@ -20,9 +20,11 @@ from metrics import MetricsRecorder
 from output import OutputWriter
 from processor import ProcessingStats, extract_paragraphs_from_arc, extract_paragraphs_from_wet
 from progress import ClaimedFile, ProgressTracker
+from record_identity import text_fingerprint
 from runtime import RuntimeSettings
 
 logger = logging.getLogger(__name__)
+_AUTO_CACHE = object()
 
 
 @dataclass(frozen=True)
@@ -179,13 +181,17 @@ class InferenceService:
         language_detector=None,
         writer: OutputWriter | None = None,
         sampler: DecisionSampler | None = None,
+        cache=_AUTO_CACHE,
     ):
+        default_components = matcher is None and language_detector is None
         if matcher is None:
             from matcher import HybridMatcher
 
             matcher = HybridMatcher(
                 threshold=settings.semantic_threshold,
                 encoding_batch_size=settings.encoding_batch_size,
+                precision=settings.precision,
+                adaptive_batching=settings.adaptive_batching,
             )
         if language_detector is None:
             from language_detector import LanguageDetector
@@ -197,10 +203,148 @@ class InferenceService:
         self.language_detector = language_detector
         self.writer = writer or OutputWriter()
         self.sampler = sampler or DecisionSampler()
+        if cache is _AUTO_CACHE:
+            if settings.cache_enabled and default_components:
+                from inference_cache import InferenceCache
+
+                try:
+                    cache = InferenceCache()
+                except Exception as exc:
+                    logger.warning(
+                        "Inference cache unavailable; continuing uncached: %s",
+                        exc,
+                    )
+                    cache = None
+            else:
+                cache = None
+        self.cache = cache
+        self._sampling_language_detector = _CachedLanguageDetector(self)
         self.pending: list[tuple[Any, list[str]]] = []
         self.transactions = {}
         self._closed_order: deque[str] = deque()
         self._closed_sources: set[str] = set()
+
+    def _evaluate_decisions(self, batch: list[tuple[Any, list[str]]]):
+        cache_stats = {
+            "semantic_cache_hits": 0,
+            "semantic_cache_misses": 0,
+            "embedding_cache_hits": 0,
+            "embedding_cache_misses": 0,
+            "semantic_prefiltered": 0,
+        }
+        cache_capable = self.cache is not None and all(
+            hasattr(self.matcher, attribute)
+            for attribute in (
+                "semantic_cache_namespace",
+                "embedding_cache_namespace",
+                "score_batch_stage2_with_embeddings",
+                "score_cached_embeddings",
+                "decisions_from_scores",
+            )
+        )
+        if not cache_capable:
+            return self.matcher.evaluate_batch_stage2(batch), cache_stats
+
+        prefiltered = (
+            self.matcher.prefilter_semantic_batch(batch)
+            if hasattr(self.matcher, "prefilter_semantic_batch")
+            else {}
+        )
+        cache_stats["semantic_prefiltered"] = len(prefiltered)
+        active_indexes = [index for index in range(len(batch)) if index not in prefiltered]
+        if not active_indexes:
+            scores = [prefiltered[index] for index in range(len(batch))]
+            return self.matcher.decisions_from_scores(batch, scores), cache_stats
+        active_batch = [batch[index] for index in active_indexes]
+
+        hashes = [
+            text_fingerprint(paragraph.text) for paragraph, _keywords in active_batch
+        ]
+        unique_items = {}
+        for text_hash, item in zip(hashes, active_batch):
+            unique_items.setdefault(text_hash, item)
+
+        score_map = self.cache.get_semantic(
+            self.matcher.semantic_cache_namespace,
+            unique_items,
+        )
+        cache_stats["semantic_cache_hits"] = sum(
+            text_hash in score_map for text_hash in hashes
+        )
+        score_misses = [text_hash for text_hash in unique_items if text_hash not in score_map]
+        cache_stats["semantic_cache_misses"] = len(score_misses)
+
+        embedding_map = self.cache.get_embeddings(
+            self.matcher.embedding_cache_namespace,
+            score_misses,
+        )
+        embedding_hits = [text_hash for text_hash in score_misses if text_hash in embedding_map]
+        embedding_misses = [
+            text_hash for text_hash in score_misses if text_hash not in embedding_map
+        ]
+        cache_stats["embedding_cache_hits"] = len(embedding_hits)
+        cache_stats["embedding_cache_misses"] = len(embedding_misses)
+
+        newly_scored = {}
+        if embedding_hits:
+            scores = self.matcher.score_cached_embeddings(
+                [embedding_map[text_hash] for text_hash in embedding_hits]
+            )
+            newly_scored.update(zip(embedding_hits, scores))
+
+        if embedding_misses:
+            uncached_batch = [unique_items[text_hash] for text_hash in embedding_misses]
+            scores, embeddings = self.matcher.score_batch_stage2_with_embeddings(
+                uncached_batch
+            )
+            newly_scored.update(zip(embedding_misses, scores))
+            self.cache.put_embeddings(
+                self.matcher.embedding_cache_namespace,
+                dict(zip(embedding_misses, embeddings)),
+            )
+
+        self.cache.put_semantic(self.matcher.semantic_cache_namespace, newly_scored)
+        score_map.update(newly_scored)
+        scores = [prefiltered.get(index) for index in range(len(batch))]
+        for index, score in zip(
+            active_indexes,
+            [score_map[text_hash] for text_hash in hashes],
+        ):
+            scores[index] = score
+        decisions = self.matcher.decisions_from_scores(batch, scores)
+        return decisions, cache_stats
+
+    def _detect_languages(self, texts: list[str]):
+        stats = {"language_cache_hits": 0, "language_cache_misses": 0}
+        cache_capable = (
+            self.cache is not None
+            and hasattr(self.language_detector, "cache_namespace")
+            and hasattr(self.language_detector, "predict")
+        )
+        if not cache_capable:
+            return [self.language_detector.detect(text) for text in texts], stats
+
+        hashes = [text_fingerprint(text) for text in texts]
+        unique_texts = {}
+        for text_hash, value in zip(hashes, texts):
+            unique_texts.setdefault(text_hash, value)
+        predictions = self.cache.get_languages(
+            self.language_detector.cache_namespace,
+            unique_texts,
+        )
+        missing = [text_hash for text_hash in unique_texts if text_hash not in predictions]
+        stats["language_cache_hits"] = len(texts) - len(missing)
+        stats["language_cache_misses"] = len(missing)
+        new_predictions = {
+            text_hash: self.language_detector.predict(unique_texts[text_hash])
+            for text_hash in missing
+        }
+        self.cache.put_languages(self.language_detector.cache_namespace, new_predictions)
+        predictions.update(new_predictions)
+        apply_threshold = getattr(self.language_detector, "apply_threshold", None)
+        if apply_threshold is None:
+            return [predictions[text_hash] for text_hash in hashes], stats
+        return [apply_threshold(predictions[text_hash]) for text_hash in hashes], stats
 
     def _remember_closed(self, source_file: str) -> None:
         if source_file in self._closed_sources:
@@ -232,13 +376,17 @@ class InferenceService:
             return
         started = time.monotonic()
         decisions = None
+        cache_stats = {}
         if hasattr(self.matcher, "evaluate_batch_stage2"):
-            decisions = self.matcher.evaluate_batch_stage2(batch)
+            decisions, cache_stats = self._evaluate_decisions(batch)
             matches = [decision.to_match() for decision in decisions if decision.accepted]
         else:
             matches = self.matcher.process_batch_stage2(batch)
 
-        languages = [self.language_detector.detect(match.text) for match in matches]
+        languages, language_cache_stats = self._detect_languages(
+            [match.text for match in matches]
+        )
+        cache_stats.update(language_cache_stats)
         grouped: dict[str, tuple[list, list]] = {}
         fallback_source = batch[0][0].source_file if batch else ""
         for match, language in zip(matches, languages):
@@ -250,8 +398,20 @@ class InferenceService:
             self._transaction(source_file).write_matches(source_matches, source_languages)
 
         if decisions is not None:
-            self.sampler.observe(decisions, self.language_detector)
-        self.metrics.record_inference(len(batch), len(matches), time.monotonic() - started)
+            self.sampler.observe(decisions, self._sampling_language_detector)
+        runtime_stats = {}
+        semantic_matcher = getattr(self.matcher, "semantic_matcher", None)
+        if semantic_matcher is not None and hasattr(
+            semantic_matcher, "consume_runtime_stats"
+        ):
+            runtime_stats = semantic_matcher.consume_runtime_stats()
+        self.metrics.record_inference(
+            len(batch),
+            len(matches),
+            time.monotonic() - started,
+            cache_stats=cache_stats,
+            runtime_stats=runtime_stats,
+        )
 
     def flush(self) -> None:
         if self.pending:
@@ -301,6 +461,22 @@ class InferenceService:
             transaction.abort()
         self.transactions.clear()
 
+    def close(self) -> None:
+        self.abort_all()
+        if self.cache is not None and hasattr(self.cache, "close"):
+            self.cache.close()
+
+
+class _CachedLanguageDetector:
+    """Expose the service cache through the detector interface used by sampling."""
+
+    def __init__(self, service: InferenceService):
+        self.service = service
+
+    def detect(self, text: str) -> tuple[str, float]:
+        predictions, _stats = self.service._detect_languages([text])
+        return predictions[0]
+
 
 class ExtractionPipeline:
     """Reuse one process pool and one inference service across crawls."""
@@ -333,7 +509,7 @@ class ExtractionPipeline:
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         if self.executor is not None:
             self.executor.shutdown(wait=True, cancel_futures=True)
-        self.service.abort_all()
+        self.service.close()
         self.queue.close()
         self.queue.join_thread()
 

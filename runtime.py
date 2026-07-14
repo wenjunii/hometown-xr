@@ -12,6 +12,9 @@ class RuntimeSettings:
     encoding_batch_size: int
     semantic_threshold: float
     language_threshold: float
+    precision: str = "fp32"
+    adaptive_batching: bool = True
+    cache_enabled: bool = True
 
     @property
     def stream_batch_size(self) -> int:

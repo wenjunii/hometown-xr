@@ -16,6 +16,8 @@ RUN_LOCK_PATH = DATA_DIR / ".crawler.lock"
 METRICS_DIR = DATA_DIR / "metrics"
 EVALUATION_DIR = DATA_DIR / "evaluation"
 PARQUET_DIR = DATA_DIR / "parquet"
+CACHE_DIR = DATA_DIR / "cache"
+INFERENCE_CACHE_PATH = CACHE_DIR / "inference.db"
 HARDWARE_OVERRIDE_PATH = DATA_DIR / "hardware-profile.local.json"
 
 for directory in (DATA_DIR, OUTPUT_DIR, MODELS_DIR):
@@ -34,6 +36,7 @@ MAX_PARAGRAPH_LENGTH = 5000
 NARRATIVE_FILTER_ENABLED = True
 MIN_NARRATIVE_INDICATORS = 8
 SEMANTIC_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+SEMANTIC_MODEL_REVISION = "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
 
 
 # Language detection
@@ -57,8 +60,13 @@ LEASE_TIMEOUT_SECONDS = 600
 HEARTBEAT_INTERVAL_SECONDS = 30
 METRICS_FLUSH_SECONDS = 10
 EVALUATION_SAMPLE_RATE = 0.002
+EVALUATION_UNCERTAIN_SAMPLE_RATE = 0.25
 EVALUATION_MAX_SAMPLES_PER_SESSION = 2_000
+EVALUATION_MIN_BASELINE_LABELS = 100
+EVALUATION_MIN_LANGUAGE_LABELS = 20
 OUTPUT_SCHEMA_VERSION = 2
+DOMAIN_SHARE_WARNING = 0.10
+DOMAIN_STORY_CAP = 100
 
 
 # "auto" is resolved lazily by the semantic matcher so importing lightweight
@@ -75,6 +83,7 @@ class HardwareProfile:
     candidate_batch_size: int
     inference_batch_size: int
     encoding_batch_size: int
+    precision: str = "fp32"
 
     @property
     def stream_batch_size(self) -> int:
@@ -85,8 +94,8 @@ class HardwareProfile:
 # Both machines currently use the proven seven-worker settings. Keeping the
 # profiles explicit makes future tuning a configuration change, not a code fork.
 HARDWARE_PROFILES = {
-    "3080": HardwareProfile("3080", 7, 100, 800, 128),
-    "4090": HardwareProfile("4090", 7, 150, 1_600, 256),
+    "3080": HardwareProfile("3080", 7, 100, 800, 128, "fp32"),
+    "4090": HardwareProfile("4090", 7, 150, 1_600, 256, "fp32"),
 }
 
 
@@ -137,6 +146,8 @@ def get_hardware_profile(name: str | None = None) -> HardwareProfile:
                     )
                     if key in override
                 }
+                if override.get("precision") in {"fp32", "fp16"}:
+                    values["precision"] = str(override["precision"])
                 profile = replace(profile, **values)
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             pass

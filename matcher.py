@@ -18,6 +18,7 @@ genealogy databases, commercial pages, and other non-personal text.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 import unicodedata
@@ -31,6 +32,7 @@ from config import (
     MIN_NARRATIVE_INDICATORS,
     NARRATIVE_FILTER_ENABLED,
     SEMANTIC_MODEL_NAME,
+    SEMANTIC_MODEL_REVISION,
     SEMANTIC_THRESHOLD,
 )
 from keywords import get_all_keywords_flat
@@ -44,6 +46,7 @@ logger = logging.getLogger(__name__)
 # substring false positives (e.g. "hem" matching inside "them").
 _SHORT_KW_THRESHOLD = 4
 _NO_BOUNDARY_SCRIPTS = ("CJK", "HIRAGANA", "KATAKANA", "HANGUL", "THAI")
+_ANCHOR_DIGEST = hashlib.sha256("\x1f".join(CONCEPT_ANCHORS).encode("utf-8")).hexdigest()[:16]
 
 
 def _needs_substring_matching(keyword: str) -> bool:
@@ -162,7 +165,12 @@ class SemanticMatcher:
     concept anchor embeddings via cosine similarity.
     """
 
-    def __init__(self, encoding_batch_size: int = ENCODING_BATCH_SIZE):
+    def __init__(
+        self,
+        encoding_batch_size: int = ENCODING_BATCH_SIZE,
+        precision: str = "fp32",
+        adaptive_batching: bool = True,
+    ):
         import numpy as np
         import torch
         from sentence_transformers import SentenceTransformer, util
@@ -177,12 +185,43 @@ class SemanticMatcher:
         else:
             device = DEVICE
 
-        self.encoding_batch_size = encoding_batch_size
+        if precision not in {"fp32", "fp16"}:
+            raise ValueError("precision must be fp32 or fp16")
+
         self._numpy = np
+        self._torch = torch
         self._util = util
         self.device = device
-        logger.info(f"Loading semantic model: {SEMANTIC_MODEL_NAME} on {device}")
-        self.model = SentenceTransformer(SEMANTIC_MODEL_NAME, device=device)
+        self.precision = precision
+        if precision == "fp16" and not str(device).startswith("cuda"):
+            logger.warning("FP16 was requested without CUDA; falling back to FP32")
+            self.precision = "fp32"
+        self.configured_batch_size = encoding_batch_size
+        self.encoding_batch_size = encoding_batch_size
+        self.adaptive_batching = adaptive_batching
+        self.minimum_batch_size = min(8, encoding_batch_size)
+        self._stable_batches = 0
+        self._runtime_stats = {"oom_retries": 0, "batch_reductions": 0}
+        self.embedding_cache_namespace = (
+            f"{SEMANTIC_MODEL_NAME}@{SEMANTIC_MODEL_REVISION}:{self.precision}"
+        )
+        self.semantic_cache_namespace = (
+            f"{self.embedding_cache_namespace}:anchors={_ANCHOR_DIGEST}"
+        )
+        logger.info(
+            "Loading semantic model: %s@%s on %s (%s)",
+            SEMANTIC_MODEL_NAME,
+            SEMANTIC_MODEL_REVISION[:12],
+            device,
+            self.precision,
+        )
+        self.model = SentenceTransformer(
+            SEMANTIC_MODEL_NAME,
+            device=device,
+            revision=SEMANTIC_MODEL_REVISION,
+        )
+        if self.precision == "fp16":
+            self.model.half()
         logger.info("Encoding concept anchors...")
         self.anchor_embeddings = self.model.encode(
             CONCEPT_ANCHORS,
@@ -191,6 +230,104 @@ class SemanticMatcher:
             device=device,
         )
         logger.info(f"Encoded {len(CONCEPT_ANCHORS)} concept anchors")
+
+    def _is_cuda_oom(self, exc: RuntimeError) -> bool:
+        return str(self.device).startswith("cuda") and "out of memory" in str(exc).lower()
+
+    def _adjust_for_memory_pressure(self) -> None:
+        if not self.adaptive_batching or not str(self.device).startswith("cuda"):
+            return
+        try:
+            free_bytes, total_bytes = self._torch.cuda.mem_get_info()
+        except RuntimeError:
+            return
+        if total_bytes and free_bytes / total_bytes < 0.12:
+            reduced = max(self.minimum_batch_size, self.encoding_batch_size // 2)
+            if reduced < self.encoding_batch_size:
+                self.encoding_batch_size = reduced
+                self._runtime_stats["batch_reductions"] += 1
+                self._stable_batches = 0
+                logger.warning(
+                    "GPU memory pressure reduced encoding batch size to %s",
+                    self.encoding_batch_size,
+                )
+
+    def _recover_batch_size(self) -> None:
+        if not self.adaptive_batching or self.encoding_batch_size >= self.configured_batch_size:
+            return
+        self._stable_batches += 1
+        if self._stable_batches < 8:
+            return
+        restored = min(self.configured_batch_size, self.encoding_batch_size * 2)
+        if restored > self.encoding_batch_size:
+            self.encoding_batch_size = restored
+            logger.info("Restored encoding batch size to %s", restored)
+        self._stable_batches = 0
+
+    def _encode_tensor(self, paragraphs: list[str]):
+        self._adjust_for_memory_pressure()
+        while True:
+            try:
+                embeddings = self.model.encode(
+                    paragraphs,
+                    batch_size=self.encoding_batch_size,
+                    convert_to_tensor=True,
+                    show_progress_bar=False,
+                    device=self.device,
+                )
+                self._recover_batch_size()
+                return embeddings
+            except RuntimeError as exc:
+                if not self._is_cuda_oom(exc) or not self.adaptive_batching:
+                    raise
+                reduced = max(self.minimum_batch_size, self.encoding_batch_size // 2)
+                if reduced >= self.encoding_batch_size:
+                    raise
+                self.encoding_batch_size = reduced
+                self._runtime_stats["oom_retries"] += 1
+                self._runtime_stats["batch_reductions"] += 1
+                self._stable_batches = 0
+                self._torch.cuda.empty_cache()
+                logger.warning(
+                    "CUDA OOM recovered by reducing encoding batch size to %s",
+                    reduced,
+                )
+
+    def encode_paragraphs(self, paragraphs: list[str]):
+        """Encode text once and return cacheable CPU vectors."""
+        if not paragraphs:
+            return self._numpy.empty((0, 0), dtype=self._numpy.float32)
+        embeddings = self._encode_tensor(paragraphs)
+        dtype = self._numpy.float16 if self.precision == "fp16" else self._numpy.float32
+        return embeddings.detach().cpu().numpy().astype(dtype, copy=False)
+
+    def score_embeddings(self, embeddings) -> list[tuple[float, str]]:
+        """Score cached or freshly encoded vectors against current anchors."""
+        if len(embeddings) == 0:
+            return []
+        matrix = self._numpy.stack(embeddings)
+        tensor = self._torch.as_tensor(
+            matrix,
+            device=self.device,
+            dtype=self.anchor_embeddings.dtype,
+        )
+        cos_scores = self._util.cos_sim(tensor, self.anchor_embeddings)
+        results = []
+        for row in cos_scores:
+            scores = row.detach().float().cpu().numpy()
+            max_idx = int(self._numpy.argmax(scores))
+            results.append((float(scores[max_idx]), CONCEPT_ANCHORS[max_idx]))
+        return results
+
+    def score_paragraphs_with_embeddings(self, paragraphs: list[str]):
+        """Return semantic results together with reusable embeddings."""
+        embeddings = self.encode_paragraphs(paragraphs)
+        return self.score_embeddings(embeddings), embeddings
+
+    def consume_runtime_stats(self) -> dict[str, int]:
+        stats = {**self._runtime_stats, "encoding_batch_size": self.encoding_batch_size}
+        self._runtime_stats = {"oom_retries": 0, "batch_reductions": 0}
+        return stats
 
     def score_paragraphs(self, paragraphs: list[str]) -> list[tuple[float, str]]:
         """
@@ -205,27 +342,7 @@ class SemanticMatcher:
         if not paragraphs:
             return []
 
-        # Encode all paragraphs in a batch
-        para_embeddings = self.model.encode(
-            paragraphs,
-            batch_size=self.encoding_batch_size,
-            convert_to_tensor=True,
-            show_progress_bar=False,
-            device=self.device,
-        )
-
-        # Compute cosine similarity against all concept anchors
-        # Shape: (num_paragraphs, num_anchors)
-        cos_scores = self._util.cos_sim(para_embeddings, self.anchor_embeddings)
-
-        results = []
-        for i in range(len(paragraphs)):
-            scores = cos_scores[i].cpu().numpy()
-            max_idx = int(self._numpy.argmax(scores))
-            max_score = float(scores[max_idx])
-            best_concept = CONCEPT_ANCHORS[max_idx]
-            results.append((max_score, best_concept))
-
+        results, _embeddings = self.score_paragraphs_with_embeddings(paragraphs)
         return results
 
 
@@ -753,11 +870,17 @@ class HybridMatcher:
         threshold: float = SEMANTIC_THRESHOLD,
         encoding_batch_size: int = ENCODING_BATCH_SIZE,
         narrative_min_indicators: int = MIN_NARRATIVE_INDICATORS,
+        precision: str = "fp32",
+        adaptive_batching: bool = True,
     ):
         self.threshold = threshold
         self.narrative_min_indicators = narrative_min_indicators
         self.keyword_matcher = KeywordMatcher()
-        self.semantic_matcher = SemanticMatcher(encoding_batch_size)
+        self.semantic_matcher = SemanticMatcher(
+            encoding_batch_size,
+            precision=precision,
+            adaptive_batching=adaptive_batching,
+        )
 
         if NARRATIVE_FILTER_ENABLED:
             self.narrative_filter = NarrativeFilter()
@@ -794,11 +917,64 @@ class HybridMatcher:
         if not batch:
             return []
 
+        prefiltered = self.prefilter_semantic_batch(batch)
+        active_indexes = [index for index in range(len(batch)) if index not in prefiltered]
+        scores = [prefiltered.get(index, (-1.0, "pre-filtered boilerplate")) for index in range(len(batch))]
+        if active_indexes:
+            active_scores = self.score_batch_stage2([batch[index] for index in active_indexes])
+            for index, score in zip(active_indexes, active_scores):
+                scores[index] = score
+        return self.decisions_from_scores(batch, scores)
+
+    @property
+    def embedding_cache_namespace(self) -> str:
+        return self.semantic_matcher.embedding_cache_namespace
+
+    @property
+    def semantic_cache_namespace(self) -> str:
+        return self.semantic_matcher.semantic_cache_namespace
+
+    def score_batch_stage2(
+        self,
+        batch: list[tuple[Paragraph, list[str]]],
+    ) -> list[tuple[float, str]]:
+        return self.semantic_matcher.score_paragraphs(
+            [paragraph.text for paragraph, _keywords in batch]
+        )
+
+    def prefilter_semantic_batch(
+        self,
+        batch: list[tuple[Paragraph, list[str]]],
+    ) -> dict[int, tuple[float, str]]:
+        """Skip GPU work for hard narrative negatives that could never pass."""
+        if self.narrative_filter is None:
+            return {}
+        return {
+            index: (-1.0, "pre-filtered boilerplate")
+            for index, (paragraph, _keywords) in enumerate(batch)
+            if self.narrative_filter.count_indicators(paragraph.text) <= -50
+        }
+
+    def score_batch_stage2_with_embeddings(
+        self,
+        batch: list[tuple[Paragraph, list[str]]],
+    ):
+        return self.semantic_matcher.score_paragraphs_with_embeddings(
+            [paragraph.text for paragraph, _keywords in batch]
+        )
+
+    def score_cached_embeddings(self, embeddings) -> list[tuple[float, str]]:
+        return self.semantic_matcher.score_embeddings(embeddings)
+
+    def decisions_from_scores(
+        self,
+        batch: list[tuple[Paragraph, list[str]]],
+        scores: list[tuple[float, str]],
+    ) -> list[MatchDecision]:
+        if len(batch) != len(scores):
+            raise ValueError("batch and semantic scores must have the same length")
         paragraphs = [item[0] for item in batch]
         keywords = [item[1] for item in batch]
-        scores = self.semantic_matcher.score_paragraphs(
-            [paragraph.text for paragraph in paragraphs]
-        )
         decisions: list[MatchDecision] = []
 
         for paragraph, matched_keywords, (score, concept) in zip(
@@ -812,7 +988,9 @@ class HybridMatcher:
                 else self.narrative_min_indicators
             )
             rejection_reason = None
-            if score < self.threshold:
+            if score < 0 and concept == "pre-filtered boilerplate":
+                rejection_reason = "boilerplate_pre_filter"
+            elif score < self.threshold:
                 rejection_reason = "semantic_threshold"
             elif self.narrative_filter and narrative_score < self.narrative_min_indicators:
                 rejection_reason = "narrative_threshold"

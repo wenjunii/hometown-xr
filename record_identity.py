@@ -60,6 +60,16 @@ def content_fingerprint(url: str, paragraph: str) -> str:
     return _digest([normalize_url(url), normalize_text(paragraph)])
 
 
+def text_fingerprint(text: str) -> str:
+    """Identify normalized text independently of URL and crawl provenance."""
+    return _digest([normalize_text(text)])
+
+
+def story_fingerprint(text: str) -> str:
+    """Return the stable canonical identifier used by story datasets."""
+    return text_fingerprint(text)
+
+
 def simhash64(text: str) -> int:
     """Return a locality-sensitive 64-bit fingerprint for near-duplicate text."""
     normalized = normalize_text(text)

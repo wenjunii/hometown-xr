@@ -13,6 +13,7 @@ The following remain local to each PC:
 - `.venv/`
 - `data/models/`
 - `data/hardware-profile.local.json`
+- `data/cache/`
 - `data/metrics/`
 - `data/parquet/`
 - live candidate evaluation samples
@@ -49,15 +50,18 @@ Test-Path .\data\.crawler.lock
 
 The result must be `False`.
 
-Then validate, commit, and push:
+Then verify output, compact metadata, commit every tracked project change, and
+push in one command:
 
 ```powershell
-python main.py verify-output
-git status --short
-git add --all
-git commit -m "checkpoint: hand off crawler state"
-.\scripts\handoff.ps1 -Direction push
+.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"
 ```
+
+The compatibility form is
+`.\scripts\handoff.ps1 -Direction push -Message "checkpoint: hand off crawler state"`.
+Use `-NoPush` with `checkpoint.ps1` to create the verified local commit without
+sending it. `-ForceVacuum` forces a full SQLite vacuum; normal checkpoints
+vacuum only after a schema migration or when enough free pages exist.
 
 Do not copy a live SQLite database, WAL sidecar, staging directory, or Parquet
 export. A clean shutdown leaves interrupted sources pending and keeps their old
@@ -73,6 +77,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\.venv\Scripts\python.exe main.py doctor --profile 3080
 .\.venv\Scripts\python.exe main.py status
 .\.venv\Scripts\python.exe main.py verify-output
+.\.venv\Scripts\python.exe main.py cache stats
 ```
 
 Rerun `scripts\setup.ps1` whenever dependency lock files changed. Resume with:

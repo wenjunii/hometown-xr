@@ -11,9 +11,11 @@ import signal
 import sys
 
 from config import (
+    CACHE_DIR,
     DATA_DIR,
     DB_PATH,
     DEFAULT_CRAWL_ID,
+    DOMAIN_STORY_CAP,
     HARDWARE_PROFILES,
     LANG_DETECTION_THRESHOLD,
     LEASE_TIMEOUT_SECONDS,
@@ -136,6 +138,9 @@ def run(crawl_ids: list[str], limit: int | None, settings: RuntimeSettings) -> N
             logger.info("CPU parser workers: %s", settings.workers)
             logger.info("Candidate batch: %s", settings.candidate_batch_size)
             logger.info("Shared inference batch: %s", settings.inference_batch_size)
+            logger.info("Model precision: %s", settings.precision)
+            logger.info("Adaptive batching: %s", settings.adaptive_batching)
+            logger.info("Inference cache: %s", settings.cache_enabled)
             logger.info("Semantic threshold: %s", settings.semantic_threshold)
             logger.info("=" * 70)
 
@@ -232,7 +237,7 @@ def reset_data() -> None:
     with CrawlerRunLock("maintenance"):
         if DB_PATH.exists():
             DB_PATH.unlink()
-        for directory in (OUTPUT_DIR, DATA_DIR / "exports", PARQUET_DIR):
+        for directory in (OUTPUT_DIR, DATA_DIR / "exports", PARQUET_DIR, CACHE_DIR):
             if directory.exists():
                 shutil.rmtree(directory)
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -248,6 +253,7 @@ def doctor(profile_name: str) -> int:
     print(f"  Candidate batch: {profile.candidate_batch_size}")
     print(f"  Inference batch: {profile.inference_batch_size}")
     print(f"  Encoding batch: {profile.encoding_batch_size}")
+    print(f"  Precision: {profile.precision}")
     print(f"  Database: {'present' if DB_PATH.exists() else 'not created'}")
     print(f"  Output directory: {OUTPUT_DIR}")
     try:
@@ -264,33 +270,24 @@ def doctor(profile_name: str) -> int:
 
 
 def verify_output() -> int:
+    from checkpoint import verify_output_integrity
+
     with CrawlerRunLock("verify-output"):
-        writer = OutputWriter()
-        manifests = sorted(writer.manifests_dir.glob("*.json"))
-        failures = 0
-        covered_shards = set()
-        for manifest_path in manifests:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            covered_shards.update(shard["path"] for shard in manifest.get("shards", []))
-            errors = writer.verify_source(manifest["source_file"])
-            if errors:
-                failures += 1
-                print(f"{manifest['source_file']}: {'; '.join(errors)}")
-        all_shards = {
-            path.relative_to(writer.output_dir).as_posix()
-            for path in writer.output_dir.glob("*/*.jsonl.gz")
-        }
-        uncovered = sorted(all_shards - covered_shards)
-        for relative in uncovered[:20]:
+        result = verify_output_integrity()
+        for failure in result["source_failures"][:20]:
+            print(f"{failure['source_file']}: {'; '.join(failure['errors'])}")
+        for relative in result["uncovered_shards"][:20]:
             print(f"Missing manifest coverage: {relative}")
-        if len(uncovered) > 20:
-            print(f"... and {len(uncovered) - 20} more uncovered shards")
-        failures += len(uncovered)
-        print(
-            f"Verified {len(manifests)} source manifests and {len(all_shards)} shards; "
-            f"{failures} integrity errors."
+        omitted = max(0, len(result["source_failures"]) - 20) + max(
+            0, len(result["uncovered_shards"]) - 20
         )
-        return 1 if failures else 0
+        if omitted > 0:
+            print(f"... and {omitted} more errors")
+        print(
+            f"Verified {result['manifests']} source manifests and {result['shards']} shards; "
+            f"{result['integrity_errors']} integrity errors."
+        )
+        return 0 if result["valid"] else 1
 
 
 def _runtime_settings(args) -> RuntimeSettings:
@@ -303,6 +300,9 @@ def _runtime_settings(args) -> RuntimeSettings:
         encoding_batch_size=args.encoding_batch_size or profile.encoding_batch_size,
         semantic_threshold=args.threshold,
         language_threshold=args.language_threshold,
+        precision=profile.precision if args.precision == "auto" else args.precision,
+        adaptive_batching=not args.no_adaptive_batching,
+        cache_enabled=not args.no_cache,
     )
     if settings.workers <= 0:
         raise ValueError("workers must be positive")
@@ -325,7 +325,12 @@ def _evaluation_command(args) -> None:
     if args.evaluation_command == "sample":
         print(json.dumps(build_annotation_sample(size=args.size), indent=2))
     elif args.evaluation_command == "annotate":
-        annotate()
+        print(
+            json.dumps(
+                annotate(language=args.language, limit=args.limit),
+                indent=2,
+            )
+        )
     elif args.evaluation_command == "report":
         print(json.dumps(evaluation_report(), indent=2))
 
@@ -352,12 +357,29 @@ def main() -> None:
     )
     run_parser.add_argument("--inference-batch-size", type=int)
     run_parser.add_argument("--encoding-batch-size", type=int)
+    run_parser.add_argument("--precision", choices=["auto", "fp32", "fp16"], default="auto")
+    run_parser.add_argument("--no-adaptive-batching", action="store_true")
+    run_parser.add_argument("--no-cache", action="store_true")
 
     subparsers.add_parser("status", help="show processing progress")
     subparsers.add_parser("metrics", help="show the latest operational metrics")
     subparsers.add_parser("list", help="list available crawls")
     subparsers.add_parser("reset", help="wipe output and progress")
     subparsers.add_parser("verify-output", help="verify source shard checksums")
+
+    checkpoint_parser = subparsers.add_parser(
+        "checkpoint",
+        help="verify and compact durable state for handoff",
+    )
+    checkpoint_parser.add_argument("--no-verify", action="store_true")
+    checkpoint_parser.add_argument("--no-compact-manifests", action="store_true")
+    checkpoint_parser.add_argument("--no-compact-db", action="store_true")
+    checkpoint_parser.add_argument("--force-vacuum", action="store_true")
+
+    cache_parser = subparsers.add_parser("cache", help="inspect or clear local inference cache")
+    cache_subparsers = cache_parser.add_subparsers(dest="cache_command", required=True)
+    cache_subparsers.add_parser("stats")
+    cache_subparsers.add_parser("clear")
 
     retry_parser = subparsers.add_parser("retry", help="retry failed files now")
     retry_parser.add_argument("--crawl")
@@ -379,6 +401,8 @@ def main() -> None:
     parquet_parser = subparsers.add_parser("parquet", help="export partitioned Parquet")
     parquet_parser.add_argument("--dedupe", choices=["none", "exact", "near"], default="exact")
     parquet_parser.add_argument("--near-distance", type=int, default=3)
+    parquet_parser.add_argument("--domain-warning-share", type=float, default=0.10)
+    parquet_parser.add_argument("--domain-story-cap", type=int, default=DOMAIN_STORY_CAP)
 
     evaluation_parser = subparsers.add_parser("evaluation", help="sample and evaluate filters")
     evaluation_subparsers = evaluation_parser.add_subparsers(
@@ -386,7 +410,9 @@ def main() -> None:
     )
     sample_parser = evaluation_subparsers.add_parser("sample")
     sample_parser.add_argument("--size", type=int, default=400)
-    evaluation_subparsers.add_parser("annotate")
+    annotate_parser = evaluation_subparsers.add_parser("annotate")
+    annotate_parser.add_argument("--language")
+    annotate_parser.add_argument("--limit", type=int)
     evaluation_subparsers.add_parser("report")
 
     args = parser.parse_args()
@@ -414,6 +440,29 @@ def main() -> None:
         raise SystemExit(doctor(args.profile))
     elif args.command == "verify-output":
         raise SystemExit(verify_output())
+    elif args.command == "checkpoint":
+        from checkpoint import create_checkpoint
+
+        with CrawlerRunLock("checkpoint"):
+            print(
+                json.dumps(
+                    create_checkpoint(
+                        verify=not args.no_verify,
+                        compact_manifests=not args.no_compact_manifests,
+                        compact_database=not args.no_compact_db,
+                        force_vacuum=args.force_vacuum,
+                    ),
+                    indent=2,
+                )
+            )
+    elif args.command == "cache":
+        from inference_cache import InferenceCache
+
+        with CrawlerRunLock("cache-maintenance"):
+            with InferenceCache() as cache:
+                if args.cache_command == "clear":
+                    cache.clear()
+                print(json.dumps(cache.stats(), indent=2))
     elif args.command == "benchmark":
         from benchmark import run_benchmark
 
@@ -427,14 +476,25 @@ def main() -> None:
     elif args.command == "parquet":
         from parquet_export import export_parquet
 
+        if not 0 < args.domain_warning_share <= 1:
+            parser.error("--domain-warning-share must be between 0 and 1")
+        if args.domain_story_cap <= 0:
+            parser.error("--domain-story-cap must be positive")
         with CrawlerRunLock("parquet"):
             print(
                 json.dumps(
-                    export_parquet(dedupe=args.dedupe, near_distance=args.near_distance),
+                    export_parquet(
+                        dedupe=args.dedupe,
+                        near_distance=args.near_distance,
+                        domain_share_warning=args.domain_warning_share,
+                        domain_story_cap=args.domain_story_cap,
+                    ),
                     indent=2,
                 )
             )
     elif args.command == "evaluation":
+        if getattr(args, "limit", None) is not None and args.limit <= 0:
+            parser.error("--limit must be positive")
         _evaluation_command(args)
 
 

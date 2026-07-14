@@ -9,12 +9,18 @@ Canonical repository: [wenjunii/hometown-xr](https://github.com/wenjunii/hometow
 
 The extractor uses two local machine-learning models:
 
-- `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` scores text
-  against the concepts in `concepts.py`.
+- `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, pinned to
+  revision `e8f8c211226b894fcb81acc59f3b34ba3efd5f42`, scores text against the
+  concepts in `concepts.py`.
 - FastText `lid.176.bin` identifies language and records prediction confidence.
 
 Neither model is a generative LLM. The crawler does not call OpenAI, Gemini,
 Anthropic, or another hosted text-generation API.
+
+A versioned local SQLite cache stores sentence embeddings, raw semantic scores,
+and raw language predictions by normalized text hash. Model revision, precision,
+and concept-anchor version are part of each cache namespace, so stale results
+cannot cross a model change. `data/cache/` remains local to each workstation.
 
 ## Workstation Safety
 
@@ -25,7 +31,7 @@ Before switching machines:
 
 1. Press `Ctrl+C` once and wait for the final summary.
 2. Confirm `data/.crawler.lock` is gone.
-3. Commit and push on the old PC.
+3. Run `scripts\checkpoint.ps1` on the old PC to verify, compact, commit, and push.
 4. Pull Git and Git LFS on the new PC.
 5. Run `main.py doctor` and `main.py status` before resuming.
 
@@ -39,6 +45,8 @@ One run has seven lightweight CPU parser processes and one inference owner:
 WET/ARC sources
     -> bounded CPU download/parse/keyword workers
     -> bounded candidate queue
+    -> hard-boilerplate prefilter
+    -> versioned score/embedding cache
     -> one shared sentence-transformer on the GPU
     -> FastText language detection
     -> source-scoped staged output
@@ -48,7 +56,9 @@ WET/ARC sources
 
 The semantic model is loaded once, not once per worker. The process pool and
 GPU service are reused across crawls. Queue backpressure keeps RAM bounded when
-the CPU workers are faster than inference.
+the CPU workers are faster than inference. Repeated text bypasses model encoding,
+and hard navigation, policy, form, lyric, and repetitive-text negatives are
+rejected before GPU work without changing which records can pass.
 
 Each source has a SQLite lease. Interrupted sources return to `pending`, hard
 crashes are recovered after the lease timeout, and failed sources retry with
@@ -101,10 +111,10 @@ the same root implementation and shared `data/` checkpoint.
 
 ## Hardware Profiles
 
-| Profile | CPU workers | Candidate batch | Inference batch | Encoding batch |
-| --- | ---: | ---: | ---: | ---: |
-| `3080` | 7 | 100 | 800 | 128 |
-| `4090` | 7 | 150 | 1600 | 256 |
+| Profile | CPU workers | Candidate batch | Inference batch | Encoding batch | Precision |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `3080` | 7 | 100 | 800 | 128 | FP32 |
+| `4090` | 7 | 150 | 1600 | 256 | FP32 |
 
 `candidate_batch_size` controls worker-to-parent messages.
 `inference_batch_size` combines candidates from multiple sources before one
@@ -116,7 +126,10 @@ Benchmark this PC and write an ignored, machine-local override:
 .\scripts\benchmark.ps1 -Profile 3080
 ```
 
-Use `-Quick` for a shorter pass. Results are written to
+Use `-Quick` for a shorter pass. The benchmark measures FP32 and FP16, checks
+maximum score drift and concept agreement on a fixed audit set, and selects
+FP16 only when drift stays within the safety bound and throughput improves by
+at least five percent. Results are written to
 `data/hardware-profile.local.json`; that file is intentionally not synchronized
 because the 3080 and 4090 should keep their own measured settings.
 
@@ -124,24 +137,31 @@ One-run overrides are also available:
 
 ```powershell
 python main.py run --profile 3080 --workers 7 `
-  --candidate-batch-size 100 --inference-batch-size 800 --encoding-batch-size 128
+  --candidate-batch-size 100 --inference-batch-size 800 --encoding-batch-size 128 `
+  --precision fp32
 ```
+
+CUDA OOMs automatically halve the active encoding batch and retry. After eight
+stable batches, the configured size is restored. Use `--no-adaptive-batching`
+or `--no-cache` only for diagnosis.
 
 ## Filtering
 
 Each paragraph passes through:
 
 1. A multilingual keyword prefilter from `keywords.py`.
-2. Sentence-transformer similarity against home and belonging concepts.
-3. A multilingual first-person narrative filter.
+2. A behavior-preserving hard-boilerplate/narrative prefilter.
+3. Cached or fresh sentence-transformer similarity against home concepts.
+4. A multilingual first-person narrative filter.
 
 CJK, Japanese, Korean, and Thai keywords use substring matching where word
 boundaries are unreliable. FastText predictions below the confidence threshold
 are stored under `unknown/` with the original confidence.
 
 Every live candidate can contribute to a deterministic local evaluation sample.
-The sample stores semantic score, narrative score, acceptance, and rejection
-reason so threshold changes can be evaluated against human labels.
+Boundary cases are sampled more aggressively, while coverage sampling and
+language stratification prevent the queue from collapsing around one score or
+language. Human labels are never synthesized.
 
 ## Commands
 
@@ -154,9 +174,12 @@ reason so threshold changes can be evaluated against human labels.
 | `python main.py metrics` | Show latest rates, GPU time, and ETA |
 | `python main.py doctor --profile 3080` | Check Python, PyTorch, CUDA, and profile |
 | `python main.py benchmark --profile 3080` | Benchmark and tune this PC |
+| `python main.py cache stats` | Inspect the local inference cache |
+| `python main.py cache clear` | Rebuild the local inference cache from empty |
 | `python main.py retry --all` | Retry all failed sources immediately |
 | `python main.py recover --minutes 10` | Release expired source leases |
 | `python main.py verify-output` | Verify committed shard checksums |
+| `python main.py checkpoint` | Verify and compact state for handoff |
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
 | `python main.py evaluation sample` | Build a real-text annotation sample |
 | `python main.py evaluation annotate` | Label samples interactively |
@@ -175,8 +198,9 @@ data/
   models/
     lid.176.bin
   output/
+    _manifest-catalog.jsonl.gz
     _manifests/
-      <source-hash>.json
+      <new-source-hash>.json
     en/
       <source-hash>_<source-name>.jsonl.gz
     zh/
@@ -205,8 +229,11 @@ Schema version 2 records include deterministic provenance and content IDs:
 ```
 
 Each source with output has a manifest recording shard paths, row counts, byte
-sizes, and SHA-256 checksums. Zero-match completion is already represented in
-SQLite, so it does not create hundreds of thousands of empty manifest files.
+sizes, and SHA-256 checksums. During crawling, changed sources write loose
+manifests. `main.py checkpoint` merges them into one deterministic compressed
+catalog; tombstones safely remove superseded catalog entries. Zero-match
+completion remains represented in SQLite rather than hundreds of thousands of
+empty manifests.
 
 Migrate existing output to schema version 2 and rebuild manifests with:
 
@@ -227,11 +254,19 @@ python main.py parquet --dedupe exact
 python main.py parquet --dedupe near --near-distance 3
 ```
 
-Parquet is partitioned by `crawl_id` and `language`, compressed with Zstandard,
-and installed by atomic directory swap. Exact deduplication uses normalized
-content fingerprints. Near deduplication uses 64-bit SimHash with an
-SQLite-backed band index, so memory does not grow with the corpus. Duplicate
-decisions and dataset checksums are included in the export manifest.
+The export contains two Zstandard-compressed tables partitioned by `crawl_id`
+and `language`:
+
+- `stories/` contains one canonical text with quality and diversity fields.
+- `provenance/` maps every original crawl capture to its canonical `story_id`.
+
+Exact canonicalization uses normalized text independently of URL. Near
+deduplication uses 64-bit SimHash with an SQLite-backed band index, so memory
+does not grow with the corpus. Nothing is discarded from provenance. Canonical
+rows include domain rank and `within_domain_cap`, explainable boilerplate
+signals, structural template fingerprints, and concept-cluster IDs. The
+manifest reports concentration and diversity diagnostics plus every file
+checksum. Adjust the research-view limit with `--domain-story-cap`.
 
 `data/parquet/` is ignored because it is reproducible and can be large.
 
@@ -245,10 +280,14 @@ python main.py evaluation annotate
 python main.py evaluation report
 ```
 
-Sampling is deterministic and language-stratified. Existing labels are kept
-when a sample is rebuilt. Reports use only human-labeled rows and include an
-overall confusion matrix, per-language metrics, false-positive/false-negative
-IDs, and a semantic/narrative threshold grid search.
+Sampling is deterministic, language-stratified, and prioritizes uncertain
+examples near semantic or narrative thresholds. Existing labels are kept when
+a sample is rebuilt. `annotate --language en --limit 25` supports focused work.
+Reports use only human-labeled rows and include confidence intervals,
+calibration bins, label-balance readiness, per-language support warnings,
+false-positive/false-negative IDs, and a semantic/narrative threshold grid
+search. Recommendations stay marked exploratory until at least 100 labels and
+both classes are present.
 
 The original synthetic regression corpus remains available:
 
@@ -274,8 +313,9 @@ the complete corpus into memory.
 ```
 
 The suite covers leases, retries, interruption, source transactions, stable
-IDs, checksum rollback, multilingual filtering, real WET parsing, spawned
-Windows-compatible orchestration, deduplication, and Parquet export. GitHub
+IDs, checksum rollback, compact manifest catalogs, inference caching,
+multilingual filtering, real WET parsing, spawned Windows-compatible
+orchestration, canonical/provenance deduplication, and Parquet export. GitHub
 Actions runs lint, tests, and compilation on both Windows and Ubuntu without
 downloading GPU models or Git LFS data.
 
@@ -286,6 +326,8 @@ main.py                 CLI and run orchestration
 pipeline.py             bounded CPU queue and shared GPU inference owner
 progress.py             SQLite leases, retries, and checkpoint migration
 output.py               source transactions, stable IDs, and manifests
+inference_cache.py      versioned embedding, score, and language cache
+checkpoint.py           integrity verification and handoff compaction
 processor.py            WET/ARC parsing and counters
 matcher.py              keyword, semantic, and narrative filters
 evaluation.py           real-text sampling, annotation, and reports
@@ -293,6 +335,7 @@ metrics.py              run rates, GPU timing, and ETA
 benchmark.py            local hardware benchmark and autotuning
 dedupe.py               disk-backed exact and SimHash duplicate index
 parquet_export.py       staged partitioned analytical export
+quality.py              boilerplate, template, domain, and diversity signals
 refilter_output.py      transactional schema/filter migration
 4090/                   compatibility launchers only
 scripts/                setup, run, test, benchmark, and handoff commands

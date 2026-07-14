@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime, timezone
 
+import pytest
+
 from progress import ProgressTracker
 
 
@@ -93,3 +95,35 @@ def test_recovers_only_stale_processing_lease(tmp_path):
     assert tracker.recover_stale_leases(60) == 1
     assert _row(tracker.db_path, stale.file_path)["status"] == "pending"
     assert _row(tracker.db_path, live.file_path)["status"] == "processing"
+
+
+def test_compact_rebuilds_oversized_without_rowid_schema_and_guards_active_work(tmp_path):
+    db_path = tmp_path / "progress.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE processing_state ("
+        "file_path TEXT PRIMARY KEY, crawl_id TEXT, status TEXT NOT NULL DEFAULT 'pending', "
+        "records_processed INTEGER NOT NULL DEFAULT 0, "
+        "matches_found INTEGER NOT NULL DEFAULT 0, error_message TEXT, started_at TEXT, "
+        "completed_at TEXT, attempt_count INTEGER NOT NULL DEFAULT 0, next_retry_at TEXT, "
+        "lease_id TEXT, heartbeat_at TEXT) WITHOUT ROWID"
+    )
+    conn.execute(
+        "INSERT INTO processing_state(file_path, crawl_id) VALUES ('one.wet.gz', 'crawl')"
+    )
+    conn.commit()
+    conn.close()
+
+    tracker = ProgressTracker(db_path)
+    claim = tracker.claim_files("crawl", 1)[0]
+    with pytest.raises(RuntimeError, match="processing"):
+        tracker.compact()
+    assert tracker.release_claim(claim)
+
+    result = tracker.compact()
+    assert result["schema_rebuilt_to_rowid"]
+    assert result["rows"] == 1
+    schema = sqlite3.connect(db_path).execute(
+        "SELECT sql FROM sqlite_master WHERE name = 'processing_state'"
+    ).fetchone()[0]
+    assert "WITHOUT ROWID" not in schema.upper()

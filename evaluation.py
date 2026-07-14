@@ -6,6 +6,7 @@ import gzip
 import hashlib
 import heapq
 import json
+import math
 import os
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -15,9 +16,13 @@ from typing import TYPE_CHECKING, Iterable, Iterator
 from config import (
     EVALUATION_DIR,
     EVALUATION_MAX_SAMPLES_PER_SESSION,
+    EVALUATION_MIN_BASELINE_LABELS,
+    EVALUATION_MIN_LANGUAGE_LABELS,
     EVALUATION_SAMPLE_RATE,
+    EVALUATION_UNCERTAIN_SAMPLE_RATE,
     MIN_NARRATIVE_INDICATORS,
     OUTPUT_DIR,
+    SEMANTIC_THRESHOLD,
 )
 from record_identity import stable_record_id
 
@@ -44,6 +49,37 @@ def _read_jsonl(path: Path) -> list[dict]:
         return []
     with path.open("r", encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def decision_uncertainty(
+    semantic_score: float | None,
+    narrative_score: int | None,
+    semantic_threshold: float = SEMANTIC_THRESHOLD,
+    narrative_threshold: int = MIN_NARRATIVE_INDICATORS,
+) -> float:
+    """Prioritize examples close to either model decision boundary."""
+    semantic = 0.0
+    narrative = 0.0
+    if semantic_score is not None:
+        semantic = max(0.0, 1.0 - abs(float(semantic_score) - semantic_threshold) / 0.08)
+    if narrative_score is not None:
+        narrative = max(0.0, 1.0 - abs(int(narrative_score) - narrative_threshold) / 4.0)
+    return round(max(semantic, narrative), 4)
+
+
+def _enrich_for_active_learning(row: dict) -> dict:
+    enriched = dict(row)
+    uncertainty = decision_uncertainty(
+        enriched.get("semantic_score"),
+        enriched.get("narrative_score"),
+    )
+    enriched["schema_version"] = max(2, int(enriched.get("schema_version", 1)))
+    enriched["uncertainty_score"] = uncertainty
+    enriched.setdefault(
+        "selection_reason",
+        "decision_boundary" if uncertainty >= 0.5 else "coverage",
+    )
+    return enriched
 
 
 class DecisionSampler:
@@ -80,12 +116,25 @@ class DecisionSampler:
                 paragraph.text,
             )
             rank = int(sample_id[:16], 16) / float(2**64)
-            if rank >= self.sample_rate or sample_id in self._known:
+            uncertainty = decision_uncertainty(
+                decision.semantic_score,
+                decision.narrative_score,
+            )
+            uncertain_rank = int(sample_id[16:32], 16) / float(2**64)
+            selected_for_coverage = rank < self.sample_rate
+            selected_for_uncertainty = (
+                uncertainty >= 0.5 and uncertain_rank < EVALUATION_UNCERTAIN_SAMPLE_RATE
+            )
+            if (
+                not selected_for_coverage
+                and not selected_for_uncertainty
+                or sample_id in self._known
+            ):
                 continue
             language, confidence = language_detector.detect(paragraph.text)
             selected.append(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "sample_id": sample_id,
                     "collected_at": _utc_now(),
                     "crawl_id": paragraph.crawl_id,
@@ -101,6 +150,12 @@ class DecisionSampler:
                     "narrative_score": decision.narrative_score,
                     "predicted_accept": decision.accepted,
                     "rejection_reason": decision.rejection_reason,
+                    "uncertainty_score": uncertainty,
+                    "selection_reason": (
+                        "decision_boundary"
+                        if selected_for_uncertainty
+                        else "coverage"
+                    ),
                 }
             )
             self._known.add(sample_id)
@@ -134,24 +189,36 @@ def _rank(row: dict) -> int:
     return int(hashlib.sha256(sample_id.encode("utf-8")).hexdigest()[:16], 16)
 
 
-def _stratified_pick(rows: Iterable[dict], limit: int) -> list[dict]:
+def _active_learning_pick(rows: Iterable[dict], limit: int) -> list[dict]:
+    """Round-robin languages while taking decision-boundary cases first."""
     if limit <= 0:
         return []
-    buckets: dict[str, list[tuple[int, str, dict]]] = defaultdict(list)
-    for sequence, row in enumerate(rows):
-        stratum = str(row.get("language") or "unknown")
-        sample_id = str(row.get("sample_id") or row.get("record_id") or _rank(row))
-        item = (-_rank(row), sample_id, sequence, row)
-        bucket = buckets[stratum]
-        if len(bucket) < limit:
-            heapq.heappush(bucket, item)
-        elif item > bucket[0]:
-            heapq.heapreplace(bucket, item)
+    buckets: dict[str, list[tuple[float, int, int, dict]]] = defaultdict(list)
+    for sequence, source_row in enumerate(rows):
+        row = _enrich_for_active_learning(source_row)
+        language = str(row.get("language") or "unknown")
+        item = (
+            float(row.get("uncertainty_score", 0.0)),
+            -_rank(row),
+            sequence,
+            row,
+        )
+        if len(buckets[language]) < limit:
+            heapq.heappush(buckets[language], item)
+        elif item > buckets[language][0]:
+            heapq.heapreplace(buckets[language], item)
 
     ordered = {
-        language: [item[3] for item in sorted(items, key=lambda value: -value[0])]
+        language: [
+            item[3]
+            for item in sorted(
+                items,
+                key=lambda item: (-item[0], -item[1], item[2]),
+            )
+        ]
         for language, items in buckets.items()
     }
+
     selected = []
     while len(selected) < limit:
         added = False
@@ -176,8 +243,8 @@ def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
             record.get("warc_date", ""),
             record.get("paragraph", ""),
         )
-        yield {
-            "schema_version": 1,
+        yield _enrich_for_active_learning({
+            "schema_version": 2,
             "sample_id": sample_id,
             "sample_origin": "committed_output",
             "crawl_id": record.get("crawl_id", ""),
@@ -185,6 +252,7 @@ def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
             "url": record.get("url", ""),
             "warc_date": record.get("warc_date", ""),
             "language": record.get("language", "unknown"),
+            "language_confidence": record.get("language_confidence", 0.0),
             "paragraph": record.get("paragraph", ""),
             "matched_keywords": record.get("matched_keywords", []),
             "semantic_score": record.get("semantic_score"),
@@ -194,7 +262,7 @@ def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
             "rejection_reason": None,
             "label": None,
             "notes": "",
-        }
+        })
 
 
 def build_annotation_sample(
@@ -211,34 +279,34 @@ def build_annotation_sample(
     existing = {row["sample_id"]: row for row in _read_jsonl(annotation_path)}
 
     positive_target = size // 2
-    output_rows = _stratified_pick(_output_annotation_rows(output_dir), positive_target)
+    output_rows = _active_learning_pick(_output_annotation_rows(output_dir), positive_target)
     candidate_rows = _read_jsonl(candidate_path)
     rejected = [
-        {
+        _enrich_for_active_learning({
             **row,
             "sample_origin": "live_candidate",
             "label": None,
             "notes": "",
-        }
+        })
         for row in candidate_rows
         if not row.get("predicted_accept", False)
     ]
-    rejected_rows = _stratified_pick(rejected, size - len(output_rows))
+    rejected_rows = _active_learning_pick(rejected, size - len(output_rows))
 
     rows = output_rows + rejected_rows
     if len(rows) < size:
         selected_ids = {row["sample_id"] for row in rows}
         extras = [
-            {
+            _enrich_for_active_learning({
                 **row,
                 "sample_origin": "live_candidate",
                 "label": None,
                 "notes": "",
-            }
+            })
             for row in candidate_rows
             if row.get("sample_id") not in selected_ids
         ]
-        rows.extend(_stratified_pick(extras, size - len(rows)))
+        rows.extend(_active_learning_pick(extras, size - len(rows)))
     if len(rows) < size:
         selected_ids = {row["sample_id"] for row in rows}
         extra_output = (
@@ -246,19 +314,26 @@ def build_annotation_sample(
             for row in _output_annotation_rows(output_dir)
             if row["sample_id"] not in selected_ids
         )
-        rows.extend(_stratified_pick(extra_output, size - len(rows)))
+        rows.extend(_active_learning_pick(extra_output, size - len(rows)))
 
     for row in rows:
         old = existing.get(row["sample_id"])
         if old:
             row["label"] = old.get("label")
             row["notes"] = old.get("notes", "")
+        row.update(
+            {
+                key: value
+                for key, value in _enrich_for_active_learning(row).items()
+                if key in {"schema_version", "uncertainty_score", "selection_reason"}
+            }
+        )
     selected_ids = {row["sample_id"] for row in rows}
     for old in existing.values():
         if old.get("label") not in {"positive", "negative"}:
             continue
         if old["sample_id"] not in selected_ids:
-            rows.append(old)
+            rows.append(_enrich_for_active_learning(old))
             selected_ids.add(old["sample_id"])
     while len(rows) > size:
         removable = next(
@@ -280,41 +355,86 @@ def build_annotation_sample(
         "predicted_positive": sum(bool(row.get("predicted_accept")) for row in rows),
         "predicted_negative": sum(not bool(row.get("predicted_accept")) for row in rows),
         "labeled": sum(row.get("label") in {"positive", "negative"} for row in rows),
+        "uncertain": sum(float(row.get("uncertainty_score", 0.0)) >= 0.5 for row in rows),
     }
 
 
 def annotate(
     annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
-) -> None:
+    language: str | None = None,
+    limit: int | None = None,
+) -> dict:
     path = Path(annotation_path)
     rows = _read_jsonl(path)
     if not rows:
         raise FileNotFoundError(f"No annotation sample at {path}; run evaluation sample first")
 
+    labeled_now = 0
     for index, row in enumerate(rows, start=1):
         if row.get("label") in {"positive", "negative"}:
             continue
+        if language and row.get("language") != language:
+            continue
+        if limit is not None and labeled_now >= limit:
+            break
         print("\n" + "=" * 78)
         print(f"Sample {index}/{len(rows)} | language={row.get('language', 'unknown')}")
         print(
             f"Model={'ACCEPT' if row.get('predicted_accept') else 'REJECT'} | "
-            f"semantic={row.get('semantic_score')} | narrative={row.get('narrative_score')}"
+            f"semantic={row.get('semantic_score')} | narrative={row.get('narrative_score')} | "
+            f"uncertainty={row.get('uncertainty_score', 0)}"
         )
+        print(f"URL: {row.get('url', '')}")
+        print(f"Selection: {row.get('selection_reason', 'coverage')}")
         print("-" * 78)
         print(row.get("paragraph", ""))
-        answer = input("\n[p]ositive [n]egative [s]kip [q]uit: ").strip().lower()
+        answer = input("\n[p]ositive [n]egative [t]note [s]kip [q]uit: ").strip().lower()
         if answer == "q":
             break
         if answer == "p":
             row["label"] = "positive"
         elif answer == "n":
             row["label"] = "negative"
+        elif answer == "t":
+            row["notes"] = input("Note: ").strip()
+            _atomic_jsonl(path, rows)
+            continue
         else:
             continue
+        labeled_now += 1
         _atomic_jsonl(path, rows)
+    return {
+        "path": str(path),
+        "labeled_now": labeled_now,
+        "labeled_total": sum(
+            row.get("label") in {"positive", "negative"} for row in rows
+        ),
+        "remaining": sum(
+            row.get("label") not in {"positive", "negative"} for row in rows
+        ),
+    }
 
 
-def _classification(rows: list[dict], semantic: float | None = None, narrative: int | None = None) -> dict:
+def _wilson(successes: int, total: int) -> list[float] | None:
+    if total <= 0:
+        return None
+    z = 1.959963984540054
+    estimate = successes / total
+    denominator = 1 + z**2 / total
+    center = (estimate + z**2 / (2 * total)) / denominator
+    margin = (
+        z
+        * math.sqrt(estimate * (1 - estimate) / total + z**2 / (4 * total**2))
+        / denominator
+    )
+    return [round(max(0.0, center - margin), 4), round(min(1.0, center + margin), 4)]
+
+
+def _classification(
+    rows: list[dict],
+    semantic: float | None = None,
+    narrative: int | None = None,
+) -> dict:
     confusion = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
     for row in rows:
         actual = row["label"] == "positive"
@@ -342,28 +462,14 @@ def _classification(rows: list[dict], semantic: float | None = None, narrative: 
     return {
         **confusion,
         "precision": round(precision, 4),
+        "precision_ci95": _wilson(tp, tp + fp),
         "recall": round(recall, 4),
+        "recall_ci95": _wilson(tp, tp + fn),
         "f1": round(f1, 4),
     }
 
 
-def evaluation_report(
-    annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
-    report_path: str | Path = EVALUATION_DIR / "report.json",
-) -> dict:
-    rows = [
-        row
-        for row in _read_jsonl(Path(annotation_path))
-        if row.get("label") in {"positive", "negative"}
-    ]
-    if not rows:
-        raise ValueError("No human-labeled rows are available")
-
-    by_language = {}
-    for language in sorted({str(row.get("language", "unknown")) for row in rows}):
-        language_rows = [row for row in rows if str(row.get("language", "unknown")) == language]
-        by_language[language] = {"samples": len(language_rows), **_classification(language_rows)}
-
+def _best_threshold(rows: list[dict]) -> dict:
     best = None
     for semantic_step in range(30, 71):
         semantic = semantic_step / 100
@@ -374,20 +480,96 @@ def evaluation_report(
                 "narrative_threshold": narrative,
                 **result,
             }
-            if best is None or (candidate["f1"], candidate["precision"], candidate["recall"]) > (
-                best["f1"],
-                best["precision"],
-                best["recall"],
-            ):
+            if best is None or (
+                candidate["f1"],
+                candidate["precision"],
+                candidate["recall"],
+            ) > (best["f1"], best["precision"], best["recall"]):
                 best = candidate
+    return best
+
+
+def _calibration(rows: list[dict]) -> list[dict]:
+    bins: dict[int, list[dict]] = defaultdict(list)
+    for row in rows:
+        score = row.get("semantic_score")
+        if score is not None:
+            bins[min(9, max(0, int(float(score) * 10)))].append(row)
+    result = []
+    for index in sorted(bins):
+        values = bins[index]
+        positives = sum(row["label"] == "positive" for row in values)
+        result.append(
+            {
+                "score_range": [round(index / 10, 1), round((index + 1) / 10, 1)],
+                "samples": len(values),
+                "observed_positive_rate": round(positives / len(values), 4),
+                "ci95": _wilson(positives, len(values)),
+            }
+        )
+    return result
+
+
+def evaluation_report(
+    annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
+    report_path: str | Path = EVALUATION_DIR / "report.json",
+) -> dict:
+    all_rows = _read_jsonl(Path(annotation_path))
+    rows = [
+        row
+        for row in all_rows
+        if row.get("label") in {"positive", "negative"}
+    ]
+    if not rows:
+        raise ValueError("No human-labeled rows are available")
+
+    positives = sum(row["label"] == "positive" for row in rows)
+    negatives = len(rows) - positives
+    baseline_ready = (
+        len(rows) >= EVALUATION_MIN_BASELINE_LABELS and positives > 0 and negatives > 0
+    )
+    by_language = {}
+    for language in sorted({str(row.get("language", "unknown")) for row in rows}):
+        language_rows = [row for row in rows if str(row.get("language", "unknown")) == language]
+        language_positives = sum(row["label"] == "positive" for row in language_rows)
+        language_ready = (
+            len(language_rows) >= EVALUATION_MIN_LANGUAGE_LABELS
+            and 0 < language_positives < len(language_rows)
+        )
+        by_language[language] = {
+            "samples": len(language_rows),
+            "ready_for_calibration": language_ready,
+            "minimum_samples": EVALUATION_MIN_LANGUAGE_LABELS,
+            **_classification(language_rows),
+            "recommended_thresholds": (
+                _best_threshold(language_rows) if language_ready else None
+            ),
+        }
+
+    best = _best_threshold(rows)
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": _utc_now(),
         "human_labeled_samples": len(rows),
+        "unlabeled_samples": sum(
+            row.get("label") not in {"positive", "negative"} for row in all_rows
+        ),
+        "label_balance": {"positive": positives, "negative": negatives},
+        "baseline": {
+            "ready": baseline_ready,
+            "minimum_labels": EVALUATION_MIN_BASELINE_LABELS,
+            "requires_both_classes": True,
+            "warning": (
+                None
+                if baseline_ready
+                else "Threshold recommendations remain exploratory until the baseline is ready."
+            ),
+        },
         "overall": _classification(rows),
         "by_language": by_language,
-        "recommended_thresholds": best,
+        "semantic_calibration": _calibration(rows),
+        "recommended_thresholds": {**best, "exploratory": not baseline_ready},
         "false_positives": [
             row["sample_id"]
             for row in rows

@@ -411,3 +411,100 @@ class ProgressTracker:
                 """
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def compact(
+        self,
+        force_vacuum: bool = False,
+        vacuum_threshold: float = 0.05,
+    ) -> dict:
+        """Optimize checkpoint storage while no crawler owns an active lease."""
+        if not 0 <= vacuum_threshold <= 1:
+            raise ValueError("vacuum_threshold must be between 0 and 1")
+        path = Path(self.db_path)
+        before_bytes = path.stat().st_size if path.exists() else 0
+        conn = self._get_conn()
+        schema_rebuilt = False
+        vacuumed = False
+        try:
+            processing = int(
+                conn.execute(
+                    "SELECT COUNT(*) FROM processing_state WHERE status = 'processing'"
+                ).fetchone()[0]
+            )
+            if processing:
+                raise RuntimeError("cannot compact while files are marked as processing")
+
+            schema_sql = str(
+                conn.execute(
+                    "SELECT sql FROM sqlite_master "
+                    "WHERE type = 'table' AND name = 'processing_state'"
+                ).fetchone()[0]
+            )
+            if "WITHOUT ROWID" in schema_sql.upper():
+                conn.executescript(
+                    """
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE processing_state_compact (
+                        file_path TEXT PRIMARY KEY,
+                        crawl_id TEXT,
+                        status TEXT NOT NULL DEFAULT 'pending',
+                        records_processed INTEGER NOT NULL DEFAULT 0,
+                        matches_found INTEGER NOT NULL DEFAULT 0,
+                        error_message TEXT,
+                        started_at TEXT,
+                        completed_at TEXT,
+                        attempt_count INTEGER NOT NULL DEFAULT 0,
+                        next_retry_at TEXT,
+                        lease_id TEXT,
+                        heartbeat_at TEXT
+                    );
+
+                    INSERT INTO processing_state_compact (
+                        file_path, crawl_id, status, records_processed, matches_found,
+                        error_message, started_at, completed_at, attempt_count,
+                        next_retry_at, lease_id, heartbeat_at
+                    )
+                    SELECT
+                        file_path, crawl_id, status, records_processed, matches_found,
+                        error_message, started_at, completed_at, attempt_count,
+                        next_retry_at, lease_id, heartbeat_at
+                    FROM processing_state;
+
+                    DROP TABLE processing_state;
+                    ALTER TABLE processing_state_compact RENAME TO processing_state;
+                    CREATE INDEX idx_status ON processing_state(status);
+                    CREATE INDEX idx_crawl_status ON processing_state(crawl_id, status);
+                    CREATE INDEX idx_retry_ready
+                        ON processing_state(crawl_id, status, next_retry_at);
+                    COMMIT;
+                    """
+                )
+                schema_rebuilt = True
+
+            page_count = int(conn.execute("PRAGMA page_count").fetchone()[0])
+            free_pages = int(conn.execute("PRAGMA freelist_count").fetchone()[0])
+            free_ratio = free_pages / page_count if page_count else 0.0
+            if force_vacuum or schema_rebuilt or free_ratio >= vacuum_threshold:
+                conn.execute("VACUUM")
+                vacuumed = True
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+        with self._get_conn() as check:
+            after_pages = int(check.execute("PRAGMA page_count").fetchone()[0])
+            after_free_pages = int(check.execute("PRAGMA freelist_count").fetchone()[0])
+            rows = int(check.execute("SELECT COUNT(*) FROM processing_state").fetchone()[0])
+        after_bytes = path.stat().st_size if path.exists() else 0
+        return {
+            "rows": rows,
+            "schema_rebuilt_to_rowid": schema_rebuilt,
+            "vacuumed": vacuumed,
+            "bytes_before": before_bytes,
+            "bytes_after": after_bytes,
+            "bytes_saved": max(0, before_bytes - after_bytes),
+            "pages_after": after_pages,
+            "free_pages_after": after_free_pages,
+        }

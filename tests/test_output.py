@@ -96,3 +96,32 @@ def test_commit_rolls_back_existing_output_when_install_fails(tmp_path, monkeypa
 
     records = _read_records(writer.find_source_outputs(source)[0])
     assert records[0]["paragraph"] == "old"
+
+
+def test_compact_manifest_catalog_supports_overrides_and_tombstones(tmp_path):
+    writer = OutputWriter(tmp_path / "output")
+    source = "crawl-data/example/catalog.warc.wet.gz"
+    first = writer.begin_source(source)
+    first.write_matches([_match("first version")], [("en", 0.9)])
+    first.commit()
+
+    result = writer.compact_manifest_catalog()
+    assert result["manifests"] == 1
+    assert writer.catalog_path.exists()
+    assert not writer.manifest_path(source).exists()
+    assert writer.verify_source(source) == []
+
+    replacement = writer.begin_source(source)
+    replacement.write_matches([_match("replacement version")], [("en", 0.9)])
+    replacement.commit()
+    assert _read_records(writer.find_source_outputs(source)[0])[0]["paragraph"] == (
+        "replacement version"
+    )
+    assert writer.verify_source(source) == []
+
+    writer.begin_source(source).commit()
+    assert writer.find_source_outputs(source) == []
+    assert writer.get_manifest(source) is None
+    compacted = writer.compact_manifest_catalog()
+    assert compacted["manifests"] == 0
+    assert not writer.catalog_path.exists()

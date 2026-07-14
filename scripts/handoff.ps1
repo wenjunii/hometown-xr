@@ -1,7 +1,11 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("pull", "push")]
-    [string]$Direction
+    [string]$Direction,
+
+    [string]$Message = "chore: checkpoint extractor state",
+
+    [switch]$ForceVacuum
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,25 +18,17 @@ if (Test-Path -LiteralPath $Lock) {
 
 Push-Location $Root
 try {
-    $Changes = git status --porcelain
-    if ($Changes) {
-        throw "The worktree is not clean. Commit or resolve local changes before handoff."
-    }
-
     if ($Direction -eq "pull") {
+        $Changes = git status --porcelain
+        if ($Changes) {
+            throw "The worktree is not clean. Commit or resolve local changes before handoff."
+        }
         git pull --ff-only
         git lfs pull
     }
     else {
-        $Python = Join-Path $Root ".venv\Scripts\python.exe"
-        if (Test-Path -LiteralPath $Python) {
-            & $Python (Join-Path $Root "main.py") verify-output
-            if ($LASTEXITCODE -ne 0) {
-                throw "Output verification failed; checkpoint was not pushed."
-            }
-        }
-        git lfs status
-        git push origin HEAD
+        $Checkpoint = Join-Path $PSScriptRoot "checkpoint.ps1"
+        & $Checkpoint -Message $Message -ForceVacuum:$ForceVacuum
     }
 
     if ($LASTEXITCODE -ne 0) {

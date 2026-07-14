@@ -30,10 +30,13 @@ data/output/.staging/
 data/exports/hometown-xr-export-*.db
 data/hardware-profile.local.json
 data/metrics/
+data/cache/
 data/parquet/
 data/.parquet-staging-*/
 data/.parquet-backup-*/
 data/evaluation/candidate_samples.jsonl
+data/output/_manifests/*.json
+data/output/_manifest-catalog.jsonl.gz.tmp
 
 # IDE
 .vscode/
