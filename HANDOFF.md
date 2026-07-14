@@ -118,6 +118,12 @@ or resetting historical work:
 Audit databases and output remain local. Their sampled decisions merge into
 the shared evaluation replay at the next checkpoint.
 
+Check the shared sample balance and next human-review action with:
+
+```powershell
+.\scripts\evaluation.ps1
+```
+
 Then resume with:
 
 ```powershell

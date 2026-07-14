@@ -5,6 +5,21 @@ param(
     [ValidateSet("auto", "3080", "4090")]
     [string]$Profile = "auto",
 
+    [Nullable[int]]$Workers = $null,
+
+    [Nullable[int]]$CandidateBatchSize = $null,
+
+    [Nullable[int]]$InferenceBatchSize = $null,
+
+    [Nullable[int]]$EncodingBatchSize = $null,
+
+    [ValidateSet("auto", "fp32", "fp16")]
+    [string]$Precision = "auto",
+
+    [switch]$NoAdaptiveBatching,
+
+    [switch]$NoCache,
+
     [ValidateRange(1, 10)]
     [int]$PerCrawl = 2,
 
@@ -37,6 +52,16 @@ if ($null -ne $SemanticThreshold -and ($SemanticThreshold -lt 0 -or $SemanticThr
 if ($null -ne $LanguageThreshold -and ($LanguageThreshold -lt 0 -or $LanguageThreshold -gt 1)) {
     throw "LanguageThreshold must be between 0 and 1."
 }
+foreach ($Override in @{
+    Workers = $Workers
+    CandidateBatchSize = $CandidateBatchSize
+    InferenceBatchSize = $InferenceBatchSize
+    EncodingBatchSize = $EncodingBatchSize
+}.GetEnumerator()) {
+    if ($null -ne $Override.Value -and $Override.Value -le 0) {
+        throw "$($Override.Key) must be positive."
+    }
+}
 
 $Arguments = @((Join-Path $Root "main.py"), "audit", $Action, "--per-crawl", $PerCrawl)
 foreach ($CrawlId in $Crawl) {
@@ -63,6 +88,27 @@ if ($Action -eq "run") {
         "--sample-rate", $SampleRate.ToString([Globalization.CultureInfo]::InvariantCulture),
         "--yes"
     )
+    if ($null -ne $Workers) {
+        $Arguments += @("--workers", $Workers)
+    }
+    if ($null -ne $CandidateBatchSize) {
+        $Arguments += @("--candidate-batch-size", $CandidateBatchSize)
+    }
+    if ($null -ne $InferenceBatchSize) {
+        $Arguments += @("--inference-batch-size", $InferenceBatchSize)
+    }
+    if ($null -ne $EncodingBatchSize) {
+        $Arguments += @("--encoding-batch-size", $EncodingBatchSize)
+    }
+    if ($Precision -ne "auto") {
+        $Arguments += @("--precision", $Precision)
+    }
+    if ($NoAdaptiveBatching) {
+        $Arguments += "--no-adaptive-batching"
+    }
+    if ($NoCache) {
+        $Arguments += "--no-cache"
+    }
 }
 
 $ExitCode = 1

@@ -214,6 +214,8 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\audit.ps1` | Plan a deterministic, isolated historical-source audit |
 | `.\scripts\audit.ps1 -Action run -Profile 3080 -Apply` | Run the reviewed audit without changing historical state |
+| `.\scripts\evaluation.ps1` | Show annotation balance and the next evaluation action |
+| `.\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25` | Review a focused batch interactively |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
@@ -402,6 +404,12 @@ ignored `data/audits/`, leaves `data/progress.db` and `data/output/` untouched,
 records local performance metrics, and contributes sampled reject decisions to
 the normal evaluation reservoir. The maximum is ten sources per crawl.
 
+The audit launcher accepts the same deliberate runtime overrides as a crawl:
+`-Workers`, `-CandidateBatchSize`, `-InferenceBatchSize`,
+`-EncodingBatchSize`, `-Precision`, `-NoAdaptiveBatching`, and `-NoCache`.
+Normally, leave them unset so `-Profile 3080` uses the tracked seven-worker
+3080 defaults and `-Profile 4090` uses the 4090 profile.
+
 Use filter signatures to make that audit selective:
 
 ```powershell
@@ -423,20 +431,20 @@ available for automation.
 Build an unlabeled sample from real committed records and sampled live rejects:
 
 ```powershell
-python main.py evaluation status
-python main.py evaluation sample --size 400
-python main.py evaluation annotate --prediction rejected --limit 25
-python main.py evaluation annotate --prediction accepted --limit 75
-python main.py evaluation report
+.\scripts\evaluation.ps1
+.\scripts\evaluation.ps1 -Action sample -Size 400
+.\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25
+.\scripts\evaluation.ps1 -Action annotate -Prediction accepted -Limit 75
+.\scripts\evaluation.ps1 -Action report
 ```
 
-`evaluation status` is always safe and explains whether more audit samples or
-human labels are needed. Reports return a structured not-ready result instead
-of a traceback when no labels exist. Sampling is deterministic,
-language-stratified, and prioritizes uncertain
-examples near semantic or narrative thresholds. Existing labels are kept when
-a sample is rebuilt. `annotate --language en --limit 25` and
-`--prediction accepted|rejected` support focused work.
+`.\scripts\evaluation.ps1` is always safe and explains whether more audit
+samples or human labels are needed. Reports return a structured not-ready
+result instead of a traceback when no labels exist. Sampling is deterministic,
+language-stratified, and prioritizes uncertain examples near semantic or
+narrative thresholds. Existing labels are kept when
+a sample is rebuilt. `-Action annotate -Language en -Limit 25` and
+`-Prediction accepted|rejected` support focused work.
 Reports use only human-labeled rows and include confidence intervals,
 calibration bins, label-balance readiness, per-language support warnings,
 content-category agreement, false-positive/false-negative IDs, and a
@@ -499,7 +507,7 @@ quality.py              boilerplate, template, domain, and diversity signals
 signatures.py           filter contracts, run IDs, and Git provenance
 refilter_output.py      transactional schema/filter migration
 4090/                   compatibility launchers only
-scripts/                setup, run, test, benchmark, and handoff commands
+scripts/                setup, run, audit, evaluation, test, and handoff commands
 tests/                  unit, regression, and integration tests
 ```
 
