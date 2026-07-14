@@ -71,6 +71,10 @@ class Match:
     crawl_id: str = ""
     source_file: str = ""
     narrative_score: int | None = None
+    document_id: str = ""
+    paragraph_index: int = 0
+    context_before: str = ""
+    context_after: str = ""
 
 
 @dataclass
@@ -98,6 +102,10 @@ class MatchDecision:
             crawl_id=self.paragraph.crawl_id,
             source_file=self.paragraph.source_file,
             narrative_score=self.narrative_score,
+            document_id=self.paragraph.document_id,
+            paragraph_index=self.paragraph.paragraph_index,
+            context_before=self.paragraph.context_before,
+            context_after=self.paragraph.context_after,
         )
 
 

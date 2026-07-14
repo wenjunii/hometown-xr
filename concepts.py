@@ -81,3 +81,32 @@ CONCEPT_ANCHORS = [
     "I have moved many times in my life, but the meaning of home — "
     "that deep yearning for a place to call my own — never fades.",
 ]
+
+# Native-language anchors reduce the chance that culturally specific phrasing is
+# under-scored even though the embedding model itself is multilingual. These are
+# additive: English anchors and every historical match remain available.
+MULTILINGUAL_CONCEPT_ANCHORS = {
+    "es": "Nací y crecí en mi pueblo natal; cuando regreso, vuelven los recuerdos de mi infancia.",
+    "pt": "Nasci e cresci na minha cidade natal; quando volto, lembro de toda a minha infância.",
+    "fr": "Je suis né et j'ai grandi dans ma ville natale; y retourner réveille mes souvenirs d'enfance.",
+    "de": "Ich bin in meiner Heimatstadt geboren und aufgewachsen; bei jeder Rückkehr kommen Kindheitserinnerungen zurück.",
+    "zh": "我在故乡出生长大，每次回去，童年的街道、家人和往事都会重新浮现在心里。",
+    "ja": "私は故郷で生まれ育ち、帰るたびに子どもの頃の町や家族の記憶がよみがえります。",
+    "ko": "나는 고향에서 태어나 자랐고, 다시 돌아갈 때마다 어린 시절의 거리와 가족에 대한 기억이 떠오른다.",
+    "ar": "وُلدت ونشأت في بلدتي، وكلما عدت إليها عادت إليّ ذكريات الطفولة والعائلة.",
+    "ru": "Я родился и вырос в родном городе, и каждое возвращение оживляет воспоминания о детстве и семье.",
+    "hi": "मेरा जन्म और पालन-पोषण मेरे गृहनगर में हुआ; वहाँ लौटते ही बचपन और परिवार की यादें ताज़ा हो जाती हैं।",
+}
+
+CONCEPT_ANCHOR_LANGUAGES = ["en"] * len(CONCEPT_ANCHORS) + list(
+    MULTILINGUAL_CONCEPT_ANCHORS
+)
+CONCEPT_ANCHORS.extend(MULTILINGUAL_CONCEPT_ANCHORS.values())
+
+
+def concept_anchor_language(anchor: str) -> str:
+    """Return the language family for a configured semantic anchor."""
+    try:
+        return CONCEPT_ANCHOR_LANGUAGES[CONCEPT_ANCHORS.index(anchor)]
+    except ValueError:
+        return "unknown"

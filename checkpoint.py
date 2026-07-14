@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from config import DB_PATH, OUTPUT_DIR
+from config import DB_ARCHIVE_PATH, DB_PATH, OUTPUT_DIR
+from database_checkpoint import archive_database
 from output import OutputWriter
 from progress import ProgressTracker
 
@@ -44,6 +45,7 @@ def create_checkpoint(
     compact_manifests: bool = True,
     compact_database: bool = True,
     force_vacuum: bool = False,
+    db_archive_path: str | Path | None = None,
 ) -> dict:
     """Verify durable state and compact metadata for a workstation handoff."""
     writer = OutputWriter(output_dir)
@@ -62,6 +64,23 @@ def create_checkpoint(
     database_result = (
         tracker.compact(force_vacuum=force_vacuum) if compact_database else None
     )
+    project_checkpoint = Path(db_path).resolve() == DB_PATH.resolve()
+    archive_target = (
+        Path(db_archive_path)
+        if db_archive_path is not None
+        else DB_ARCHIVE_PATH
+        if project_checkpoint
+        else Path(str(db_path) + ".gz")
+    )
+    archive_result = archive_database(db_path, archive_target)
+    replay_result = None
+    run_history_result = None
+    if project_checkpoint:
+        from evaluation import compact_replay_reservoir
+        from metrics import compact_run_history
+
+        replay_result = compact_replay_reservoir()
+        run_history_result = compact_run_history()
     verification_after = verify_output_integrity(output_dir) if verify else None
     if verification_after is not None and not verification_after["valid"]:
         raise RuntimeError(
@@ -76,4 +95,7 @@ def create_checkpoint(
         "verification": verification_after or verification_before,
         "manifest_compaction": manifest_result,
         "database_compaction": database_result,
+        "database_archive": archive_result,
+        "evaluation_replay": replay_result,
+        "run_history": run_history_result,
     }

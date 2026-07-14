@@ -5,10 +5,11 @@ from __future__ import annotations
 import gzip
 import hashlib
 import heapq
+import io
 import json
 import math
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Iterator
@@ -18,12 +19,15 @@ from config import (
     EVALUATION_MAX_SAMPLES_PER_SESSION,
     EVALUATION_MIN_BASELINE_LABELS,
     EVALUATION_MIN_LANGUAGE_LABELS,
+    EVALUATION_REPLAY_MAX_SAMPLES,
     EVALUATION_SAMPLE_RATE,
     EVALUATION_UNCERTAIN_SAMPLE_RATE,
     MIN_NARRATIVE_INDICATORS,
     OUTPUT_DIR,
+    REPLAY_PATH,
     SEMANTIC_THRESHOLD,
 )
+from quality import classify_content
 from record_identity import stable_record_id
 
 if TYPE_CHECKING:
@@ -47,8 +51,22 @@ def _atomic_jsonl(path: Path, rows: Iterable[dict]) -> None:
 def _read_jsonl(path: Path) -> list[dict]:
     if not path.exists():
         return []
-    with path.open("r", encoding="utf-8") as handle:
+    opener = gzip.open if path.suffix == ".gz" else Path.open
+    with opener(path, "rt" if path.suffix == ".gz" else "r", encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def _atomic_gzip_jsonl(path: Path, rows: Iterable[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
+                for row in rows:
+                    handle.write(
+                        json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+                    )
+    os.replace(temporary, path)
 
 
 def decision_uncertainty(
@@ -134,7 +152,7 @@ class DecisionSampler:
             language, confidence = language_detector.detect(paragraph.text)
             selected.append(
                 {
-                    "schema_version": 2,
+                    "schema_version": 3,
                     "sample_id": sample_id,
                     "collected_at": _utc_now(),
                     "crawl_id": paragraph.crawl_id,
@@ -144,6 +162,10 @@ class DecisionSampler:
                     "language": language,
                     "language_confidence": round(confidence, 4),
                     "paragraph": paragraph.text,
+                    "document_id": paragraph.document_id,
+                    "paragraph_index": paragraph.paragraph_index,
+                    "context_before": paragraph.context_before,
+                    "context_after": paragraph.context_after,
                     "matched_keywords": decision.matched_keywords,
                     "semantic_score": round(decision.semantic_score, 6),
                     "concept_match": decision.concept_match,
@@ -156,6 +178,9 @@ class DecisionSampler:
                         if selected_for_uncertainty
                         else "coverage"
                     ),
+                    "predicted_content_category": classify_content(
+                        paragraph.text, paragraph.url
+                    ).category,
                 }
             )
             self._known.add(sample_id)
@@ -233,6 +258,63 @@ def _active_learning_pick(rows: Iterable[dict], limit: int) -> list[dict]:
     return selected
 
 
+def compact_replay_reservoir(
+    candidate_path: str | Path = EVALUATION_DIR / "candidate_samples.jsonl",
+    replay_path: str | Path = REPLAY_PATH,
+    max_samples: int = EVALUATION_REPLAY_MAX_SAMPLES,
+    clear_local: bool = True,
+) -> dict:
+    """Merge local decisions into a deterministic cross-workstation reservoir."""
+    if max_samples <= 0:
+        raise ValueError("max_samples must be positive")
+    candidate_path = Path(candidate_path)
+    replay_path = Path(replay_path)
+    merged: dict[str, dict] = {}
+    for row in [*_read_jsonl(replay_path), *_read_jsonl(candidate_path)]:
+        sample_id = str(row.get("sample_id", ""))
+        if sample_id:
+            merged[sample_id] = _enrich_for_active_learning(row)
+
+    buckets: dict[tuple[bool, str], list[dict]] = defaultdict(list)
+    for row in merged.values():
+        key = (bool(row.get("predicted_accept")), str(row.get("language", "unknown")))
+        buckets[key].append(row)
+    for rows in buckets.values():
+        rows.sort(
+            key=lambda row: (
+                -float(row.get("uncertainty_score", 0.0)),
+                _rank(row),
+            )
+        )
+
+    selected: list[dict] = []
+    while len(selected) < max_samples:
+        added = False
+        for key in sorted(buckets, key=lambda value: (value[0], value[1])):
+            if buckets[key]:
+                selected.append(buckets[key].pop(0))
+                added = True
+                if len(selected) >= max_samples:
+                    break
+        if not added:
+            break
+    selected.sort(key=lambda row: str(row.get("sample_id", "")))
+    before = replay_path.stat().st_size if replay_path.exists() else 0
+    if selected:
+        _atomic_gzip_jsonl(replay_path, selected)
+    if clear_local and candidate_path.exists():
+        candidate_path.unlink()
+    return {
+        "samples": len(selected),
+        "accepted": sum(bool(row.get("predicted_accept")) for row in selected),
+        "rejected": sum(not bool(row.get("predicted_accept")) for row in selected),
+        "languages": len({str(row.get("language", "unknown")) for row in selected}),
+        "bytes_before": before,
+        "bytes_after": replay_path.stat().st_size if replay_path.exists() else 0,
+        "path": str(replay_path),
+    }
+
+
 def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
     for record in iter_output_records(output_dir):
         source_file = record.get("source_file", "")
@@ -244,7 +326,7 @@ def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
             record.get("paragraph", ""),
         )
         yield _enrich_for_active_learning({
-            "schema_version": 2,
+            "schema_version": 3,
             "sample_id": sample_id,
             "sample_origin": "committed_output",
             "crawl_id": record.get("crawl_id", ""),
@@ -262,6 +344,9 @@ def _output_annotation_rows(output_dir: str | Path) -> Iterator[dict]:
             "rejection_reason": None,
             "label": None,
             "notes": "",
+            "predicted_content_category": classify_content(
+                str(record.get("paragraph", "")), str(record.get("url", ""))
+            ).category,
         })
 
 
@@ -270,6 +355,7 @@ def build_annotation_sample(
     output_dir: str | Path = OUTPUT_DIR,
     candidate_path: str | Path = EVALUATION_DIR / "candidate_samples.jsonl",
     annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
+    replay_path: str | Path = REPLAY_PATH,
 ) -> dict:
     """Create a balanced, language-stratified sample of real project text."""
     if size <= 0:
@@ -280,7 +366,12 @@ def build_annotation_sample(
 
     positive_target = size // 2
     output_rows = _active_learning_pick(_output_annotation_rows(output_dir), positive_target)
-    candidate_rows = _read_jsonl(candidate_path)
+    candidate_rows_by_id = {
+        str(row.get("sample_id", "")): row
+        for row in [*_read_jsonl(Path(replay_path)), *_read_jsonl(candidate_path)]
+        if row.get("sample_id")
+    }
+    candidate_rows = list(candidate_rows_by_id.values())
     rejected = [
         _enrich_for_active_learning({
             **row,
@@ -321,6 +412,7 @@ def build_annotation_sample(
         if old:
             row["label"] = old.get("label")
             row["notes"] = old.get("notes", "")
+            row["content_label"] = old.get("content_label")
         row.update(
             {
                 key: value
@@ -386,6 +478,9 @@ def annotate(
         )
         print(f"URL: {row.get('url', '')}")
         print(f"Selection: {row.get('selection_reason', 'coverage')}")
+        print(
+            f"Content type: {row.get('predicted_content_category', 'unknown')}"
+        )
         print("-" * 78)
         print(row.get("paragraph", ""))
         answer = input("\n[p]ositive [n]egative [t]note [s]kip [q]uit: ").strip().lower()
@@ -401,6 +496,23 @@ def annotate(
             continue
         else:
             continue
+        category_codes = {
+            "p": "personal_prose",
+            "l": "lyrics",
+            "o": "poetry",
+            "c": "commercial",
+            "g": "genealogy",
+            "a": "adult_content",
+            "u": "unknown",
+        }
+        category = input(
+            "Content [p]ersonal [l]yrics p[o]etry [c]ommercial "
+            "[g]enealogy [a]dult [u]nknown [Enter=model]: "
+        ).strip().lower()
+        row["content_label"] = category_codes.get(
+            category,
+            row.get("predicted_content_category", "unknown"),
+        )
         labeled_now += 1
         _atomic_jsonl(path, rows)
     return {
@@ -547,6 +659,24 @@ def evaluation_report(
         }
 
     best = _best_threshold(rows)
+    human_categories = Counter(
+        str(row["content_label"])
+        for row in rows
+        if row.get("content_label")
+    )
+    predicted_categories = Counter(
+        str(row.get("predicted_content_category", "unknown")) for row in rows
+    )
+    categorized = [row for row in rows if row.get("content_label")]
+    category_agreement = (
+        sum(
+            row.get("content_label") == row.get("predicted_content_category")
+            for row in categorized
+        )
+        / len(categorized)
+        if categorized
+        else None
+    )
 
     payload = {
         "schema_version": 2,
@@ -569,6 +699,13 @@ def evaluation_report(
         "overall": _classification(rows),
         "by_language": by_language,
         "semantic_calibration": _calibration(rows),
+        "content_taxonomy": {
+            "human_labeled": dict(sorted(human_categories.items())),
+            "predicted": dict(sorted(predicted_categories.items())),
+            "agreement": round(category_agreement, 4)
+            if category_agreement is not None
+            else None,
+        },
         "recommended_thresholds": {**best, "exploratory": not baseline_ready},
         "false_positives": [
             row["sample_id"]

@@ -15,6 +15,8 @@ class RuntimeSettings:
     precision: str = "fp32"
     adaptive_batching: bool = True
     cache_enabled: bool = True
+    filter_signature: str = ""
+    run_id: str = ""
 
     @property
     def stream_batch_size(self) -> int:

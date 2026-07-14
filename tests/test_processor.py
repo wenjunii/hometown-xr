@@ -1,7 +1,12 @@
 import pytest
 
 import processor
-from processor import ProcessingStats, SourceReadError, extract_paragraphs_from_wet
+from processor import (
+    ProcessingStats,
+    SourceReadError,
+    _extract_paras,
+    extract_paragraphs_from_wet,
+)
 
 
 class Headers:
@@ -38,6 +43,11 @@ class NoKeywords:
         return []
 
 
+class AllKeywords:
+    def find_matches(self, text):
+        return ["home"]
+
+
 def test_record_count_includes_records_without_keyword_candidates(monkeypatch):
     monkeypatch.setattr(processor, "ArchiveIterator", lambda stream: [Record(), Record()])
     stats = ProcessingStats()
@@ -67,3 +77,25 @@ def test_record_read_error_fails_the_source(monkeypatch):
     )
     with pytest.raises(SourceReadError, match="broken stream"):
         list(extract_paragraphs_from_wet(object(), stats=ProcessingStats()))
+
+
+def test_paragraphs_keep_stable_document_context():
+    first = "First context " + "a" * 160
+    middle = "Middle home story " + "b" * 160
+    last = "Last context " + "c" * 160
+    rows = list(
+        _extract_paras(
+            "\n\n".join((first, middle, last)),
+            "https://example.test/story",
+            "2026-01-01",
+            "crawl",
+            AllKeywords(),
+            source_file="source.wet.gz",
+            document_index=7,
+        )
+    )
+    paragraph = rows[1][0]
+    assert paragraph.paragraph_index == 1
+    assert paragraph.context_before == first
+    assert paragraph.context_after == last
+    assert len(paragraph.document_id) == 64

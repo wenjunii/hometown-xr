@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import gzip
+import io
 import json
 import os
 import time
@@ -9,7 +11,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from config import METRICS_DIR, METRICS_FLUSH_SECONDS
+from config import METRICS_DIR, METRICS_FLUSH_SECONDS, RUN_HISTORY_PATH
 
 
 def _utc_now() -> str:
@@ -33,9 +35,14 @@ class MetricsRecorder:
         inference_batch_size: int,
         metrics_dir: str | Path = METRICS_DIR,
         gpu_name: str = "unknown",
+        provenance: dict | None = None,
     ):
         self.metrics_dir = Path(metrics_dir)
-        self.session_id = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:8]}"
+        self.provenance = dict(provenance or {})
+        self.session_id = str(
+            self.provenance.get("run_id")
+            or f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:8]}"
+        )
         self.started_at = _utc_now()
         self._started_monotonic = time.monotonic()
         self._last_flush = 0.0
@@ -126,7 +133,7 @@ class MetricsRecorder:
         remaining = max(self.target_files - finished, 0)
         eta = remaining / rate if rate > 0 else None
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "session_id": self.session_id,
             "started_at": self.started_at,
             "updated_at": _utc_now(),
@@ -165,6 +172,7 @@ class MetricsRecorder:
                 ),
             },
             "eta_seconds": round(eta, 1) if eta is not None else None,
+            "provenance": self.provenance,
         }
 
     def flush(self, force: bool = False, final: bool = False) -> None:
@@ -183,6 +191,52 @@ class MetricsRecorder:
         with (self.metrics_dir / "history.jsonl").open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload) + "\n")
         return payload
+
+
+def compact_run_history(
+    metrics_dir: str | Path = METRICS_DIR,
+    target_path: str | Path = RUN_HISTORY_PATH,
+    max_runs: int = 1_000,
+) -> dict:
+    """Merge machine-local run metrics into a deterministic shared history."""
+    if max_runs <= 0:
+        raise ValueError("max_runs must be positive")
+    target = Path(target_path)
+    rows: dict[str, dict] = {}
+    if target.exists():
+        with gzip.open(target, "rt", encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    row = json.loads(line)
+                    rows[str(row.get("session_id", ""))] = row
+
+    local_path = Path(metrics_dir) / "history.jsonl"
+    if local_path.exists():
+        with local_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    row = json.loads(line)
+                    rows[str(row.get("session_id", ""))] = row
+
+    ordered = sorted(
+        rows.values(),
+        key=lambda row: (str(row.get("started_at", "")), str(row.get("session_id", ""))),
+    )[-max_runs:]
+    before = target.stat().st_size if target.exists() else 0
+    if ordered:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_suffix(target.suffix + ".tmp")
+        with temporary.open("wb") as raw:
+            with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+                with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
+                    for row in ordered:
+                        handle.write(json.dumps(row, sort_keys=True) + "\n")
+        os.replace(temporary, target)
+    return {
+        "runs": len(ordered),
+        "bytes_before": before,
+        "bytes_after": target.stat().st_size if target.exists() else 0,
+    }
 
 
 def latest_metrics(metrics_dir: str | Path = METRICS_DIR) -> dict | None:

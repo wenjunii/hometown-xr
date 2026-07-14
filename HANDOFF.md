@@ -6,7 +6,8 @@ Never run the crawler on both PCs at the same time.
 ## Shared And Local State
 
 Git and Git LFS synchronize source code, tests, documentation,
-`data/progress.db`, committed JSONL output, manifests, and Markdown exports.
+`data/checkpoints/progress.db.gz`, committed JSONL output, manifests, the
+bounded evaluation replay reservoir, run history, and Markdown exports.
 
 The following remain local to each PC:
 
@@ -16,7 +17,8 @@ The following remain local to each PC:
 - `data/cache/`
 - `data/metrics/`
 - `data/parquet/`
-- live candidate evaluation samples
+- `data/progress.db` (restored working copy)
+- uncheckpointed live candidate evaluation samples
 
 This division lets both PCs use one checkpoint while retaining their own GPU
 tuning and reproducible derived data.
@@ -65,6 +67,10 @@ The script first confirms that the current branch is `main` and that
 checks Git LFS, pushes explicitly to `origin/main`, and confirms that the local
 and remote commit IDs match.
 
+Checkpointing verifies every output checksum, compacts manifests and SQLite,
+merges replay/run history, and creates the deterministic compressed database
+archive before Git stages anything.
+
 The compatibility form is
 `.\scripts\handoff.ps1 -Direction push -Message "checkpoint: hand off crawler state"`.
 Use `-NoPush` with `checkpoint.ps1` to create the verified local commit without
@@ -85,10 +91,16 @@ Set-ExecutionPolicy -Scope Process Bypass
 ```
 
 The receive script checks every Git command, permits only a fast-forward pull,
-pulls Git LFS objects, and then runs `doctor`, `status`, and `verify-output`.
-Use `-SkipVerify` only for maintenance when the local Python environment has
-not been installed yet. Rerun `scripts\setup.ps1` whenever dependency lock
-files changed. Resume with:
+refuses to overwrite a working database that differs from its current archive,
+pulls Git LFS objects, atomically restores and validates `data/progress.db`,
+and then runs `doctor`, `status`, and `verify-output`. `-SkipVerify` skips the
+diagnostics but still restores the checkpoint, so a virtual environment is
+required. Rerun `scripts\setup.ps1` whenever dependency lock files changed.
+Resume with:
+
+During the one-time upgrade from the formerly tracked raw database, any command
+that opens a missing project DB also restores the validated archive. This keeps
+the first pull from an older handoff script safe.
 
 ```powershell
 .\scripts\run.ps1 -Profile 3080 run --all
@@ -126,6 +138,6 @@ python main.py retry --all
 ## Conflict Rule
 
 If both PCs accidentally produced commits, stop. Do not merge two
-`data/progress.db` files or combine source shards manually. Keep both branches
-for inspection, choose the checkpoint from the PC that ran most recently, and
+database archives or combine source shards manually. Keep both branches for
+inspection, choose the checkpoint from the PC that ran most recently, and
 resume serially from that checkpoint.

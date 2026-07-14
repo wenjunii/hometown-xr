@@ -201,7 +201,10 @@ class InferenceService:
         self.metrics = metrics
         self.matcher = matcher
         self.language_detector = language_detector
-        self.writer = writer or OutputWriter()
+        self.writer = writer or OutputWriter(
+            run_id=settings.run_id,
+            filter_signature=settings.filter_signature,
+        )
         self.sampler = sampler or DecisionSampler()
         if cache is _AUTO_CACHE:
             if settings.cache_enabled and default_components:
@@ -528,6 +531,8 @@ class ExtractionPipeline:
                 result.records_processed,
                 result.matches_found,
                 claim.lease_id,
+                filter_signature=self.settings.filter_signature,
+                run_id=self.settings.run_id,
             ):
                 completed = 1
                 matches = result.matches_found

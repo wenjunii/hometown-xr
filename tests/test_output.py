@@ -39,9 +39,58 @@ def test_source_commit_is_idempotent_and_records_source(tmp_path):
     records = _read_records(outputs[0])
     assert len(records) == 1
     assert records[0]["source_file"] == source
-    assert records[0]["schema_version"] == 2
+    assert records[0]["schema_version"] == 3
     assert len(records[0]["record_id"]) == 64
     assert len(records[0]["content_fingerprint"]) == 64
+    assert writer.verify_source(source) == []
+
+
+def test_schema_three_records_include_context_and_run_provenance(tmp_path):
+    writer = OutputWriter(
+        tmp_path / "output",
+        run_id="run-123",
+        filter_signature="f" * 64,
+    )
+    source = "crawl-data/example/context.warc.wet.gz"
+    match = _match()
+    match.document_id = "document-123"
+    match.paragraph_index = 4
+    match.context_before = "before"
+    match.context_after = "after"
+    transaction = writer.begin_source(source)
+    transaction.write_matches([match], [("en", 0.99)])
+    transaction.commit()
+
+    record = _read_records(writer.find_source_outputs(source)[0])[0]
+    assert record["document_id"] == "document-123"
+    assert record["paragraph_index"] == 4
+    assert record["context_before"] == "before"
+    assert record["context_after"] == "after"
+    assert record["run_id"] == "run-123"
+    assert record["filter_signature"] == "f" * 64
+    manifest = writer.get_manifest(source)
+    assert manifest["run_id"] == "run-123"
+    assert manifest["filter_signature"] == "f" * 64
+
+
+def test_verifier_keeps_schema_two_shards_backward_compatible(tmp_path):
+    writer = OutputWriter(tmp_path / "output")
+    source = "crawl-data/example/schema-two.warc.wet.gz"
+    transaction = writer.begin_source(source)
+    transaction.write_matches([_match()], [("en", 0.99)])
+    transaction.commit()
+
+    path = writer.find_source_outputs(source)[0]
+    records = _read_records(path)
+    records[0]["schema_version"] = 2
+    with gzip.open(path, "wt", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record) + "\n")
+    manifest = writer.get_manifest(source)
+    manifest["shards"][0]["bytes"] = path.stat().st_size
+    manifest["shards"][0]["sha256"] = output._sha256(path)
+    writer.manifest_path(source).write_text(json.dumps(manifest), encoding="utf-8")
+
     assert writer.verify_source(source) == []
 
 

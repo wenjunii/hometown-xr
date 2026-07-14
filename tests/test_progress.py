@@ -42,7 +42,14 @@ def test_migrates_old_checkpoint_and_retries_failed_file(tmp_path):
     claim = tracker.claim_files("crawl", 1)[0]
     assert claim.file_path == "failed.wet.gz"
     assert claim.attempt_count == 1
-    assert {"attempt_count", "next_retry_at", "lease_id", "heartbeat_at"} <= {
+    assert {
+        "attempt_count",
+        "next_retry_at",
+        "lease_id",
+        "heartbeat_at",
+        "filter_signature",
+        "run_id",
+    } <= {
         row[1] for row in sqlite3.connect(db_path).execute("PRAGMA table_info(processing_state)")
     }
 
@@ -95,6 +102,27 @@ def test_recovers_only_stale_processing_lease(tmp_path):
     assert tracker.recover_stale_leases(60) == 1
     assert _row(tracker.db_path, stale.file_path)["status"] == "pending"
     assert _row(tracker.db_path, live.file_path)["status"] == "processing"
+
+
+def test_filter_signatures_report_stamp_and_selectively_reset(tmp_path):
+    tracker = ProgressTracker(tmp_path / "progress.db")
+    tracker.initialize_paths(["current", "stale", "unknown"], "crawl")
+    tracker.mark_completed("current", 10, 1, filter_signature="new", run_id="run")
+    tracker.mark_completed("stale", 10, 2, filter_signature="old", run_id="old-run")
+    tracker.mark_completed("unknown", 10, 3)
+
+    assert tracker.get_filter_signature_summary("new") == {
+        "current_signature": "new",
+        "completed": 3,
+        "current": 1,
+        "unknown": 1,
+        "stale": 1,
+    }
+    assert tracker.reset_stale_completed("new") == 1
+    assert _row(tracker.db_path, "stale")["status"] == "pending"
+    assert _row(tracker.db_path, "unknown")["status"] == "completed"
+    assert tracker.stamp_unknown_completed("new") == 1
+    assert _row(tracker.db_path, "unknown")["filter_signature"] == "new"
 
 
 def test_compact_rebuilds_oversized_without_rowid_schema_and_guards_active_work(tmp_path):

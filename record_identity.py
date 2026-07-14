@@ -55,6 +55,25 @@ def stable_record_id(
     )
 
 
+def stable_document_id(
+    crawl_id: str,
+    source_file: str,
+    url: str,
+    warc_date: str,
+    document_index: int,
+) -> str:
+    """Identify one source document so adjacent paragraph context can be joined."""
+    return _digest(
+        [
+            crawl_id,
+            source_file.replace("\\", "/"),
+            normalize_url(url),
+            warc_date,
+            str(document_index),
+        ]
+    )
+
+
 def content_fingerprint(url: str, paragraph: str) -> str:
     """Identify exact normalized content independent of crawl provenance."""
     return _digest([normalize_url(url), normalize_text(paragraph)])

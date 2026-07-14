@@ -3,7 +3,12 @@ import json
 import pyarrow.dataset as ds
 
 from dedupe import DedupIndex
-from evaluation import build_annotation_sample, decision_uncertainty, evaluation_report
+from evaluation import (
+    build_annotation_sample,
+    compact_replay_reservoir,
+    decision_uncertainty,
+    evaluation_report,
+)
 from matcher import Match
 from output import OutputWriter
 from parquet_export import export_parquet
@@ -79,6 +84,12 @@ def test_partitioned_parquet_export_is_staged_and_deduplicated(tmp_path):
     saved = json.loads((target / "_manifest.json").read_text(encoding="utf-8"))
     assert saved["files"][0]["sha256"]
     assert saved["tables"]["provenance"]["rows"] == 2
+    assert saved["dataset_schema_version"] == 3
+    assert saved["tables"]["curated"]["rows"] == 1
+    curated = ds.dataset(target / "curated", format="parquet", partitioning="hive")
+    curated_row = curated.to_table().to_pylist()[0]
+    assert curated_row["content_category"] == "personal_prose"
+    assert curated_row["curated_default"]
 
     replacement = export_parquet(output_dir, target, dedupe="exact")
     assert replacement["rows"] == 1
@@ -158,4 +169,32 @@ def test_evaluation_report_marks_small_threshold_search_as_exploratory(tmp_path)
     assert report["recommended_thresholds"]["exploratory"]
     assert report["overall"]["precision_ci95"]
     assert report["semantic_calibration"]
+    assert report["content_taxonomy"]["predicted"]["unknown"] == 2
     assert decision_uncertainty(0.45, 20) == 1.0
+
+
+def test_replay_reservoir_is_deterministic_and_cross_machine_ready(tmp_path):
+    local = tmp_path / "candidate_samples.jsonl"
+    replay = tmp_path / "replay.jsonl.gz"
+    rows = [
+        {
+            "sample_id": f"sample-{index}",
+            "language": "en" if index % 2 else "fr",
+            "predicted_accept": bool(index % 2),
+            "semantic_score": 0.45,
+            "narrative_score": 8,
+            "paragraph": f"sample text {index}",
+        }
+        for index in range(8)
+    ]
+    local.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    result = compact_replay_reservoir(local, replay, max_samples=6)
+    first_bytes = replay.read_bytes()
+    assert result["samples"] == 6
+    assert result["accepted"] > 0
+    assert result["rejected"] > 0
+    assert not local.exists()
+
+    second = compact_replay_reservoir(local, replay, max_samples=6)
+    assert second["samples"] == 6
+    assert replay.read_bytes() == first_bytes

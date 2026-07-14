@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Iterable
 
 from config import (
+    DB_ARCHIVE_PATH,
     DB_PATH,
     LEASE_TIMEOUT_SECONDS,
     MAX_FILE_ATTEMPTS,
@@ -39,7 +40,17 @@ class ProgressTracker:
 
     def __init__(self, db_path: str | Path = DB_PATH):
         self.db_path = str(db_path)
-        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+        path = Path(self.db_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if (
+            path.resolve() == DB_PATH.resolve()
+            and not path.exists()
+            and DB_ARCHIVE_PATH.exists()
+        ):
+            from database_checkpoint import restore_database
+
+            logger.info("Restoring missing project database from %s", DB_ARCHIVE_PATH)
+            restore_database(DB_ARCHIVE_PATH, path)
         self._init_db()
 
     def _get_conn(self) -> sqlite3.Connection:
@@ -65,7 +76,9 @@ class ProgressTracker:
                     attempt_count INTEGER NOT NULL DEFAULT 0,
                     next_retry_at TEXT,
                     lease_id TEXT,
-                    heartbeat_at TEXT
+                    heartbeat_at TEXT,
+                    filter_signature TEXT,
+                    run_id TEXT
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_status
@@ -81,6 +94,8 @@ class ProgressTracker:
                 "next_retry_at": "TEXT",
                 "lease_id": "TEXT",
                 "heartbeat_at": "TEXT",
+                "filter_signature": "TEXT",
+                "run_id": "TEXT",
             }
             for name, declaration in migrations.items():
                 if name not in columns:
@@ -89,6 +104,10 @@ class ProgressTracker:
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_retry_ready "
                 "ON processing_state(crawl_id, status, next_retry_at)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_filter_signature "
+                "ON processing_state(status, filter_signature)"
             )
 
     def initialize_paths(self, file_paths: list[str], crawl_id: str = "") -> None:
@@ -238,6 +257,8 @@ class ProgressTracker:
         records_processed: int,
         matches_found: int,
         lease_id: str | None = None,
+        filter_signature: str = "",
+        run_id: str = "",
     ) -> bool:
         """Commit successful source statistics if the caller owns the lease."""
         now = _utc_now().isoformat()
@@ -246,6 +267,8 @@ class ProgressTracker:
             records_processed,
             matches_found,
             now,
+            filter_signature or None,
+            run_id or None,
             file_path,
         ]
         if lease_id is not None:
@@ -260,6 +283,8 @@ class ProgressTracker:
                     records_processed = ?,
                     matches_found = ?,
                     completed_at = ?,
+                    filter_signature = ?,
+                    run_id = ?,
                     error_message = NULL,
                     next_retry_at = NULL,
                     lease_id = NULL,
@@ -269,6 +294,102 @@ class ProgressTracker:
                 params,
             )
             return cursor.rowcount == 1
+
+    def get_filter_signature_summary(self, current_signature: str) -> dict[str, int | str]:
+        """Classify completed work without changing any checkpoint state."""
+        with self._get_conn() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+                    SUM(CASE WHEN status = 'completed' AND filter_signature = ?
+                             THEN 1 ELSE 0 END) AS current,
+                    SUM(CASE WHEN status = 'completed'
+                                  AND COALESCE(filter_signature, '') = ''
+                             THEN 1 ELSE 0 END) AS unknown,
+                    SUM(CASE WHEN status = 'completed'
+                                  AND COALESCE(filter_signature, '') != ''
+                                  AND filter_signature != ?
+                             THEN 1 ELSE 0 END) AS stale
+                FROM processing_state
+                """,
+                (current_signature, current_signature),
+            ).fetchone()
+        return {
+            "current_signature": current_signature,
+            "completed": int(row["completed"] or 0),
+            "current": int(row["current"] or 0),
+            "unknown": int(row["unknown"] or 0),
+            "stale": int(row["stale"] or 0),
+        }
+
+    def stamp_unknown_completed(self, current_signature: str) -> int:
+        """Adopt audited legacy completions without forcing an expensive recrawl."""
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE processing_state
+                SET filter_signature = ?,
+                    run_id = COALESCE(run_id, 'historical-audit')
+                WHERE status = 'completed'
+                  AND COALESCE(filter_signature, '') = ''
+                """,
+                (current_signature,),
+            )
+            return cursor.rowcount
+
+    def reset_stale_completed(
+        self,
+        current_signature: str,
+        include_unknown: bool = False,
+        crawl_id: str | None = None,
+        limit: int | None = None,
+    ) -> int:
+        """Return stale completed sources to pending while preserving output until replacement."""
+        signature_clause = "COALESCE(filter_signature, '') != ?"
+        if not include_unknown:
+            signature_clause = (
+                "COALESCE(filter_signature, '') != '' AND filter_signature != ?"
+            )
+        clauses = ["status = 'completed'", signature_clause]
+        params: list[object] = [current_signature]
+        if crawl_id is not None:
+            clauses.append("crawl_id = ?")
+            params.append(crawl_id)
+        query = (
+            "SELECT file_path FROM processing_state WHERE "
+            + " AND ".join(clauses)
+            + " ORDER BY completed_at, file_path"
+        )
+        if limit is not None:
+            if limit <= 0:
+                return 0
+            query += " LIMIT ?"
+            params.append(limit)
+        with self._get_conn() as conn:
+            paths = [row[0] for row in conn.execute(query, params).fetchall()]
+            if not paths:
+                return 0
+            conn.executemany(
+                """
+                UPDATE processing_state
+                SET status = 'pending',
+                    records_processed = 0,
+                    matches_found = 0,
+                    error_message = NULL,
+                    started_at = NULL,
+                    completed_at = NULL,
+                    attempt_count = 0,
+                    next_retry_at = NULL,
+                    lease_id = NULL,
+                    heartbeat_at = NULL,
+                    filter_signature = NULL,
+                    run_id = NULL
+                WHERE file_path = ? AND status = 'completed'
+                """,
+                [(path,) for path in paths],
+            )
+            return len(paths)
 
     def mark_failed(
         self,
@@ -456,18 +577,20 @@ class ProgressTracker:
                         attempt_count INTEGER NOT NULL DEFAULT 0,
                         next_retry_at TEXT,
                         lease_id TEXT,
-                        heartbeat_at TEXT
+                        heartbeat_at TEXT,
+                        filter_signature TEXT,
+                        run_id TEXT
                     );
 
                     INSERT INTO processing_state_compact (
                         file_path, crawl_id, status, records_processed, matches_found,
                         error_message, started_at, completed_at, attempt_count,
-                        next_retry_at, lease_id, heartbeat_at
+                        next_retry_at, lease_id, heartbeat_at, filter_signature, run_id
                     )
                     SELECT
                         file_path, crawl_id, status, records_processed, matches_found,
                         error_message, started_at, completed_at, attempt_count,
-                        next_retry_at, lease_id, heartbeat_at
+                        next_retry_at, lease_id, heartbeat_at, filter_signature, run_id
                     FROM processing_state;
 
                     DROP TABLE processing_state;
@@ -476,6 +599,8 @@ class ProgressTracker:
                     CREATE INDEX idx_crawl_status ON processing_state(crawl_id, status);
                     CREATE INDEX idx_retry_ready
                         ON processing_state(crawl_id, status, next_retry_at);
+                    CREATE INDEX idx_filter_signature
+                        ON processing_state(status, filter_signature);
                     COMMIT;
                     """
                 )

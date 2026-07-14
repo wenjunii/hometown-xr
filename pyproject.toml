@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hometown-xr-extractor"
-version = "0.4.0"
+version = "0.5.0"
 description = "Resumable multilingual Common Crawl narrative extractor"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -33,6 +33,7 @@ py-modules = [
     "config",
     "crawl_catalog",
     "dedupe",
+    "database_checkpoint",
     "downloader",
     "evaluation",
     "export_md",
@@ -53,6 +54,7 @@ py-modules = [
     "review",
     "run_lock",
     "runtime",
+    "signatures",
 ]
 
 [tool.pytest.ini_options]

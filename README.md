@@ -11,7 +11,7 @@ The extractor uses two local machine-learning models:
 
 - `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, pinned to
   revision `e8f8c211226b894fcb81acc59f3b34ba3efd5f42`, scores text against the
-  concepts in `concepts.py`.
+  English and native-language concepts in `concepts.py`.
 - FastText `lid.176.bin` identifies language and records prediction confidence.
 
 Neither model is a generative LLM. The crawler does not call OpenAI, Gemini,
@@ -26,6 +26,10 @@ cannot cross a model change. `data/cache/` remains local to each workstation.
 
 The RTX 3080 and RTX 4090 PCs share one Git checkpoint. Run the crawler on
 only one PC at a time.
+
+Git LFS stores `data/checkpoints/progress.db.gz`, a deterministic compressed
+checkpoint. `data/progress.db` is restored locally by setup/handoff and is
+never copied while live.
 
 Before switching machines:
 
@@ -66,7 +70,7 @@ WET/ARC sources
     -> FastText language detection
     -> source-scoped staged output
     -> atomic shard + manifest commit
-    -> SQLite checkpoint completion
+    -> filter-signed SQLite checkpoint completion
 ```
 
 The semantic model is loaded once, not once per worker. The process pool and
@@ -179,7 +183,13 @@ are stored under `unknown/` with the original confidence.
 Every live candidate can contribute to a deterministic local evaluation sample.
 Boundary cases are sampled more aggressively, while coverage sampling and
 language stratification prevent the queue from collapsing around one score or
-language. Human labels are never synthesized.
+language. At checkpoint time, local candidates merge into the bounded,
+deterministic `data/evaluation/replay.jsonl.gz` reservoir shared by both PCs.
+Human labels are never synthesized.
+
+Every run records a filter signature over the model revision, thresholds,
+paragraph bounds, narrative rules, keywords, and concept anchors. New output,
+manifests, progress rows, and run history carry the signature and run ID.
 
 ## Commands
 
@@ -203,7 +213,8 @@ The underlying Python CLI remains available directly:
 | --- | --- |
 | `python main.py run --crawl ID` | Start or resume one crawl |
 | `python main.py run --all` | Process every known crawl |
-| `python main.py run --limit 5` | Process at most five ready sources |
+| `python main.py run --all --strategy round-robin --chunk-size 100` | Rotate bounded chunks across old and new crawls |
+| `python main.py run --limit 5` | Process at most five ready sources globally |
 | `python main.py status` | Show checkpoint progress |
 | `python main.py metrics` | Show latest rates, GPU time, and ETA |
 | `python main.py doctor --profile 3080` | Check Python, PyTorch, CUDA, and profile |
@@ -214,10 +225,15 @@ The underlying Python CLI remains available directly:
 | `python main.py recover --minutes 10` | Release expired source leases |
 | `python main.py verify-output` | Verify committed shard checksums |
 | `python main.py checkpoint` | Verify and compact state for handoff |
+| `python main.py filters status` | Compare completed work with the current filter signature |
+| `python main.py filters reset-stale --crawl ID --limit 100 --yes` | Queue a bounded stale-source recrawl |
+| `python main.py database restore` | Restore the local SQLite DB from the shared archive |
+| `python main.py database check` | Confirm local SQLite state matches the shared archive |
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
 | `python main.py evaluation sample` | Build a real-text annotation sample |
 | `python main.py evaluation annotate` | Label samples interactively |
 | `python main.py evaluation report` | Compute precision, recall, F1, and tuning |
+| `python main.py evaluation replay` | Compact local decisions into the shared replay reservoir |
 | `python main.py reset` | Delete output, derivatives, and progress |
 
 Use `recover --minutes 0` only after confirming no crawler is running.
@@ -228,7 +244,9 @@ Output is gzip-compressed JSON Lines grouped by detected language:
 
 ```text
 data/
-  progress.db
+  progress.db                         # local restored working database
+  checkpoints/
+    progress.db.gz                    # synchronized Git LFS checkpoint
   models/
     lid.176.bin
   output/
@@ -241,20 +259,27 @@ data/
     unknown/
 ```
 
-Schema version 2 records include deterministic provenance and content IDs:
+Schema version 3 records add run provenance and adjacent document context.
+Schema-2 records remain supported and do not need rewriting:
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "record_id": "<sha256>",
   "content_fingerprint": "<sha256>",
   "crawl_id": "CC-MAIN-2026-12",
   "source_file": "crawl-data/.../example.warc.wet.gz",
+  "run_id": "20260714T120000Z-ab12cd34",
+  "filter_signature": "<sha256>",
   "url": "https://example.org/story",
   "warc_date": "2026-03-01T12:00:00Z",
   "language": "en",
   "language_confidence": 0.9821,
   "paragraph": "I remember the home where I grew up...",
+  "document_id": "<sha256>",
+  "paragraph_index": 4,
+  "context_before": "The paragraph immediately before...",
+  "context_after": "The paragraph immediately after...",
   "matched_keywords": ["home", "grew up"],
   "semantic_score": 0.7312,
   "concept_match": "memories of childhood home",
@@ -269,14 +294,14 @@ catalog; tombstones safely remove superseded catalog entries. Zero-match
 completion remains represented in SQLite rather than hundreds of thousands of
 empty manifests.
 
-Migrate existing output to schema version 2 and rebuild manifests with:
+To apply a stricter filter to existing accepted output and rebuild manifests:
 
 ```powershell
 python refilter_output.py
 python main.py verify-output
 ```
 
-The migration stages a complete replacement, atomically swaps it into place,
+The operation stages a complete replacement, atomically swaps it into place,
 and updates SQLite counts in the same journaled operation.
 
 ## Parquet And Deduplication
@@ -288,17 +313,22 @@ python main.py parquet --dedupe exact
 python main.py parquet --dedupe near --near-distance 3
 ```
 
-The export contains two Zstandard-compressed tables partitioned by `crawl_id`
+The export contains three Zstandard-compressed tables partitioned by `crawl_id`
 and `language`:
 
 - `stories/` contains one canonical text with quality and diversity fields.
 - `provenance/` maps every original crawl capture to its canonical `story_id`.
+- `curated/` is a conservative default view of personal prose within the domain cap.
 
 Exact canonicalization uses normalized text independently of URL. Near
 deduplication uses 64-bit SimHash with an SQLite-backed band index, so memory
 does not grow with the corpus. Nothing is discarded from provenance. Canonical
 rows include domain rank and `within_domain_cap`, explainable boilerplate
-signals, structural template fingerprints, and concept-cluster IDs. The
+signals, structural template fingerprints, concept-cluster IDs, document
+context, and content categories (`personal_prose`, `lyrics`, `poetry`,
+`commercial`, `genealogy`, and `adult_content`). Category flags never delete
+records; sensitive and non-story material remains in `stories/` and
+`provenance/`. The
 manifest reports concentration and diversity diagnostics plus every file
 checksum. Adjust the research-view limit with `--domain-story-cap`.
 
@@ -330,7 +360,9 @@ applied output is verified again before the canonical dataset is rebuilt.
 
 The July 14, 2026 baseline keeps all `3,416` accepted captures under the
 semantic threshold `0.45` and narrative threshold `8`. Near deduplication
-produces `1,356` canonical stories; `1,183` are within the default domain cap.
+produces `1,356` canonical stories; `1,183` are within the default domain cap
+and `1,098` are in the default curated view. The retained full table classifies
+`29` poetry, `22` lyrics, `22` genealogy, and `12` adult-content stories.
 
 Reprocess completed Common Crawl sources only after a recall-affecting change,
 such as broader keywords or concept anchors, a lower threshold, a new model
@@ -338,6 +370,18 @@ revision, or different paragraph extraction. Rejected candidates were not all
 retained, so those changes cannot be applied retrospectively to accepted output
 alone. Before a full recrawl, compare a representative sample of completed
 sources in an isolated audit. Do not use `reset` merely to refresh results.
+
+Use filter signatures to make that audit selective:
+
+```powershell
+python main.py filters status
+python main.py filters reset-stale --crawl CC-MAIN-2014-15 --limit 100 --yes
+```
+
+Historical rows created before signatures are reported as `unknown`. Add
+`--include-unknown` only for a deliberate bounded recrawl. After an audit proves
+legacy work equivalent, `filters stamp-current --yes` can adopt those rows
+without downloading them again.
 
 ## Evaluation
 
@@ -354,8 +398,9 @@ examples near semantic or narrative thresholds. Existing labels are kept when
 a sample is rebuilt. `annotate --language en --limit 25` supports focused work.
 Reports use only human-labeled rows and include confidence intervals,
 calibration bins, label-balance readiness, per-language support warnings,
-false-positive/false-negative IDs, and a semantic/narrative threshold grid
-search. Recommendations stay marked exploratory until at least 100 labels and
+content-category agreement, false-positive/false-negative IDs, and a
+semantic/narrative threshold grid search. Recommendations stay marked
+exploratory until at least 100 labels and
 both classes are present.
 
 The original synthetic regression corpus remains available:
@@ -385,7 +430,8 @@ The suite covers leases, retries, interruption, source transactions, stable
 IDs, checksum rollback, compact manifest catalogs, inference caching,
 multilingual filtering, real WET parsing, spawned Windows-compatible
 orchestration, canonical/provenance deduplication, and Parquet export. GitHub
-Actions runs lint, tests, and compilation on both Windows and Ubuntu without
+Actions runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing
+on both Windows and Ubuntu without
 downloading GPU models or Git LFS data.
 
 ## Project Structure
@@ -397,6 +443,7 @@ progress.py             SQLite leases, retries, and checkpoint migration
 output.py               source transactions, stable IDs, and manifests
 inference_cache.py      versioned embedding, score, and language cache
 checkpoint.py           integrity verification and handoff compaction
+database_checkpoint.py  compressed SQLite archive, restore, and sync checks
 processor.py            WET/ARC parsing and counters
 matcher.py              keyword, semantic, and narrative filters
 evaluation.py           real-text sampling, annotation, and reports
@@ -405,6 +452,7 @@ benchmark.py            local hardware benchmark and autotuning
 dedupe.py               disk-backed exact and SimHash duplicate index
 parquet_export.py       staged partitioned analytical export
 quality.py              boilerplate, template, domain, and diversity signals
+signatures.py           filter contracts, run IDs, and Git provenance
 refilter_output.py      transactional schema/filter migration
 4090/                   compatibility launchers only
 scripts/                setup, run, test, benchmark, and handoff commands

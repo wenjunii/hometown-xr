@@ -7,6 +7,19 @@ if (-not (Test-Path -LiteralPath $Python)) {
 
 Push-Location $Root
 try {
+    Get-ChildItem (Join-Path $Root "scripts") -Filter *.ps1 | ForEach-Object {
+        $Tokens = $null
+        $ParseErrors = $null
+        [System.Management.Automation.Language.Parser]::ParseFile(
+            $_.FullName,
+            [ref]$Tokens,
+            [ref]$ParseErrors
+        ) | Out-Null
+        if ($ParseErrors.Count -gt 0) {
+            $ParseErrors | ForEach-Object { Write-Error $_ }
+            throw "PowerShell parse failed: $($_.FullName)"
+        }
+    }
     & $Python -m pytest
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & $Python -m ruff check .

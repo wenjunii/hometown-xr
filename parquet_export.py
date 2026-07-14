@@ -25,6 +25,7 @@ from quality import (
     DiversityTracker,
     boilerplate_features,
     boilerplate_score,
+    classify_content,
     concept_cluster_id,
     domain_from_url,
     template_fingerprint,
@@ -79,6 +80,12 @@ def _record_with_identity(record: dict) -> dict:
         "semantic_score": float(record.get("semantic_score", 0.0) or 0.0),
         "concept_match": str(record.get("concept_match", "")),
         "narrative_score": int(record.get("narrative_score", 0) or 0),
+        "document_id": str(record.get("document_id", "")),
+        "paragraph_index": int(record.get("paragraph_index", 0) or 0),
+        "context_before": str(record.get("context_before", "")),
+        "context_after": str(record.get("context_after", "")),
+        "filter_signature": str(record.get("filter_signature", "")),
+        "run_id": str(record.get("run_id", "")),
     }
 
 
@@ -151,6 +158,8 @@ def _schemas():
             ("content_fingerprint", pa.string()),
             ("crawl_id", pa.string()),
             ("source_file", pa.string()),
+            ("run_id", pa.string()),
+            ("filter_signature", pa.string()),
             ("url", pa.string()),
             ("domain", pa.string()),
             ("domain_story_rank", pa.int32()),
@@ -159,6 +168,10 @@ def _schemas():
             ("language", pa.string()),
             ("language_confidence", pa.float32()),
             ("paragraph", pa.string()),
+            ("document_id", pa.string()),
+            ("paragraph_index", pa.int32()),
+            ("context_before", pa.string()),
+            ("context_after", pa.string()),
             ("matched_keywords", pa.list_(pa.string())),
             ("semantic_score", pa.float32()),
             ("concept_match", pa.string()),
@@ -167,6 +180,11 @@ def _schemas():
             ("template_fingerprint", pa.string()),
             ("boilerplate_score", pa.int8()),
             ("boilerplate_features", pa.list_(pa.string())),
+            ("content_category", pa.string()),
+            ("content_confidence", pa.float32()),
+            ("content_flags", pa.list_(pa.string())),
+            ("content_reasons", pa.list_(pa.string())),
+            ("curated_default", pa.bool_()),
         ]
     )
     provenance = pa.schema(
@@ -177,6 +195,10 @@ def _schemas():
             ("content_fingerprint", pa.string()),
             ("crawl_id", pa.string()),
             ("source_file", pa.string()),
+            ("run_id", pa.string()),
+            ("filter_signature", pa.string()),
+            ("document_id", pa.string()),
+            ("paragraph_index", pa.int32()),
             ("url", pa.string()),
             ("domain", pa.string()),
             ("warc_date", pa.string()),
@@ -222,6 +244,12 @@ def export_parquet(
     provenance_writer = _PartitionedWriter(
         staging / "provenance",
         provenance_schema,
+        ("crawl_id", "language"),
+        batch_size,
+    )
+    curated_writer = _PartitionedWriter(
+        staging / "curated",
+        story_schema,
         ("crawl_id", "language"),
         batch_size,
     )
@@ -277,6 +305,10 @@ def export_parquet(
                             "content_fingerprint": record["content_fingerprint"],
                             "crawl_id": record["crawl_id"],
                             "source_file": record["source_file"],
+                            "run_id": record["run_id"],
+                            "filter_signature": record["filter_signature"],
+                            "document_id": record["document_id"],
+                            "paragraph_index": record["paragraph_index"],
                             "url": record["url"],
                             "domain": domain,
                             "warc_date": record["warc_date"],
@@ -295,6 +327,15 @@ def export_parquet(
                         if within_domain_cap:
                             stories_within_domain_cap += 1
                         features = boilerplate_features(record["paragraph"])
+                        classification = classify_content(
+                            record["paragraph"], record["url"]
+                        )
+                        content_fields = classification.as_record_fields()
+                        curated_default = (
+                            classification.category == "personal_prose"
+                            and boilerplate_score(features) < 4
+                            and within_domain_cap
+                        )
                         story = {
                             **record,
                             "story_id": story_id,
@@ -309,21 +350,29 @@ def export_parquet(
                             ),
                             "boilerplate_score": boilerplate_score(features),
                             "boilerplate_features": features,
+                            **content_fields,
+                            "curated_default": curated_default,
                         }
                         story_writer.add(story)
+                        if curated_default:
+                            curated_writer.add(story)
                         diversity.observe(story)
 
                     while (
-                        story_writer.buffered_rows + provenance_writer.buffered_rows
+                        story_writer.buffered_rows
+                        + provenance_writer.buffered_rows
+                        + curated_writer.buffered_rows
                         >= batch_size * 10
                     ):
-                        if story_writer.buffered_rows >= provenance_writer.buffered_rows:
-                            story_writer.flush_largest()
-                        else:
-                            provenance_writer.flush_largest()
+                        largest = max(
+                            (story_writer, provenance_writer, curated_writer),
+                            key=lambda writer: writer.buffered_rows,
+                        )
+                        largest.flush_largest()
 
         story_writer.flush_all()
         provenance_writer.flush_all()
+        curated_writer.flush_all()
         (staging / "_dedupe.sqlite").unlink(missing_ok=True)
 
         parquet_files = sorted(staging.rglob("*.parquet"))
@@ -348,7 +397,7 @@ def export_parquet(
         )
         manifest = {
             "schema_version": OUTPUT_SCHEMA_VERSION,
-            "dataset_schema_version": 2,
+            "dataset_schema_version": 3,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "dedupe_mode": dedupe,
             "near_distance": near_distance if dedupe == "near" else None,
@@ -363,6 +412,10 @@ def export_parquet(
                 "provenance": {
                     "rows": provenance_writer.rows,
                     "partitions": dict(sorted(provenance_writer.partition_rows.items())),
+                },
+                "curated": {
+                    "rows": curated_writer.rows,
+                    "partitions": dict(sorted(curated_writer.partition_rows.items())),
                 },
             },
             "quality": quality_report,

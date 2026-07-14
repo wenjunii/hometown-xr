@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from config import OUTPUT_DIR, OUTPUT_SCHEMA_VERSION
+from config import OUTPUT_DIR, OUTPUT_SCHEMA_VERSION, SUPPORTED_OUTPUT_SCHEMA_VERSIONS
 from record_identity import content_fingerprint, stable_record_id
 
 if TYPE_CHECKING:
@@ -122,6 +122,12 @@ class SourceOutputTransaction:
                 "semantic_score": round(match.semantic_score, 4),
                 "concept_match": match.concept_match,
                 "narrative_score": match.narrative_score,
+                "document_id": match.document_id,
+                "paragraph_index": match.paragraph_index,
+                "context_before": match.context_before,
+                "context_after": match.context_after,
+                "filter_signature": self.writer.filter_signature,
+                "run_id": self.writer.run_id,
             }
             by_language.setdefault(lang, []).append(record)
 
@@ -156,6 +162,8 @@ class SourceOutputTransaction:
             "source_digest": _source_digest(self.source_path),
             "records": sum(self.counts.values()),
             "committed_at": datetime.now(timezone.utc).isoformat(),
+            "filter_signature": self.writer.filter_signature,
+            "run_id": self.writer.run_id,
             "shards": shards,
         }
 
@@ -227,8 +235,15 @@ class SourceOutputTransaction:
 class OutputWriter:
     """Create source-scoped output transactions under ``data/output``."""
 
-    def __init__(self, output_dir: str | Path = OUTPUT_DIR):
+    def __init__(
+        self,
+        output_dir: str | Path = OUTPUT_DIR,
+        run_id: str = "",
+        filter_signature: str = "",
+    ):
         self.output_dir = Path(output_dir)
+        self.run_id = run_id
+        self.filter_signature = filter_signature
         self.staging_root = self.output_dir / ".staging"
         self.manifests_dir = self.output_dir / "_manifests"
         self.catalog_path = self.output_dir / _MANIFEST_CATALOG
@@ -382,7 +397,7 @@ class OutputWriter:
                             errors.append(
                                 f"source mismatch: {shard['path']}:{line_number}"
                             )
-                        if record.get("schema_version") != OUTPUT_SCHEMA_VERSION:
+                        if record.get("schema_version") not in SUPPORTED_OUTPUT_SCHEMA_VERSIONS:
                             errors.append(
                                 f"schema mismatch: {shard['path']}:{line_number}"
                             )

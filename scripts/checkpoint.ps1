@@ -51,6 +51,10 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Checkpoint verification failed with exit code $LASTEXITCODE."
     }
+    $DatabaseArchive = Join-Path $Root "data\checkpoints\progress.db.gz"
+    if (-not (Test-Path -LiteralPath $DatabaseArchive)) {
+        throw "Checkpoint did not create the compressed database archive."
+    }
 
     git add -A
     git diff --cached --quiet

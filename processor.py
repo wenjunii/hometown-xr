@@ -9,7 +9,8 @@ from typing import Iterator
 
 from warcio.archiveiterator import ArchiveIterator
 
-from config import MAX_PARAGRAPH_LENGTH, MIN_PARAGRAPH_LENGTH
+from config import DOCUMENT_CONTEXT_CHARS, MAX_PARAGRAPH_LENGTH, MIN_PARAGRAPH_LENGTH
+from record_identity import stable_document_id
 
 
 @dataclass
@@ -19,6 +20,10 @@ class Paragraph:
     text: str
     crawl_id: str = ""
     source_file: str = ""
+    document_id: str = ""
+    paragraph_index: int = 0
+    context_before: str = ""
+    context_after: str = ""
 
 
 @dataclass
@@ -92,6 +97,7 @@ def extract_paragraphs_from_wet(
             keyword_matcher,
             shutdown_event,
             source_file,
+            stats.records_processed,
         ):
             yield paragraph, keywords, stats.records_processed
 
@@ -143,6 +149,7 @@ def extract_paragraphs_from_arc(
             keyword_matcher,
             shutdown_event,
             source_file,
+            stats.records_processed,
         ):
             yield paragraph, keywords, stats.records_processed
 
@@ -158,12 +165,20 @@ def _extract_paras(
     keyword_matcher=None,
     shutdown_event=None,
     source_file: str = "",
+    document_index: int = 0,
 ) -> Iterator[tuple[Paragraph, list[str]]]:
-    for raw_paragraph in content.split("\n\n"):
+    paragraphs = [" ".join(value.split()) for value in content.split("\n\n")]
+    paragraphs = [value for value in paragraphs if value]
+    document_id = stable_document_id(
+        crawl_id,
+        source_file,
+        url,
+        warc_date,
+        document_index,
+    )
+    for paragraph_index, text in enumerate(paragraphs):
         if shutdown_event and shutdown_event.is_set():
             return
-
-        text = " ".join(raw_paragraph.split())
         if not MIN_PARAGRAPH_LENGTH <= len(text) <= MAX_PARAGRAPH_LENGTH:
             continue
 
@@ -180,6 +195,18 @@ def _extract_paras(
                 text=text,
                 crawl_id=crawl_id,
                 source_file=source_file,
+                document_id=document_id,
+                paragraph_index=paragraph_index,
+                context_before=(
+                    paragraphs[paragraph_index - 1][-DOCUMENT_CONTEXT_CHARS:]
+                    if paragraph_index > 0
+                    else ""
+                ),
+                context_after=(
+                    paragraphs[paragraph_index + 1][:DOCUMENT_CONTEXT_CHARS]
+                    if paragraph_index + 1 < len(paragraphs)
+                    else ""
+                ),
             ),
             keywords,
         )

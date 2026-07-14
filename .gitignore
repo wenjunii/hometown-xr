@@ -18,9 +18,11 @@ build/
 *.log
 
 # SQLite runtime sidecars (never sync a live database)
+data/progress.db
 data/progress.db-wal
 data/progress.db-shm
 data/progress.db-journal
+data/progress.db.*.tmp
 data/.crawler.lock
 data/.refilter-journal.json
 data/.refilter-journal.tmp
@@ -37,6 +39,7 @@ data/.parquet-backup-*/
 data/evaluation/candidate_samples.jsonl
 data/output/_manifests/*.json
 data/output/_manifest-catalog.jsonl.gz.tmp
+data/checkpoints/*.tmp
 
 # IDE
 .vscode/

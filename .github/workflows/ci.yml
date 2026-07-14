@@ -29,3 +29,24 @@ jobs:
         run: pytest
       - name: Compile
         run: python -m compileall -q -x "[\\/](\.venv|data)[\\/]" .
+      - name: CLI smoke test
+        run: |
+          python main.py --help
+          python main.py filters --help
+      - name: Parse PowerShell scripts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem scripts -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName,
+              [ref]$tokens,
+              [ref]$parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              $parseErrors | ForEach-Object { Write-Error $_ }
+              throw "PowerShell parse failed: $($_.FullName)"
+            }
+          }

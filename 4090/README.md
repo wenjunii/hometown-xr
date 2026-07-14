@@ -16,7 +16,8 @@ The preferred equivalent is:
 .\scripts\run.ps1 -Profile 4090 run --all
 ```
 
-Both forms use the root `data/` checkpoint and output directories.
+Both forms use the root `data/` checkpoint and output directories. The handoff
+restores the same compressed Git LFS database archive used by the 3080 PC.
 
 Before resuming a checkpoint from the 3080 PC, receive and verify it with:
 

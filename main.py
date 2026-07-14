@@ -9,10 +9,12 @@ import multiprocessing
 import shutil
 import signal
 import sys
+from dataclasses import replace
 
 from config import (
     CACHE_DIR,
     DATA_DIR,
+    DB_ARCHIVE_PATH,
     DB_PATH,
     DEFAULT_CRAWL_ID,
     DOMAIN_STORY_CAP,
@@ -79,21 +81,22 @@ def process_crawl(
     limit: int | None,
     settings: RuntimeSettings,
     pipeline: ExtractionPipeline,
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     crawl_info = get_crawl_info(crawl_id)
     format_name = "ARC (HTML)" if crawl_info.era == "legacy" else "WET (text)"
     logger.info("--- Crawl: %s [%s] ---", crawl_id, format_name)
 
     tracker = ProgressTracker()
     tracker.recover_stale_leases(LEASE_TIMEOUT_SECONDS)
-    logger.info("Fetching file list...")
-    file_paths = fetch_file_paths(crawl_info)
-    if not file_paths:
-        logger.warning("No files found for %s. Skipping.", crawl_id)
-        return 0, 0
-
-    tracker.initialize_paths(file_paths, crawl_id)
     summary = tracker.get_summary(crawl_id)
+    if int(summary["total_files"]) == 0:
+        logger.info("Fetching file list...")
+        file_paths = fetch_file_paths(crawl_info)
+        if not file_paths:
+            logger.warning("No files found for %s. Skipping.", crawl_id)
+            return 0, 0, 0
+        tracker.initialize_paths(file_paths, crawl_id)
+        summary = tracker.get_summary(crawl_id)
     logger.info(
         "Progress: %s/%s completed, %s pending, %s retryable, %s matches",
         summary["completed"],
@@ -106,7 +109,7 @@ def process_crawl(
     target = min(limit, ready) if limit is not None else ready
     if target <= 0:
         logger.info("No ready files to process for %s.", crawl_id)
-        return 0, 0
+        return 0, 0, 0
 
     pipeline.metrics.add_target_files(target)
     logger.info(
@@ -114,18 +117,54 @@ def process_crawl(
         settings.workers,
         target,
     )
-    return pipeline.process_crawl(tracker, crawl_info, target)
+    completed, matches = pipeline.process_crawl(tracker, crawl_info, target)
+    return completed, matches, target
 
 
-def run(crawl_ids: list[str], limit: int | None, settings: RuntimeSettings) -> None:
+def _schedule_order(crawl_ids: list[str], strategy: str) -> list[str]:
+    if strategy == "oldest":
+        return list(crawl_ids)
+    if strategy == "newest":
+        return list(reversed(crawl_ids))
+    if strategy != "round-robin":
+        raise ValueError(f"unknown scheduling strategy: {strategy}")
+    ordered = []
+    left = 0
+    right = len(crawl_ids) - 1
+    take_newest = True
+    while left <= right:
+        if take_newest:
+            ordered.append(crawl_ids[right])
+            right -= 1
+        else:
+            ordered.append(crawl_ids[left])
+            left += 1
+        take_newest = not take_newest
+    return ordered
+
+
+def run(
+    crawl_ids: list[str],
+    limit: int | None,
+    settings: RuntimeSettings,
+    strategy: str = "round-robin",
+    chunk_size: int = 100,
+) -> None:
     global _shutdown_event
     context = multiprocessing.get_context("spawn")
     _shutdown_event = context.Event()
+    from signatures import build_run_manifest
+
+    effective_strategy = strategy if len(crawl_ids) > 1 else "oldest"
+    run_manifest = build_run_manifest(
+        settings, crawl_ids, effective_strategy, limit, chunk_size
+    )
     metrics = MetricsRecorder(
         profile=settings.profile_name,
         workers=settings.workers,
         inference_batch_size=settings.inference_batch_size,
         gpu_name=_gpu_name(),
+        provenance=run_manifest,
     )
 
     try:
@@ -142,27 +181,54 @@ def run(crawl_ids: list[str], limit: int | None, settings: RuntimeSettings) -> N
             logger.info("Adaptive batching: %s", settings.adaptive_batching)
             logger.info("Inference cache: %s", settings.cache_enabled)
             logger.info("Semantic threshold: %s", settings.semantic_threshold)
+            logger.info("Run ID: %s", settings.run_id)
+            logger.info("Filter signature: %s", settings.filter_signature[:16])
+            logger.info("Scheduling: %s (chunk size %s)", effective_strategy, chunk_size)
             logger.info("=" * 70)
 
             total_files = 0
             total_matches = 0
-            attempted = 0
+            crawls_attempted = 0
+            sources_scheduled = 0
             with ExtractionPipeline(
                 settings,
                 context,
                 metrics,
                 shutdown_event=_shutdown_event,
             ) as pipeline:
-                for crawl_id in crawl_ids:
-                    if _shutdown_event.is_set():
+                active = _schedule_order(crawl_ids, effective_strategy)
+                while active and not _shutdown_event.is_set():
+                    next_round = []
+                    for crawl_id in active:
+                        if _shutdown_event.is_set():
+                            break
+                        remaining = None if limit is None else limit - sources_scheduled
+                        if remaining is not None and remaining <= 0:
+                            break
+                        per_crawl_limit = remaining
+                        if effective_strategy == "round-robin":
+                            per_crawl_limit = min(chunk_size, remaining or chunk_size)
+                        crawls_attempted += 1
+                        files, matches, scheduled = process_crawl(
+                            crawl_id,
+                            per_crawl_limit,
+                            settings,
+                            pipeline,
+                        )
+                        total_files += files
+                        total_matches += matches
+                        sources_scheduled += scheduled
+                        if effective_strategy == "round-robin" and scheduled > 0:
+                            next_round.append(crawl_id)
+                    if effective_strategy != "round-robin" or (
+                        limit is not None and sources_scheduled >= limit
+                    ):
                         break
-                    attempted += 1
-                    files, matches = process_crawl(crawl_id, limit, settings, pipeline)
-                    total_files += files
-                    total_matches += matches
+                    active = next_round
 
             logger.info("=" * 70)
-            logger.info("Crawls attempted: %s", attempted)
+            logger.info("Crawl chunks attempted: %s", crawls_attempted)
+            logger.info("Sources scheduled: %s", sources_scheduled)
             logger.info("Files completed: %s", total_files)
             logger.info("Matches committed: %s", total_matches)
             logger.info("=" * 70)
@@ -237,6 +303,7 @@ def reset_data() -> None:
     with CrawlerRunLock("maintenance"):
         if DB_PATH.exists():
             DB_PATH.unlink()
+        DB_ARCHIVE_PATH.unlink(missing_ok=True)
         for directory in (OUTPUT_DIR, DATA_DIR / "exports", PARQUET_DIR, CACHE_DIR):
             if directory.exists():
                 shutil.rmtree(directory)
@@ -303,6 +370,8 @@ def _runtime_settings(args) -> RuntimeSettings:
         precision=profile.precision if args.precision == "auto" else args.precision,
         adaptive_batching=not args.no_adaptive_batching,
         cache_enabled=not args.no_cache,
+        filter_signature="",
+        run_id="",
     )
     if settings.workers <= 0:
         raise ValueError("workers must be positive")
@@ -316,11 +385,63 @@ def _runtime_settings(args) -> RuntimeSettings:
         raise ValueError("semantic threshold must be between 0 and 1")
     if not 0 <= settings.language_threshold <= 1:
         raise ValueError("language threshold must be between 0 and 1")
-    return settings
+    from signatures import build_filter_signature, new_run_id
+
+    return replace(
+        settings,
+        filter_signature=build_filter_signature(
+            settings.semantic_threshold,
+            settings.language_threshold,
+        ),
+        run_id=new_run_id(),
+    )
+
+
+def _filter_command(args) -> None:
+    from signatures import build_filter_signature, filter_contract
+
+    signature = build_filter_signature(args.threshold, args.language_threshold)
+    tracker = ProgressTracker()
+    if args.filter_command == "status":
+        result = tracker.get_filter_signature_summary(signature)
+        contract = filter_contract(args.threshold, args.language_threshold)
+        result["contract"] = {
+            "schema_version": contract["schema_version"],
+            "semantic_model": contract["semantic_model"],
+            "semantic_threshold": contract["semantic_threshold"],
+            "language_threshold": contract["language_threshold"],
+            "paragraph_length": contract["paragraph_length"],
+            "narrative_filter": contract["narrative_filter"],
+            "keyword_count": len(contract["keywords"]),
+            "concept_anchor_count": len(contract["concept_anchors"]),
+        }
+    elif not args.yes:
+        raise SystemExit("Refusing to change checkpoint state without --yes")
+    elif args.filter_command == "stamp-current":
+        result = {
+            "current_signature": signature,
+            "stamped": tracker.stamp_unknown_completed(signature),
+        }
+    else:
+        result = {
+            "current_signature": signature,
+            "reset": tracker.reset_stale_completed(
+                signature,
+                include_unknown=args.include_unknown,
+                crawl_id=args.crawl,
+                limit=args.limit,
+            ),
+        }
+    print(json.dumps(result, indent=2))
 
 
 def _evaluation_command(args) -> None:
-    from evaluation import annotate, build_annotation_sample, evaluation_report
+    from evaluation import (
+        annotate,
+        build_annotation_sample,
+        compact_replay_reservoir,
+        evaluation_report,
+    )
 
     if args.evaluation_command == "sample":
         print(json.dumps(build_annotation_sample(size=args.size), indent=2))
@@ -333,6 +454,8 @@ def _evaluation_command(args) -> None:
         )
     elif args.evaluation_command == "report":
         print(json.dumps(evaluation_report(), indent=2))
+    elif args.evaluation_command == "replay":
+        print(json.dumps(compact_replay_reservoir(), indent=2))
 
 
 def main() -> None:
@@ -345,6 +468,12 @@ def main() -> None:
     run_parser.add_argument("--crawl")
     run_parser.add_argument("--all", action="store_true")
     run_parser.add_argument("--limit", type=int)
+    run_parser.add_argument(
+        "--strategy",
+        choices=["round-robin", "newest", "oldest"],
+        default="round-robin",
+    )
+    run_parser.add_argument("--chunk-size", type=int, default=100)
     run_parser.add_argument("--threshold", type=float, default=SEMANTIC_THRESHOLD)
     run_parser.add_argument("--language-threshold", type=float, default=LANG_DETECTION_THRESHOLD)
     run_parser.add_argument("--profile", choices=["auto", *HARDWARE_PROFILES], default="auto")
@@ -366,6 +495,16 @@ def main() -> None:
     subparsers.add_parser("list", help="list available crawls")
     subparsers.add_parser("reset", help="wipe output and progress")
     subparsers.add_parser("verify-output", help="verify source shard checksums")
+
+    database_parser = subparsers.add_parser(
+        "database", help="manage the compressed cross-PC progress checkpoint"
+    )
+    database_subparsers = database_parser.add_subparsers(
+        dest="database_command", required=True
+    )
+    database_subparsers.add_parser("archive")
+    database_subparsers.add_parser("restore")
+    database_subparsers.add_parser("check")
 
     checkpoint_parser = subparsers.add_parser(
         "checkpoint",
@@ -414,14 +553,34 @@ def main() -> None:
     annotate_parser.add_argument("--language")
     annotate_parser.add_argument("--limit", type=int)
     evaluation_subparsers.add_parser("report")
+    evaluation_subparsers.add_parser("replay")
+
+    filter_parser = subparsers.add_parser(
+        "filters", help="inspect or selectively refresh filter-signature state"
+    )
+    filter_parser.add_argument("--threshold", type=float, default=SEMANTIC_THRESHOLD)
+    filter_parser.add_argument(
+        "--language-threshold", type=float, default=LANG_DETECTION_THRESHOLD
+    )
+    filter_subparsers = filter_parser.add_subparsers(dest="filter_command", required=True)
+    filter_subparsers.add_parser("status")
+    stamp_parser = filter_subparsers.add_parser("stamp-current")
+    stamp_parser.add_argument("--yes", action="store_true")
+    reset_filter_parser = filter_subparsers.add_parser("reset-stale")
+    reset_filter_parser.add_argument("--include-unknown", action="store_true")
+    reset_filter_parser.add_argument("--crawl")
+    reset_filter_parser.add_argument("--limit", type=int)
+    reset_filter_parser.add_argument("--yes", action="store_true")
 
     args = parser.parse_args()
     if args.command == "run":
         if args.limit is not None and args.limit <= 0:
             parser.error("--limit must be positive")
+        if args.chunk_size <= 0:
+            parser.error("--chunk-size must be positive")
         settings = _runtime_settings(args)
         crawl_ids = get_all_crawl_ids() if args.all else [args.crawl or DEFAULT_CRAWL_ID]
-        run(crawl_ids, args.limit, settings)
+        run(crawl_ids, args.limit, settings, args.strategy, args.chunk_size)
     elif args.command == "status":
         show_status()
     elif args.command == "metrics":
@@ -496,6 +655,28 @@ def main() -> None:
         if getattr(args, "limit", None) is not None and args.limit <= 0:
             parser.error("--limit must be positive")
         _evaluation_command(args)
+    elif args.command == "filters":
+        if getattr(args, "limit", None) is not None and args.limit <= 0:
+            parser.error("--limit must be positive")
+        with CrawlerRunLock("filter-maintenance"):
+            _filter_command(args)
+    elif args.command == "database":
+        from database_checkpoint import (
+            archive_database,
+            database_sync_status,
+            restore_database,
+        )
+
+        with CrawlerRunLock("database-maintenance"):
+            if args.database_command == "archive":
+                result = archive_database()
+            elif args.database_command == "restore":
+                result = restore_database()
+            else:
+                result = database_sync_status()
+        print(json.dumps(result, indent=2))
+        if args.database_command == "check" and not result["synchronized"]:
+            raise SystemExit(1)
 
 
 if __name__ == "__main__":
