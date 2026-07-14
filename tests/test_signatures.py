@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from pathlib import Path
+
 from concepts import concept_anchor_language
 from main import _schedule_order
 from signatures import build_filter_signature, filter_contract
@@ -22,3 +26,15 @@ def test_crawl_scheduling_supports_newest_oldest_and_balanced_order():
         "newer",
         "older",
     ]
+
+
+def test_filter_cli_rejects_invalid_threshold_before_touching_state():
+    result = subprocess.run(
+        [sys.executable, "main.py", "filters", "--threshold", "2", "status"],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    assert "--threshold must be between 0 and 1" in result.stderr

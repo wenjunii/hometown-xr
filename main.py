@@ -658,6 +658,10 @@ def main() -> None:
     elif args.command == "filters":
         if getattr(args, "limit", None) is not None and args.limit <= 0:
             parser.error("--limit must be positive")
+        if not 0 <= args.threshold <= 1:
+            parser.error("--threshold must be between 0 and 1")
+        if not 0 <= args.language_threshold <= 1:
+            parser.error("--language-threshold must be between 0 and 1")
         with CrawlerRunLock("filter-maintenance"):
             _filter_command(args)
     elif args.command == "database":

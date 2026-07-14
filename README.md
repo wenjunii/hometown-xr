@@ -203,6 +203,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\run.ps1 -Profile 3080 run --all` | Start or resume using the selected hardware profile |
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
+| `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
@@ -374,14 +375,18 @@ sources in an isolated audit. Do not use `reset` merely to refresh results.
 Use filter signatures to make that audit selective:
 
 ```powershell
-python main.py filters status
-python main.py filters reset-stale --crawl CC-MAIN-2014-15 --limit 100 --yes
+.\scripts\filter-state.ps1
+.\scripts\filter-state.ps1 -Action reset-stale `
+  -Crawl CC-MAIN-2014-15 -Limit 100 -IncludeUnknown -Apply
 ```
 
 Historical rows created before signatures are reported as `unknown`. Add
-`--include-unknown` only for a deliberate bounded recrawl. After an audit proves
-legacy work equivalent, `filters stamp-current --yes` can adopt those rows
-without downloading them again.
+`-IncludeUnknown` only for a deliberate bounded recrawl. The PowerShell helper
+requires `-Crawl`, a positive `-Limit`, and `-Apply` before changing checkpoint
+state. After an audit proves legacy work equivalent,
+`.\scripts\filter-state.ps1 -Action stamp-current -Apply` can adopt those rows
+without downloading them again. The underlying Python commands remain
+available for automation.
 
 ## Evaluation
 

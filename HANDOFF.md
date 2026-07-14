@@ -96,11 +96,18 @@ pulls Git LFS objects, atomically restores and validates `data/progress.db`,
 and then runs `doctor`, `status`, and `verify-output`. `-SkipVerify` skips the
 diagnostics but still restores the checkpoint, so a virtual environment is
 required. Rerun `scripts\setup.ps1` whenever dependency lock files changed.
-Resume with:
 
 During the one-time upgrade from the formerly tracked raw database, any command
 that opens a missing project DB also restores the validated archive. This keeps
 the first pull from an older handoff script safe.
+
+Inspect filter-signature coverage without changing checkpoint state:
+
+```powershell
+.\scripts\filter-state.ps1
+```
+
+Then resume with:
 
 ```powershell
 .\scripts\run.ps1 -Profile 3080 run --all
