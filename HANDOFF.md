@@ -1,126 +1,109 @@
 # Workstation Handoff Guide
 
-This repository transfers a complete, resumable crawl checkpoint between RTX 3080 and RTX 4090 workstations through GitHub.
+Use this procedure to move the Hometown XR extractor between the RTX 3080 PC
+and RTX 4090 PC. Never run the crawler on both PCs at the same time.
 
-> [!IMPORTANT]
-> GitHub is a **serial checkpoint transfer**, not a live shared database. Only one workstation may run the crawler from the synchronized checkpoint at a time. Do not start two PCs from the same commit and later push both: `data/progress.db` is a binary Git LFS object, and the compressed output shards are not mergeable. Using different crawl IDs does not make the shared database mergeable.
+## What Is Synchronized
 
-## What GitHub Synchronizes
+Git and Git LFS synchronize:
 
-- All source code and hardware profiles
+- All source code, tests, scripts, and documentation
 - `data/progress.db` through Git LFS
-- `data/output/` compressed JSONL results
-- `data/exports/` readable Markdown exports
-- Documentation and configuration
+- Committed `data/output/` JSONL shards
+- Committed `data/exports/` Markdown files
 
-Python environments, bytecode caches, machine-local settings, and ML model caches are intentionally excluded. The FastText and sentence-transformer models download automatically on first use. Each database checkpoint creates another roughly 144 MB LFS object, so create checkpoints at handoffs rather than after every small batch.
+The virtual environment and `data/models/` are machine-local and ignored.
 
-## First-Time Setup on Either Workstation
+## First-Time Setup
 
-Install Git, Git LFS, Python 3.10+, and a current NVIDIA driver. Then open PowerShell:
+On each PC:
 
 ```powershell
-git lfs install
 git clone https://github.com/wenjunii/hometown-xr.git
 cd hometown-xr
+git lfs install
 git lfs pull
-git status --short --branch
-git lfs ls-files
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\setup.ps1 -Profile 3080
 ```
 
-The status should be clean, and `git lfs ls-files` should list `data/progress.db`. From the repository root, create a machine-local environment and install the tested CUDA stack:
+Use `-Profile 4090` on the 4090 PC.
+
+## Send A Checkpoint
+
+On the currently active PC:
+
+1. Press `Ctrl+C` once.
+2. Wait for active workers to return their claims and for the final summary.
+3. Confirm the local lock is gone:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install "torch==2.1.0+cu121" --index-url https://download.pytorch.org/whl/cu121
-python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
+Test-Path .\data\.crawler.lock
 ```
 
-Install and verify exactly one hardware profile from the repository root.
+The result must be `False`.
 
-RTX 3080:
-
-```powershell
-python -m pip install -r requirements.txt
-python main.py status
-python main.py run --all
-```
-
-RTX 4090:
-
-```powershell
-python -m pip install -r 4090/requirements.txt
-python 4090/main.py status
-python 4090/main.py run --all
-```
-
-Both profiles use the same filters, shared checkpoint, and seven-worker configuration. The direct dependencies are pinned to the versions tested on both machines. Update both requirements files together when changing the ML stack. Never run both profile commands at the same time.
-
-## Send a Checkpoint from the Active PC
-
-1. Press `Ctrl+C` once and wait until the crawler and all Python worker processes have exited.
-2. Run the active profile's status command: `python main.py status` on the RTX 3080 or `python 4090/main.py status` on the RTX 4090. The checkpoint must show `Processing: 0`. If it does not, keep the crawler stopped. Once the rows have been stale for more than one hour, opening the progress tracker recovers them to `pending`; verify status again before continuing.
-3. Confirm there are no live SQLite sidecars named `progress.db-wal`, `progress.db-shm`, or `progress.db-journal`.
-4. Fetch GitHub and verify that the active PC started from the current remote commit:
-
-   ```powershell
-   git fetch origin
-   git rev-list --left-right --count HEAD...origin/main
-   ```
-
-   The command must print `0 0`. If it does not, stop and reconcile the machines before staging; never resolve a `progress.db` conflict by blindly choosing "ours" or "theirs."
-
-5. Review, commit, and push the complete checkpoint:
-
-   ```powershell
-   git add -A
-   git status --short
-   git diff --cached --stat
-   git commit -m "data: checkpoint crawl progress from WORKSTATION"
-   git push origin main
-   git status --short --branch
-   git lfs status
-   ```
-
-The final Git status must be clean and aligned with `origin/main` before the receiving PC starts.
-
-## Receive the Checkpoint on the Other PC
-
-The receiving PC must not have a crawler running or unsaved local progress.
+Inspect and commit the checkpoint:
 
 ```powershell
 git status --short
-git fetch origin
-git pull --ff-only origin main
-git lfs pull
-git status --short --branch
-git lfs ls-files
+git add --all
+git commit -m "checkpoint: hand off crawler state"
+.\scripts\handoff.ps1 -Direction push
 ```
 
-Do not continue if the first status command shows local changes or if `git pull --ff-only` refuses to update. That indicates divergent work requiring deliberate reconciliation.
+Do not copy a live `progress.db`, its WAL sidecars, or partially staged output.
+The crawler's clean shutdown guarantees that interrupted source output was not
+committed and those source rows are back in `pending`.
 
-From the repository root, run exactly one profile's status command:
+## Receive A Checkpoint
+
+On the destination PC, with no local changes:
 
 ```powershell
-# RTX 3080
-python main.py status
-
-# RTX 4090
-python 4090/main.py status
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\handoff.ps1 -Direction pull
+.\.venv\Scripts\python.exe main.py doctor --profile 3080
+.\.venv\Scripts\python.exe main.py status
 ```
 
-Once the tree is clean and the checkpoint shows `Processing: 0`, resume exactly one profile:
+Use `--profile 4090` on the 4090 PC. If dependencies changed since the last
+handoff, rerun `scripts/setup.ps1`.
+
+Start the crawler:
 
 ```powershell
-# RTX 3080
-python main.py run --all
-
-# RTX 4090
-python 4090/main.py run --all
+.\scripts\run.ps1 -Profile 3080 run --all
 ```
 
-## Switching Back
+or:
 
-Repeat the same sequence in the opposite direction: stop and push from the currently active PC, verify a clean remote checkpoint, then pull and resume on the other PC. Never have both crawlers active from copies of the same checkpoint.
+```powershell
+.\scripts\run.ps1 -Profile 4090 run --all
+```
+
+## After A Crash
+
+A normal `Ctrl+C` releases claims immediately. After a hard power loss, the
+last active rows remain leased for 10 minutes to protect a worker that may still
+be alive.
+
+Once you have confirmed no crawler process is running, recover immediately with:
+
+```powershell
+python main.py recover --minutes 0
+```
+
+Failed sources retry automatically after backoff. To retry every failed source
+immediately, including attempts that reached the limit:
+
+```powershell
+python main.py retry --all
+```
+
+## Conflict Rule
+
+If both PCs accidentally created commits, stop. Do not merge two versions of
+`data/progress.db` or combine two sets of source shards by hand. Choose the
+checkpoint from the PC that ran most recently, preserve the other branch for
+inspection, and resume from the chosen serial checkpoint.

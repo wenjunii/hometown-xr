@@ -1,79 +1,118 @@
-"""
-Central configuration for the Common Crawl Home/Belonging Extractor.
-"""
+"""Central configuration for the Hometown XR Common Crawl extractor."""
+
+from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
-# ── Project Paths ────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = DATA_DIR / "output"
 MODELS_DIR = DATA_DIR / "models"
 DB_PATH = DATA_DIR / "progress.db"
+RUN_LOCK_PATH = DATA_DIR / ".crawler.lock"
 
-# Ensure directories exist
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-MODELS_DIR.mkdir(parents=True, exist_ok=True)
+for directory in (DATA_DIR, OUTPUT_DIR, MODELS_DIR):
+    directory.mkdir(parents=True, exist_ok=True)
 
-# ── Common Crawl Settings ────────────────────────────────────────────────────
+
+# Common Crawl
 CC_BASE_URL = "https://data.commoncrawl.org/"
 DEFAULT_CRAWL_ID = "CC-MAIN-2026-12"
 
-# ── Matching Settings ────────────────────────────────────────────────────────
-# Minimum cosine similarity score to accept a paragraph as a match
+
+# Matching
 SEMANTIC_THRESHOLD = 0.45
-
-# Minimum paragraph length in characters (filters out navigation text, short labels)
 MIN_PARAGRAPH_LENGTH = 150
-
-# Maximum paragraph length in characters (filters out extremely long blocks)
 MAX_PARAGRAPH_LENGTH = 5000
-
-# Batch size for sentence-transformer encoding
-# Higher values (128+) recommended for GPU
-ENCODING_BATCH_SIZE = 128
-
-# ── Narrative Voice Filter ───────────────────────────────────────────────────
-# Enable the narrative voice filter (Stage 3) to prefer personal stories
 NARRATIVE_FILTER_ENABLED = True
-
-# Minimum number of first-person / narrative indicators required
-# in a paragraph to pass the narrative filter
 MIN_NARRATIVE_INDICATORS = 8
-
-# ── Semantic Model ───────────────────────────────────────────────────────────
-# Multilingual sentence transformer — supports 50+ languages, ~500 MB
 SEMANTIC_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-# ── FastText Language Detection ──────────────────────────────────────────────
+
+# Language detection
 FASTTEXT_MODEL_URL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
 FASTTEXT_MODEL_PATH = MODELS_DIR / "lid.176.bin"
-
-# Minimum confidence for language detection
 LANG_DETECTION_THRESHOLD = 0.5
+LANG_DETECT_CHARS = 500
 
-# ── Network Settings ─────────────────────────────────────────────────────────
-HTTP_TIMEOUT = 60  # seconds
+
+# Network
+HTTP_TIMEOUT = 60
 HTTP_RETRIES = 3
 HTTP_BACKOFF_FACTOR = 1.0
 
-# ── Processing Settings ─────────────────────────────────────────────────────
-# Number of characters from a paragraph used for language detection
-LANG_DETECT_CHARS = 500
 
-# Device for semantic matching ('cuda', 'mps', or 'cpu')
-import torch
-if torch.cuda.is_available():
-    DEVICE = "cuda"
-elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-    DEVICE = "mps"
-else:
-    DEVICE = "cpu"
+# Retry and lease behavior
+MAX_FILE_ATTEMPTS = 4
+RETRY_BASE_SECONDS = 300
+RETRY_MAX_SECONDS = 21_600
+LEASE_TIMEOUT_SECONDS = 600
+HEARTBEAT_INTERVAL_SECONDS = 30
 
-# Multiprocessing settings
-# 7 workers optimized for performance and stability
-MAX_WORKERS = 7
-# Max number of paragraphs to send to matcher in one go (prevents memory spikes)
-MAX_PARAGRAPHS_PER_BATCH = 5000
+
+# "auto" is resolved lazily by the semantic matcher so importing lightweight
+# modules such as progress.py does not initialize PyTorch or CUDA.
+DEVICE = os.environ.get("HOMETOWN_XR_DEVICE", "auto")
+
+
+@dataclass(frozen=True)
+class HardwareProfile:
+    """Runtime settings that may differ between extractor workstations."""
+
+    name: str
+    workers: int
+    stream_batch_size: int
+    encoding_batch_size: int
+
+
+# Both machines currently use the proven seven-worker settings. Keeping the
+# profiles explicit makes future tuning a configuration change, not a code fork.
+HARDWARE_PROFILES = {
+    "3080": HardwareProfile("3080", 7, 200, 128),
+    "4090": HardwareProfile("4090", 7, 200, 128),
+}
+
+
+def detect_hardware_profile() -> str:
+    """Return the configured or GPU-detected hardware profile name."""
+    requested = os.environ.get("HOMETOWN_XR_PROFILE", "auto").lower()
+    if requested in HARDWARE_PROFILES:
+        return requested
+    if requested != "auto":
+        valid = ", ".join(sorted(HARDWARE_PROFILES))
+        raise ValueError(f"Unknown hardware profile {requested!r}; choose {valid}")
+
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            device_name = torch.cuda.get_device_name(0).lower()
+            if "4090" in device_name:
+                return "4090"
+            if "3080" in device_name:
+                return "3080"
+    except (ImportError, RuntimeError):
+        pass
+
+    return "3080"
+
+
+def get_hardware_profile(name: str | None = None) -> HardwareProfile:
+    """Resolve an explicit profile name or auto-detect the local GPU."""
+    resolved = detect_hardware_profile() if not name or name == "auto" else name
+    try:
+        return HARDWARE_PROFILES[resolved]
+    except KeyError as exc:
+        valid = ", ".join(sorted(HARDWARE_PROFILES))
+        raise ValueError(f"Unknown hardware profile {resolved!r}; choose {valid}") from exc
+
+
+_legacy_profile_name = os.environ.get("HOMETOWN_XR_PROFILE", "3080").lower()
+if _legacy_profile_name not in HARDWARE_PROFILES:
+    _legacy_profile_name = "3080"
+_DEFAULT_PROFILE = HARDWARE_PROFILES[_legacy_profile_name]
+MAX_WORKERS = _DEFAULT_PROFILE.workers
+STREAM_BATCH_SIZE = _DEFAULT_PROFILE.stream_batch_size
+ENCODING_BATCH_SIZE = _DEFAULT_PROFILE.encoding_batch_size

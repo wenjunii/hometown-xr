@@ -21,6 +21,13 @@ build/
 data/progress.db-wal
 data/progress.db-shm
 data/progress.db-journal
+data/.crawler.lock
+data/.refilter-journal.json
+data/.refilter-journal.tmp
+data/.refilter-staging-*/
+data/.refilter-backup-*/
+data/output/.staging/
+data/exports/hometown-xr-export-*.db
 
 # IDE
 .vscode/

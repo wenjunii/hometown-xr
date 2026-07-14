@@ -9,17 +9,17 @@ Handles:
 
 import gzip
 import logging
-import re
-import xml.etree.ElementTree as ET
+from contextlib import contextmanager
+from typing import Iterator
 
+import boto3
 import requests
+from botocore.exceptions import ClientError, NoCredentialsError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-import boto3
-from botocore.exceptions import NoCredentialsError, ClientError
 
-from config import CC_BASE_URL, HTTP_TIMEOUT, HTTP_RETRIES, HTTP_BACKOFF_FACTOR
-from crawl_catalog import CrawlInfo, is_legacy_crawl
+from config import CC_BASE_URL, HTTP_BACKOFF_FACTOR, HTTP_RETRIES, HTTP_TIMEOUT
+from crawl_catalog import CrawlInfo
 
 logger = logging.getLogger(__name__)
 
@@ -91,15 +91,15 @@ def _fetch_arc_paths(crawl_info: CrawlInfo) -> list[str]:
     arc_paths = []
 
     try:
-        s3 = boto3.client('s3')
-        paginator = s3.get_paginator('list_objects_v2')
-        pages = paginator.paginate(Bucket='commoncrawl', Prefix=base_prefix)
+        s3 = boto3.client("s3")
+        paginator = s3.get_paginator("list_objects_v2")
+        pages = paginator.paginate(Bucket="commoncrawl", Prefix=base_prefix)
 
         for page in pages:
-            if 'Contents' not in page:
+            if "Contents" not in page:
                 continue
-            for obj in page['Contents']:
-                key = obj['Key']
+            for obj in page["Contents"]:
+                key = obj["Key"]
                 if key and (key.endswith(".arc.gz") or key.endswith(".arc")):
                     arc_paths.append(key)
 
@@ -110,18 +110,21 @@ def _fetch_arc_paths(crawl_info: CrawlInfo) -> list[str]:
             "to list legacy ARC path files from Common Crawl's S3 bucket."
         )
     except ClientError as e:
-        if e.response['Error']['Code'] == 'AccessDenied':
-            logger.error("Access Denied to S3. Ensure your AWS IAM user has s3:ListBucket permissions for 'commoncrawl'.")
+        if e.response["Error"]["Code"] == "AccessDenied":
+            logger.error(
+                "Access Denied to S3. Ensure your AWS IAM user has s3:ListBucket permissions for 'commoncrawl'."
+            )
         else:
             logger.error(f"Failed to list S3 directory: {e}")
     except Exception as e:
-         logger.error(f"Unexpected error listing S3 for legacy crawl: {e}")
+        logger.error(f"Unexpected error listing S3 for legacy crawl: {e}")
 
     logger.info(f"Found {len(arc_paths)} ARC files for {crawl_info.crawl_id}")
     return arc_paths
 
 
-def stream_file(file_path: str, crawl_info: CrawlInfo):
+@contextmanager
+def stream_file(file_path: str, crawl_info: CrawlInfo) -> Iterator[object]:
     """
     Open an HTTP stream to a WET or ARC file.
 
@@ -129,8 +132,8 @@ def stream_file(file_path: str, crawl_info: CrawlInfo):
         file_path: Relative path to the file
         crawl_info: Crawl metadata
 
-    Returns:
-        A file-like stream object
+    Yields:
+        A file-like stream object. The HTTP response is always closed.
     """
     # Modern crawls use data.commoncrawl.org
     # Legacy crawls also accessible via data.commoncrawl.org
@@ -138,7 +141,9 @@ def stream_file(file_path: str, crawl_info: CrawlInfo):
     logger.debug(f"Streaming file: {url}")
 
     response = _session.get(url, timeout=HTTP_TIMEOUT, stream=True)
-    response.raise_for_status()
-
-    response.raw.decode_content = True
-    return response.raw
+    try:
+        response.raise_for_status()
+        response.raw.decode_content = True
+        yield response.raw
+    finally:
+        response.close()

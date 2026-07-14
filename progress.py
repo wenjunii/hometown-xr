@@ -1,266 +1,413 @@
-"""
-SQLite-based progress tracking for resumable processing.
+"""SQLite progress tracking with retryable, leased work claims."""
 
-Tracks the processing state of each data file (WET or ARC) so the
-application can be stopped and resumed at any time without losing progress.
-
-Supports per-crawl tracking for processing multiple crawls.
-"""
+from __future__ import annotations
 
 import logging
 import sqlite3
-from datetime import datetime, timezone, timedelta
+import uuid
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Iterable
 
-from config import DB_PATH
+from config import (
+    DB_PATH,
+    LEASE_TIMEOUT_SECONDS,
+    MAX_FILE_ATTEMPTS,
+    RETRY_BASE_SECONDS,
+    RETRY_MAX_SECONDS,
+)
 
 logger = logging.getLogger(__name__)
 
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+@dataclass(frozen=True)
+class ClaimedFile:
+    """A file claim owned by one parent process until completion or release."""
+
+    file_path: str
+    lease_id: str
+    attempt_count: int
+
+
 class ProgressTracker:
-    """
-    SQLite-based progress tracker.
+    """Track files and atomically lease ready work to crawler processes."""
 
-    Each data file is tracked with a status:
-    - pending: not yet processed
-    - processing: currently being processed
-    - completed: successfully processed
-    - failed: processing failed (will be retried on next run)
-
-    Files are scoped by crawl_id so multiple crawls can be
-    tracked independently in the same database.
-    """
-
-    def __init__(self):
-        self.db_path = str(DB_PATH)
+    def __init__(self, db_path: str | Path = DB_PATH):
+        self.db_path = str(db_path)
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
-        self._recover_stuck()
 
     def _get_conn(self) -> sqlite3.Connection:
-        """Get a new database connection."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA busy_timeout = 30000")
         return conn
 
-    def _init_db(self):
-        """Create tables if they don't exist."""
-        conn = self._get_conn()
-        try:
-            conn.executescript("""
+    def _init_db(self) -> None:
+        """Create the current schema and migrate older checkpoints in place."""
+        with self._get_conn() as conn:
+            conn.executescript(
+                """
                 CREATE TABLE IF NOT EXISTS processing_state (
                     file_path TEXT PRIMARY KEY,
                     crawl_id TEXT,
-                    status TEXT DEFAULT 'pending',
-                    records_processed INTEGER DEFAULT 0,
-                    matches_found INTEGER DEFAULT 0,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    records_processed INTEGER NOT NULL DEFAULT 0,
+                    matches_found INTEGER NOT NULL DEFAULT 0,
                     error_message TEXT,
                     started_at TEXT,
-                    completed_at TEXT
+                    completed_at TEXT,
+                    attempt_count INTEGER NOT NULL DEFAULT 0,
+                    next_retry_at TEXT,
+                    lease_id TEXT,
+                    heartbeat_at TEXT
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_status
                     ON processing_state(status);
-
                 CREATE INDEX IF NOT EXISTS idx_crawl_status
                     ON processing_state(crawl_id, status);
-            """)
-            conn.commit()
-        finally:
-            conn.close()
-
-    def _recover_stuck(self):
-        """Reset any files stuck in 'processing' state for more than 1 hour (from a crash)."""
-        conn = self._get_conn()
-        try:
-            # Only recover files that started processing more than 1 hour ago
-            # This prevents status checks from interfering with an active run
-            an_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-            
-            cursor = conn.execute(
-                "UPDATE processing_state SET status = 'pending', started_at = NULL "
-                "WHERE status = 'processing' AND started_at < ?",
-                (an_hour_ago,)
+                """
             )
-            if cursor.rowcount > 0:
-                logger.info(
-                    f"Recovered {cursor.rowcount} files stuck in 'processing' state"
-                )
-            conn.commit()
-        finally:
-            conn.close()
 
-    def initialize_paths(self, file_paths: list[str], crawl_id: str = ""):
-        """
-        Populate the database with file paths for a crawl.
-        Skips paths that already exist (idempotent).
-        """
-        conn = self._get_conn()
-        try:
+            columns = {row["name"] for row in conn.execute("PRAGMA table_info(processing_state)")}
+            migrations = {
+                "attempt_count": "INTEGER NOT NULL DEFAULT 0",
+                "next_retry_at": "TEXT",
+                "lease_id": "TEXT",
+                "heartbeat_at": "TEXT",
+            }
+            for name, declaration in migrations.items():
+                if name not in columns:
+                    conn.execute(f"ALTER TABLE processing_state ADD COLUMN {name} {declaration}")
+
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_retry_ready "
+                "ON processing_state(crawl_id, status, next_retry_at)"
+            )
+
+    def initialize_paths(self, file_paths: list[str], crawl_id: str = "") -> None:
+        """Add newly discovered source paths without changing existing state."""
+        with self._get_conn() as conn:
             conn.executemany(
-                "INSERT OR IGNORE INTO processing_state (file_path, crawl_id) "
-                "VALUES (?, ?)",
-                [(p, crawl_id) for p in file_paths],
+                "INSERT OR IGNORE INTO processing_state (file_path, crawl_id) VALUES (?, ?)",
+                [(path, crawl_id) for path in file_paths],
             )
-            conn.commit()
             count = conn.execute(
                 "SELECT COUNT(*) FROM processing_state WHERE crawl_id = ?",
-                (crawl_id,)
+                (crawl_id,),
             ).fetchone()[0]
-            logger.info(f"Progress database has {count} tracked files for {crawl_id}")
-        finally:
-            conn.close()
+        logger.info("Progress database has %s tracked files for %s", count, crawl_id)
 
-    def get_batch_pending(self, crawl_id: str = "", limit: int = 1000) -> list[str]:
-        """Get a batch of files with 'pending' status for a given crawl."""
-        conn = self._get_conn()
-        try:
-            rows = conn.execute(
-                "SELECT file_path FROM processing_state "
-                "WHERE status = 'pending' AND crawl_id = ? LIMIT ?",
-                (crawl_id, limit)
-            ).fetchall()
-            return [row["file_path"] for row in rows]
-        finally:
-            conn.close()
-
-    def get_next_pending(self, crawl_id: str = "") -> str | None:
-        """Get the next file with 'pending' status for a given crawl."""
-        batch = self.get_batch_pending(crawl_id, limit=1)
-        return batch[0] if batch else None
-
-    def mark_batch_processing(self, file_paths: list[str]):
-        """Mark multiple files as currently being processed in a single transaction."""
-        if not file_paths:
-            return
-        conn = self._get_conn()
-        try:
-            now = datetime.now(timezone.utc).isoformat()
-            # SQLite handles about 999 parameters per query usually, 
-            # so we use executemany for safety and speed.
-            conn.executemany(
-                "UPDATE processing_state SET status = 'processing', "
-                "started_at = ? WHERE file_path = ?",
-                [(now, p) for p in file_paths],
+    def recover_stale_leases(self, max_age_seconds: int = LEASE_TIMEOUT_SECONDS) -> int:
+        """Release claims whose parent process stopped sending heartbeats."""
+        cutoff = (_utc_now() - timedelta(seconds=max_age_seconds)).isoformat()
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE processing_state
+                SET status = 'pending',
+                    started_at = NULL,
+                    heartbeat_at = NULL,
+                    lease_id = NULL,
+                    attempt_count = CASE
+                        WHEN attempt_count > 0 THEN attempt_count - 1 ELSE 0 END
+                WHERE status = 'processing'
+                  AND (
+                    COALESCE(heartbeat_at, started_at) IS NULL
+                    OR COALESCE(heartbeat_at, started_at) < ?
+                  )
+                """,
+                (cutoff,),
             )
+            recovered = cursor.rowcount
+        if recovered:
+            logger.info("Recovered %s stale processing leases", recovered)
+        return recovered
+
+    def claim_files(
+        self,
+        crawl_id: str,
+        limit: int,
+        max_attempts: int = MAX_FILE_ATTEMPTS,
+    ) -> list[ClaimedFile]:
+        """Atomically claim ready pending or retryable failed files."""
+        if limit <= 0:
+            return []
+
+        now = _utc_now().isoformat()
+        claims: list[ClaimedFile] = []
+        conn = self._get_conn()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            rows = conn.execute(
+                """
+                SELECT file_path, attempt_count
+                FROM processing_state
+                WHERE crawl_id = ?
+                  AND (
+                    status = 'pending'
+                    OR (
+                      status = 'failed'
+                      AND attempt_count < ?
+                      AND (next_retry_at IS NULL OR next_retry_at <= ?)
+                    )
+                  )
+                ORDER BY CASE WHEN status = 'failed' THEN 0 ELSE 1 END,
+                         completed_at,
+                         file_path
+                LIMIT ?
+                """,
+                (crawl_id, max_attempts, now, limit),
+            ).fetchall()
+
+            for row in rows:
+                lease_id = uuid.uuid4().hex
+                attempt_count = int(row["attempt_count"] or 0) + 1
+                conn.execute(
+                    """
+                    UPDATE processing_state
+                    SET status = 'processing',
+                        attempt_count = ?,
+                        lease_id = ?,
+                        started_at = ?,
+                        heartbeat_at = ?,
+                        next_retry_at = NULL
+                    WHERE file_path = ?
+                    """,
+                    (attempt_count, lease_id, now, now, row["file_path"]),
+                )
+                claims.append(ClaimedFile(row["file_path"], lease_id, attempt_count))
             conn.commit()
+            return claims
+        except Exception:
+            conn.rollback()
+            raise
         finally:
             conn.close()
 
-    def mark_processing(self, file_path: str):
-        """Mark a file as currently being processed."""
-        self.mark_batch_processing([file_path])
+    def heartbeat_claims(self, claims: Iterable[ClaimedFile]) -> int:
+        """Refresh active leases so another run cannot recover live work."""
+        claim_list = list(claims)
+        if not claim_list:
+            return 0
+        now = _utc_now().isoformat()
+        updated = 0
+        with self._get_conn() as conn:
+            for claim in claim_list:
+                cursor = conn.execute(
+                    """
+                    UPDATE processing_state SET heartbeat_at = ?
+                    WHERE file_path = ? AND status = 'processing' AND lease_id = ?
+                    """,
+                    (now, claim.file_path, claim.lease_id),
+                )
+                updated += cursor.rowcount
+        return updated
+
+    def release_claim(self, claim: ClaimedFile) -> bool:
+        """Return an interrupted or cancelled claim to pending work."""
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE processing_state
+                SET status = 'pending',
+                    started_at = NULL,
+                    heartbeat_at = NULL,
+                    lease_id = NULL,
+                    next_retry_at = NULL,
+                    attempt_count = CASE
+                        WHEN attempt_count > 0 THEN attempt_count - 1 ELSE 0 END
+                WHERE file_path = ? AND status = 'processing' AND lease_id = ?
+                """,
+                (claim.file_path, claim.lease_id),
+            )
+            return cursor.rowcount == 1
+
+    def release_claims(self, claims: Iterable[ClaimedFile]) -> int:
+        return sum(1 for claim in claims if self.release_claim(claim))
 
     def mark_completed(
-        self, file_path: str, records_processed: int, matches_found: int
-    ):
-        """Mark a file as successfully processed."""
+        self,
+        file_path: str,
+        records_processed: int,
+        matches_found: int,
+        lease_id: str | None = None,
+    ) -> bool:
+        """Commit successful source statistics if the caller owns the lease."""
+        now = _utc_now().isoformat()
+        where = "file_path = ?"
+        params: list[object] = [
+            records_processed,
+            matches_found,
+            now,
+            file_path,
+        ]
+        if lease_id is not None:
+            where += " AND status = 'processing' AND lease_id = ?"
+            params.append(lease_id)
+
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                f"""
+                UPDATE processing_state
+                SET status = 'completed',
+                    records_processed = ?,
+                    matches_found = ?,
+                    completed_at = ?,
+                    error_message = NULL,
+                    next_retry_at = NULL,
+                    lease_id = NULL,
+                    heartbeat_at = NULL
+                WHERE {where}
+                """,
+                params,
+            )
+            return cursor.rowcount == 1
+
+    def mark_failed(
+        self,
+        file_path: str,
+        error: str,
+        lease_id: str | None = None,
+        retry_base_seconds: int = RETRY_BASE_SECONDS,
+    ) -> bool:
+        """Record a failed attempt and schedule exponential-backoff retry."""
         conn = self._get_conn()
         try:
-            now = datetime.now(timezone.utc).isoformat()
-            conn.execute(
-                "UPDATE processing_state SET status = 'completed', "
-                "records_processed = ?, matches_found = ?, "
-                "completed_at = ? WHERE file_path = ?",
-                (records_processed, matches_found, now, file_path),
+            conn.execute("BEGIN IMMEDIATE")
+            where = "file_path = ?"
+            lookup_params: list[object] = [file_path]
+            if lease_id is not None:
+                where += " AND status = 'processing' AND lease_id = ?"
+                lookup_params.append(lease_id)
+            row = conn.execute(
+                f"SELECT attempt_count FROM processing_state WHERE {where}",
+                lookup_params,
+            ).fetchone()
+            if row is None:
+                conn.rollback()
+                return False
+
+            attempt = max(1, int(row["attempt_count"] or 0))
+            delay = min(
+                RETRY_MAX_SECONDS,
+                retry_base_seconds * (2 ** max(0, attempt - 1)),
+            )
+            now = _utc_now()
+            next_retry = (now + timedelta(seconds=delay)).isoformat()
+            cursor = conn.execute(
+                f"""
+                UPDATE processing_state
+                SET status = 'failed',
+                    error_message = ?,
+                    completed_at = ?,
+                    next_retry_at = ?,
+                    lease_id = NULL,
+                    heartbeat_at = NULL
+                WHERE {where}
+                """,
+                [error[:4000], now.isoformat(), next_retry, *lookup_params],
             )
             conn.commit()
+            return cursor.rowcount == 1
+        except Exception:
+            conn.rollback()
+            raise
         finally:
             conn.close()
 
-    def mark_failed(self, file_path: str, error: str):
-        """Mark a file as failed."""
-        conn = self._get_conn()
-        try:
-            now = datetime.now(timezone.utc).isoformat()
-            conn.execute(
-                "UPDATE processing_state SET status = 'failed', "
-                "error_message = ?, completed_at = ? WHERE file_path = ?",
-                (error, now, file_path),
+    def retry_failed(self, crawl_id: str | None = None) -> int:
+        """Reset failed files so an operator-requested retry starts immediately."""
+        where = "status = 'failed'"
+        params: tuple[object, ...] = ()
+        if crawl_id is not None:
+            where += " AND crawl_id = ?"
+            params = (crawl_id,)
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                f"""
+                UPDATE processing_state
+                SET status = 'pending',
+                    attempt_count = 0,
+                    next_retry_at = NULL,
+                    started_at = NULL,
+                    heartbeat_at = NULL,
+                    lease_id = NULL
+                WHERE {where}
+                """,
+                params,
             )
-            conn.commit()
-        finally:
-            conn.close()
+            return cursor.rowcount
 
-    def get_summary(self, crawl_id: str | None = None) -> dict:
-        """
-        Get a progress summary.
+    def get_summary(self, crawl_id: str | None = None) -> dict[str, int | float]:
+        """Return aggregate state, including work ready for this run."""
+        now = _utc_now().isoformat()
+        scope = ""
+        params: list[object] = [MAX_FILE_ATTEMPTS, now, MAX_FILE_ATTEMPTS]
+        if crawl_id is not None:
+            scope = "WHERE crawl_id = ?"
+            params.append(crawl_id)
 
-        Args:
-            crawl_id: If provided, only show stats for this crawl.
-                      If None, show overall stats.
-        """
-        conn = self._get_conn()
-        try:
-            if crawl_id is not None:
-                # Stats for a specific crawl
-                query = """
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-                        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-                        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-                        SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
-                        COALESCE(SUM(records_processed), 0) as total_records,
-                        COALESCE(SUM(matches_found), 0) as total_matches
-                    FROM processing_state
-                    WHERE crawl_id = ?
-                """
-                row = conn.execute(query, (crawl_id,)).fetchone()
-            else:
-                # Overall stats
-                query = """
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-                        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-                        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-                        SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
-                        COALESCE(SUM(records_processed), 0) as total_records,
-                        COALESCE(SUM(matches_found), 0) as total_matches
-                    FROM processing_state
-                """
-                row = conn.execute(query).fetchone()
+        with self._get_conn() as conn:
+            row = conn.execute(
+                f"""
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+                    SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+                    SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) AS processing,
+                    SUM(CASE WHEN status = 'failed'
+                              AND attempt_count < ?
+                              AND (next_retry_at IS NULL OR next_retry_at <= ?)
+                             THEN 1 ELSE 0 END) AS retryable,
+                    SUM(CASE WHEN status = 'failed' AND attempt_count >= ?
+                             THEN 1 ELSE 0 END) AS exhausted,
+                    COALESCE(SUM(records_processed), 0) AS total_records,
+                    COALESCE(SUM(matches_found), 0) AS total_matches
+                FROM processing_state
+                {scope}
+                """,
+                params,
+            ).fetchone()
 
-            if not row or row["total"] == 0:
-                return {
-                    "total_files": 0, "completed": 0, "failed": 0, "pending": 0,
-                    "processing": 0, "total_records": 0, "total_matches": 0, "progress_pct": 0
-                }
+        total = int(row["total"] or 0)
+        completed = int(row["completed"] or 0)
+        pending = int(row["pending"] or 0)
+        retryable = int(row["retryable"] or 0)
+        return {
+            "total_files": total,
+            "completed": completed,
+            "failed": int(row["failed"] or 0),
+            "pending": pending,
+            "processing": int(row["processing"] or 0),
+            "retryable": retryable,
+            "exhausted": int(row["exhausted"] or 0),
+            "ready": pending + retryable,
+            "total_records": int(row["total_records"] or 0),
+            "total_matches": int(row["total_matches"] or 0),
+            "progress_pct": (completed / total * 100) if total else 0.0,
+        }
 
-            return {
-                "total_files": row["total"],
-                "completed": row["completed"],
-                "failed": row["failed"],
-                "pending": row["pending"],
-                "processing": row["processing"],
-                "total_records": row["total_records"],
-                "total_matches": row["total_matches"],
-                "progress_pct": (row["completed"] / row["total"] * 100) if row["total"] > 0 else 0,
-            }
-        finally:
-            conn.close()
-
-    def get_per_crawl_summary(self) -> list[dict]:
-        """Get a progress summary broken down by crawl_id."""
-        conn = self._get_conn()
-        try:
+    def get_per_crawl_summary(self) -> list[dict[str, int | str]]:
+        with self._get_conn() as conn:
             rows = conn.execute(
-                "SELECT crawl_id, "
-                "COUNT(*) as total, "
-                "SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed, "
-                "COALESCE(SUM(matches_found), 0) as matches "
-                "FROM processing_state "
-                "GROUP BY crawl_id "
-                "ORDER BY crawl_id"
+                """
+                SELECT crawl_id,
+                       COUNT(*) AS total,
+                       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+                       SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
+                       SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) AS processing,
+                       COALESCE(SUM(matches_found), 0) AS matches
+                FROM processing_state
+                GROUP BY crawl_id
+                ORDER BY crawl_id
+                """
             ).fetchall()
-
-            return [
-                {
-                    "crawl_id": row["crawl_id"],
-                    "total": row["total"],
-                    "completed": row["completed"],
-                    "matches": row["matches"],
-                }
-                for row in rows
-            ]
-        finally:
-            conn.close()
+        return [dict(row) for row in rows]

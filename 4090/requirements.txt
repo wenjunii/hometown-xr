@@ -1,9 +1,1 @@
-warcio==1.8.1
-requests==2.34.2
-sentence-transformers==2.7.0
-transformers==4.40.2
-fasttext-wheel==0.9.2
-torch==2.1.0
-tqdm==4.68.4
-boto3==1.43.47
-numpy==1.26.4
+-r ../requirements.txt
