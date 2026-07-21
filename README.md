@@ -145,6 +145,11 @@ The Blackwell-generation 5090 uses `requirements-lock-5090.txt`, which pins
 stable PyTorch 2.12.1 with its CUDA 13.0 runtime. Add `-Tune` to run a quick
 local hardware benchmark or `-Dev` to install the test toolchain.
 
+PyTorch and Transformers are excluded from automatic Dependabot version bumps.
+They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay
+separate, and the pinned sentence-transformer constrains compatible
+Transformers releases. CI tests these profile relationships on every change.
+
 Verify the environment and checkpoint:
 
 ```powershell
