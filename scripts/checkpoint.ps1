@@ -9,57 +9,27 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $Lock = Join-Path $Root "data\.crawler.lock"
 
-function Test-SensitivePath {
-    param([Parameter(Mandatory = $true)][string]$Path)
+function Update-OriginBranch {
+    param([Parameter(Mandatory = $true)][string]$Branch)
 
-    $Normalized = $Path.Replace("\", "/")
-    $Leaf = [IO.Path]::GetFileName($Normalized)
-    if ($Leaf -eq ".env.example") {
-        return $false
-    }
-    return (
-        $Leaf -eq ".env" -or
-        $Leaf -like ".env.*" -or
-        $Normalized -match "(^|/)(credentials?|secrets?)([._/-]|$)" -or
-        $Normalized -match "\.(pem|p12|pfx)$" -or
-        $Normalized -match "(^|/)(id_rsa|id_ed25519)([^/]*$)" -or
-        $Normalized -match "(^|/)service[-_]?account[^/]*\.json$"
-    )
-}
-
-function Assert-NoSensitiveStagedPaths {
-    $StagedPaths = @(git diff --cached --name-only --diff-filter=ACMR)
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unable to inspect staged paths for credentials."
-    }
-    $SensitivePaths = @($StagedPaths | Where-Object { Test-SensitivePath $_ })
-    if ($SensitivePaths.Count -eq 0) {
-        return
-    }
-    foreach ($SensitivePath in $SensitivePaths) {
-        git restore --staged -- $SensitivePath
-        if ($LASTEXITCODE -ne 0) {
-            throw "A credential-like path was staged and could not be removed: $SensitivePath"
-        }
-    }
-    throw (
-        "Refusing to checkpoint credential-like paths: " +
-        ($SensitivePaths -join ", ") +
-        ". They were removed from the staging area and remain local."
-    )
-}
-
-function Update-OriginMain {
     git fetch --prune origin
     if ($LASTEXITCODE -ne 0) {
-        throw "Unable to fetch origin/main before handoff."
+        throw "Unable to fetch origin before handoff."
     }
-    $BehindText = git rev-list --count HEAD..origin/main
+    git show-ref --verify --quiet "refs/remotes/origin/$Branch"
+    $RemoteStatus = $LASTEXITCODE
+    if ($RemoteStatus -eq 1) {
+        return
+    }
+    if ($RemoteStatus -ne 0) {
+        throw "Unable to inspect origin/$Branch before handoff."
+    }
+    $BehindText = git rev-list --count "HEAD..origin/$Branch"
     if ($LASTEXITCODE -ne 0) {
-        throw "Unable to compare this checkpoint with origin/main."
+        throw "Unable to compare this checkpoint with origin/$Branch."
     }
     if ([int]$BehindText -gt 0) {
-        throw "origin/main is ahead. Run .\scripts\handoff.ps1 -Direction pull first."
+        throw "origin/$Branch is ahead. Run .\scripts\handoff.ps1 -Direction pull first."
     }
 }
 
@@ -76,11 +46,11 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Unable to determine the current Git branch."
     }
-    if ($Branch -ne "main") {
-        throw "Workstation checkpoints must be sent from main; current branch is '$Branch'."
+    if ([string]::IsNullOrWhiteSpace($Branch)) {
+        throw "Checkpointing from a detached HEAD is not supported. Switch to a branch first."
     }
     if (-not $NoPush) {
-        Update-OriginMain
+        Update-OriginBranch -Branch $Branch
     }
 
     $CheckpointArgs = @((Join-Path $Root "main.py"), "checkpoint")
@@ -97,7 +67,10 @@ try {
     }
 
     git add -A
-    Assert-NoSensitiveStagedPaths
+    & $Python (Join-Path $Root "credential_guard.py") --scope staged --unstage
+    if ($LASTEXITCODE -ne 0) {
+        throw "Checkpoint stopped because the staged credential scan failed."
+    }
     git diff --cached --quiet
     $DiffExit = $LASTEXITCODE
     if ($DiffExit -eq 1) {
@@ -111,23 +84,23 @@ try {
     }
 
     if (-not $NoPush) {
-        Update-OriginMain
+        Update-OriginBranch -Branch $Branch
         git lfs status
         if ($LASTEXITCODE -ne 0) {
             throw "Unable to inspect Git LFS state before push."
         }
-        git push origin HEAD:main
+        git push --set-upstream origin "HEAD:refs/heads/$Branch"
         if ($LASTEXITCODE -ne 0) {
             throw "Checkpoint push failed with exit code $LASTEXITCODE."
         }
         git fetch origin
         if ($LASTEXITCODE -ne 0) {
-            throw "Checkpoint was pushed, but origin/main could not be confirmed."
+            throw "Checkpoint was pushed, but origin/$Branch could not be confirmed."
         }
         $LocalHead = git rev-parse HEAD
-        $RemoteHead = git rev-parse origin/main
+        $RemoteHead = git rev-parse "origin/$Branch"
         if ($LASTEXITCODE -ne 0 -or $LocalHead -ne $RemoteHead) {
-            throw "Checkpoint push could not be verified against origin/main."
+            throw "Checkpoint push could not be verified against origin/$Branch."
         }
     }
 }

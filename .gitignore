@@ -21,12 +21,26 @@ credentials.*
 secrets/
 secrets.*
 *.pem
+*.key
+*.keytab
 *.p12
 *.pfx
+*.jks
+*.kdbx
+*.keystore
 id_rsa*
 id_ed25519*
 service-account*.json
 service_account*.json
+client-secret*.json
+client_secret*.json
+oauth*.json
+token*.json
+.git-credentials
+.netrc
+_netrc
+.npmrc
+.pypirc
 *.log
 
 # SQLite runtime sidecars (never sync a live database)

@@ -41,8 +41,21 @@ checkpoint, committed output and manifests, exports, bounded evaluation replay,
 annotations, and run history. Virtual environments, downloaded models, caches,
 live SQLite files, metrics, derived Parquet datasets, hardware overrides, and
 credential-like files remain local because they are unsafe to copy or can be
-recreated deterministically. `scripts\checkpoint.ps1` refuses to commit common
-credential filenames even if a local ignore rule is accidentally removed.
+recreated deterministically. `scripts\checkpoint.ps1` scans staged filenames
+and contents before every commit. Credential-like files are unstaged and the
+checkpoint stops, even if a local ignore rule is accidentally removed.
+
+Run the same guard at any time:
+
+```powershell
+.\scripts\security-check.ps1
+```
+
+The default scans tracked and non-ignored worktree files without printing
+secret values. Use `-Scope staged` to inspect exactly what is staged or
+`-Scope tracked` to inspect repository files. GitHub Actions repeats the tracked
+scan on every push and pull request. Keep credentials outside this repository;
+the scanner is a final guard, not a password manager.
 
 Before switching machines:
 
@@ -67,8 +80,10 @@ Use `4090` or `5090` in the first two commands on the corresponding PC. The
 receive command
 requires a clean worktree, performs a fast-forward-only Git pull plus Git LFS
 pull, then runs `doctor`, `status`, and `verify-output`. The send command works
-only from `main`, checks that `origin/main` is not ahead before checkpointing,
-and confirms the pushed commit against the remote.
+from the current non-detached branch, checks that the matching remote branch is
+not ahead before checkpointing, and confirms the pushed commit against that
+remote branch. Both PCs must use the same branch. Because `main` is protected,
+use a shared working branch until its pull request is approved and merged.
 
 ## Architecture
 
@@ -260,6 +275,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 -WorkerCount 1,4,7` | Compare worker counts on identical isolated real sources |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
+| `.\scripts\security-check.ps1` | Scan local Git candidates for credential paths and content |
 | `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\audit.ps1` | Plan a deterministic, isolated historical-source audit |
 | `.\scripts\audit.ps1 -Action run -Profile 3080 -Apply` | Run the reviewed audit without changing historical state |
@@ -627,7 +643,7 @@ signatures.py           filter contracts, run IDs, and Git provenance
 refilter_output.py      transactional schema/filter migration
 4090/                   RTX 4090 compatibility launchers
 5090/                   RTX 5090 compatibility launchers
-scripts/                setup, run, audit, evaluation, test, and handoff commands
+scripts/                setup, run, security, audit, evaluation, test, and handoff commands
 tests/                  unit, regression, and integration tests
 ```
 

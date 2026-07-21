@@ -7,6 +7,8 @@ if (-not (Test-Path -LiteralPath $Python)) {
 
 Push-Location $Root
 try {
+    & $Python (Join-Path $Root "credential_guard.py") --scope worktree
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Get-ChildItem (Join-Path $Root "scripts") -Filter *.ps1 | ForEach-Object {
         $Tokens = $null
         $ParseErrors = $null

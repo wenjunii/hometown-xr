@@ -27,9 +27,19 @@ The following remain local to each PC:
 This division lets all PCs use one checkpoint while retaining their own GPU
 tuning and reproducible derived data.
 
-The checkpoint script stages the complete tracked project, then refuses and
-unstages common credential-like paths before it creates a commit. Keep secrets
-outside the repository even when they are already covered by `.gitignore`.
+The checkpoint script stages the complete tracked project, then scans staged
+filenames and file contents before it creates a commit. Files with findings are
+unstaged, remain local, and stop the checkpoint. Keep secrets outside the
+repository even when they are already covered by `.gitignore`.
+
+Run a read-only scan before any handoff when local configuration changed:
+
+```powershell
+.\scripts\security-check.ps1
+```
+
+The default covers tracked and non-ignored worktree files. The scanner reports
+only paths, line numbers, and rule names; it never prints detected values.
 
 ## First-Time Setup
 
@@ -83,10 +93,12 @@ push in one command:
 .\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"
 ```
 
-The script first confirms that the current branch is `main` and that
-`origin/main` is not ahead. After the integrity checkpoint and commit, it
-checks Git LFS, pushes explicitly to `origin/main`, and confirms that the local
-and remote commit IDs match.
+The script requires a named branch and confirms that its matching remote branch
+is not ahead. After the integrity checkpoint and commit, it checks Git LFS,
+pushes the current branch, and confirms that the local and remote commit IDs
+match. Both workstations must check out the same branch. Because `main` is
+protected, use a shared working branch until its pull request is approved and
+merged; the script does not bypass repository protection.
 
 Checkpointing verifies every output checksum, compacts manifests and SQLite,
 merges replay/run history, and creates the deterministic compressed database
