@@ -5,10 +5,12 @@
 
 ---
 
-### 1. Seed Score: 0.734
+### Source Story for Matches 1, 2
+- **Seed Score:** 0.734
 - **Story-Length Passage:** `yes`
 - **Story Size:** 9 source paragraphs, 30 sentences, 2 excerpts
 - **Filter-Matched Paragraph:** 8 of 9
+- **Matches Export References:** `matches_en.md` #1, #2
 - **Keywords:** `heritage`
 - **Nearest Semantic Reference (Not a Summary):** 'My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
@@ -68,10 +70,12 @@
 
 ---
 
-### 2. Seed Score: 0.637
+### Source Story for Match 52
+- **Seed Score:** 0.637
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 24 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_en.md` #52
 - **Keywords:** `growing up`
 - **Nearest Semantic Reference (Not a Summary):** 'My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text

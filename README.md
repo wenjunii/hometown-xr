@@ -488,6 +488,14 @@ extraction uses only deterministic paragraph positions, literal relationship
 and loss terms, and structural boundaries. No LLM or generative model writes,
 selects, paraphrases, summarizes, or completes the story.
 
+Story headings reference the corresponding number in
+`matches_<language>.md`; they do not use an independent story sequence.
+Repeated crawl captures of the same story are deduplicated, so one heading can
+reference multiple matches, such as `Source Story for Matches 1, 2`. The next
+story may then reference `Match 52` if that is its actual position in the match
+export. Equal-score match ordering is deterministic by capture date and stable
+record ID on every workstation.
+
 `story_length_ready` means the source window contains at least 350 normalized
 characters and three sentence endings. Normal exports include only these
 passages. `-IncludeShort` retains shorter context for diagnostics; it is not

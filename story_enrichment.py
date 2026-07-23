@@ -15,6 +15,7 @@ from typing import Iterable
 from config import OUTPUT_DIR, STORIES_DIR, STORY_EXPANSION_VERSION
 from crawl_catalog import get_crawl_info
 from downloader import stream_file
+from export_md import build_match_rank_index
 from output import OutputWriter
 from processor import (
     ProcessingStats,
@@ -29,6 +30,12 @@ STORY_RECORD_SCHEMA_VERSION = 1
 
 def _count_label(count: int, singular: str) -> str:
     return f"{count} {singular}{'' if count == 1 else 's'}"
+
+
+def _match_reference_label(match_numbers: list[int]) -> str:
+    if len(match_numbers) == 1:
+        return f"Match {match_numbers[0]}"
+    return "Matches " + ", ".join(str(number) for number in match_numbers)
 
 
 def _source_key(source_file: str) -> str:
@@ -407,15 +414,34 @@ def _group_story_records(rows: Iterable[dict]) -> list[dict]:
     return stories
 
 
+def _attach_match_references(
+    stories: list[dict],
+    output_dir: str | Path,
+) -> None:
+    ranks = build_match_rank_index(output_dir)
+    for story in stories:
+        language = str(story.get("language", "unknown"))
+        match_numbers = []
+        for capture in story["captures"]:
+            reference = ranks.get(str(capture["record_id"]))
+            if reference is None or reference[0] != language:
+                continue
+            capture["match_number"] = reference[1]
+            match_numbers.append(reference[1])
+        story["match_numbers"] = sorted(set(match_numbers))
+
+
 def export_stories(
     stories_dir: str | Path = STORIES_DIR,
     export_dir: str | Path = STORIES_DIR.parent / "exports",
     include_short: bool = False,
+    output_dir: str | Path = OUTPUT_DIR,
 ) -> dict:
     """Write deterministic structured and Markdown story exports."""
     export_path = Path(export_dir)
     export_path.mkdir(parents=True, exist_ok=True)
     all_stories = _group_story_records(iter_story_records(stories_dir))
+    _attach_match_references(all_stories, output_dir)
     stories = (
         all_stories
         if include_short
@@ -440,11 +466,18 @@ def export_stories(
             handle.write("# Expanded Home and Belonging Stories\n\n")
             handle.write(f"**Language:** `{language}`\n")
             handle.write(f"**Unique Stories:** {len(rows)}\n\n---\n\n")
-            for index, row in enumerate(rows, 1):
+            for position, row in enumerate(rows, 1):
                 seed = row["seed"]
                 story = row["story"]
+                match_numbers = row.get("match_numbers", [])
+                heading = (
+                    _match_reference_label(match_numbers)
+                    if match_numbers
+                    else f"Unmapped Match ({row['story_id'][:12]})"
+                )
+                handle.write(f"### Source Story for {heading}\n")
                 handle.write(
-                    f"### {index}. Seed Score: "
+                    "- **Seed Score:** "
                     f"{float(seed.get('semantic_score', 0.0)):.3f}\n"
                 )
                 handle.write(
@@ -479,6 +512,12 @@ def export_stories(
                     f"- **Filter-Matched Paragraph:** {seed_position} of "
                     f"{story.get('paragraph_count', 0)}\n"
                 )
+                if match_numbers:
+                    handle.write(
+                        f"- **Matches Export References:** `matches_{language}.md` "
+                        + ", ".join(f"#{number}" for number in match_numbers)
+                        + "\n"
+                    )
                 handle.write(
                     "- **Keywords:** `"
                     + ", ".join(seed.get("matched_keywords", []))
@@ -535,7 +574,7 @@ def export_stories(
                     )
                     handle.write("\n\n")
                     previous_paragraph_index = paragraph_index
-                handle.write("---\n" if index == len(rows) else "---\n\n")
+                handle.write("---\n" if position == len(rows) else "---\n\n")
         os.replace(temporary, destination)
         generated.add(destination)
     for old_export in export_path.glob("stories_*.md"):

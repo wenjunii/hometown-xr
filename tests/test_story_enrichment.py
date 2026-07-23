@@ -71,7 +71,7 @@ def test_embedded_story_enrichment_is_resumable_and_exports_deduplicated_stories
     before = plan_story_enrichment(output_dir, stories_dir, limit=10)
     result = enrich_story_sources(output_dir, stories_dir, limit=10)
     after = plan_story_enrichment(output_dir, stories_dir, limit=10)
-    exported = export_stories(stories_dir, export_dir)
+    exported = export_stories(stories_dir, export_dir, output_dir=output_dir)
 
     assert before["pending_sources"] == 2
     assert result["completed_sources"] == 2
@@ -81,12 +81,16 @@ def test_embedded_story_enrichment_is_resumable_and_exports_deduplicated_stories
     assert exported["unique_stories"] == 1
     assert exported["source_captures"] == 2
     markdown = (export_dir / "stories_en.md").read_text(encoding="utf-8")
+    assert "### Source Story for Matches 1, 2" in markdown
+    assert "**Matches Export References:** `matches_en.md` #1, #2" in markdown
     assert "#### Extracted Source Story" in markdown
     assert "**Filter-Matched Paragraph:** 2 of 3" in markdown
     assert "**Seed:**" not in markdown
     with gzip.open(export_dir / "stories.jsonl.gz", "rt", encoding="utf-8") as handle:
         row = json.loads(next(handle))
     assert row["capture_count"] == 2
+    assert row["match_numbers"] == [1, 2]
+    assert [capture["match_number"] for capture in row["captures"]] == [1, 2]
 
 
 def test_story_export_excludes_short_passages_by_default(tmp_path):
@@ -102,8 +106,13 @@ def test_story_export_excludes_short_passages_by_default(tmp_path):
     )
     enrich_story_sources(output_dir, stories_dir, limit=1)
 
-    strict = export_stories(stories_dir, export_dir)
-    inclusive = export_stories(stories_dir, export_dir, include_short=True)
+    strict = export_stories(stories_dir, export_dir, output_dir=output_dir)
+    inclusive = export_stories(
+        stories_dir,
+        export_dir,
+        include_short=True,
+        output_dir=output_dir,
+    )
 
     assert strict["unique_stories"] == 0
     assert strict["excluded_short_passages"] == 1
@@ -157,11 +166,15 @@ def test_story_export_keeps_the_accepted_filter_seed_authoritative(tmp_path):
     )
     enrich_story_sources(output_dir, stories_dir, limit=2)
 
-    result = export_stories(stories_dir, export_dir)
+    result = export_stories(stories_dir, export_dir, output_dir=output_dir)
     markdown = (export_dir / "stories_en.md").read_text(encoding="utf-8")
 
     assert result["unique_stories"] == 2
     assert "excluded_anchor_mismatches" not in result
+    assert "### Source Story for Match 1" in markdown
+    assert "### Source Story for Match 2" in markdown
+    assert "**Matches Export References:** `matches_en.md` #1" in markdown
+    assert "**Matches Export References:** `matches_en.md` #2" in markdown
     assert "Nearest Semantic Reference (Not a Summary)" in markdown
     assert markdown.count("#### Accepted Filter Paragraph") == 2
     assert "deterministic source-paragraph selection; no generated text" in markdown
@@ -185,7 +198,7 @@ def test_outdated_story_fragment_is_pending_and_not_exported(tmp_path):
         handle.write(json.dumps(row) + "\n")
 
     plan = plan_story_enrichment(output_dir, stories_dir, limit=1)
-    exported = export_stories(stories_dir, export_dir)
+    exported = export_stories(stories_dir, export_dir, output_dir=output_dir)
 
     assert plan["pending_sources"] == 1
     assert plan["pending_matches"] == 1
