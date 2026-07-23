@@ -59,3 +59,44 @@ def test_story_window_stops_before_a_letter_salutation():
     assert story["end_paragraph_index"] == 2
     assert story["boundary_after"] == "structural_boundary"
     assert "Dear Mary and Bernard" not in story["text"]
+
+
+def test_story_window_removes_an_introduction_to_an_excluded_letter():
+    story = expand_story_window(
+        [
+            "I remained proud of my heritage. I remembered where I came from.",
+            "I wrote to Sandra after my brother died. I explained my decision.",
+            "Sandra responded with another warm letter:",
+            "Dear Mary and Bernard:",
+            "Thank you for writing.",
+        ],
+        0,
+    ).payload
+
+    assert story["end_paragraph_index"] == 1
+    assert story["boundary_after"] == "structural_boundary"
+    assert "Sandra responded" not in story["text"]
+
+
+def test_story_window_preserves_verbatim_source_paragraphs():
+    normalized = [
+        "My family lived here for years. We knew every road.",
+        "I remember my childhood home and my grandmother's kitchen.",
+    ]
+    source = [
+        "My family lived here for years.\nWe knew every road.",
+        "I remember my childhood home &amp;\nand my grandmother's kitchen.",
+    ]
+
+    story = expand_story_window(
+        normalized,
+        1,
+        source_paragraphs=source,
+    ).payload
+
+    assert story["source_text_mode"] == "verbatim_extracted_paragraphs"
+    assert story["text"] == "\n\n".join(source)
+    assert story["paragraphs"][1]["text"] == source[1]
+    assert story["paragraphs"][1]["normalized_text"] == normalized[1]
+    assert len(story["source_text_sha256"]) == 64
+    assert all(len(row["source_text_sha256"]) == 64 for row in story["paragraphs"])

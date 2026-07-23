@@ -100,6 +100,7 @@ def expand_story_window(
     paragraphs: list[str],
     seed_index: int,
     *,
+    source_paragraphs: list[str] | None = None,
     before: int = STORY_CONTEXT_BEFORE_PARAGRAPHS,
     after: int = STORY_CONTEXT_AFTER_PARAGRAPHS,
     max_paragraphs: int = PASSAGE_MAX_PARAGRAPHS,
@@ -112,8 +113,11 @@ def expand_story_window(
         raise ValueError("context paragraph limits cannot be negative")
     if max_paragraphs <= 0 or max_chars <= 0:
         raise ValueError("story limits must be positive")
+    if source_paragraphs is not None and len(source_paragraphs) != len(paragraphs):
+        raise ValueError("source and normalized paragraphs must have the same length")
 
     seed = paragraphs[seed_index]
+    source_values = source_paragraphs if source_paragraphs is not None else paragraphs
     before_limit = min(before, max(0, max_paragraphs - 1))
     before_indices, before_reason, selected_chars = _collect_context(
         paragraphs,
@@ -133,6 +137,12 @@ def expand_story_window(
         selected_chars,
         max_chars,
     )
+    if (
+        after_reason == "structural_boundary"
+        and after_indices
+        and paragraphs[after_indices[-1]].rstrip().endswith(":")
+    ):
+        after_indices.pop()
     ordered_indices = [*reversed(before_indices), seed_index, *after_indices]
     rows = []
     for paragraph_index in ordered_indices:
@@ -143,32 +153,42 @@ def expand_story_window(
             if paragraph_index < seed_index
             else "context_after"
         )
-        rows.append(
-            {
-                "paragraph_index": paragraph_index,
-                "role": role,
-                "text": paragraphs[paragraph_index],
-            }
-        )
+        source_text = source_values[paragraph_index]
+        normalized_text = paragraphs[paragraph_index]
+        row = {
+            "paragraph_index": paragraph_index,
+            "role": role,
+            "text": source_text,
+            "source_text_sha256": hashlib.sha256(
+                source_text.encode("utf-8")
+            ).hexdigest(),
+        }
+        if normalized_text != source_text:
+            row["normalized_text"] = normalized_text
+        rows.append(row)
     text = "\n\n".join(row["text"] for row in rows)
-    sentences = sentence_count(text)
+    normalized_text = "\n\n".join(paragraphs[index] for index in ordered_indices)
+    sentences = sentence_count(normalized_text)
     story_length_ready = (
-        len(text) >= STORY_MIN_CHARS and sentences >= STORY_MIN_SENTENCES
+        len(normalized_text) >= STORY_MIN_CHARS
+        and sentences >= STORY_MIN_SENTENCES
     )
     fingerprint = hashlib.sha256(
-        " ".join(text.split()).casefold().encode("utf-8")
+        " ".join(normalized_text.split()).casefold().encode("utf-8")
     ).hexdigest()
     return StoryWindow(
         {
             "schema_version": 1,
             "expansion_version": STORY_EXPANSION_VERSION,
             "selection_policy": "precise_seed_with_unfiltered_document_context",
+            "source_text_mode": "verbatim_extracted_paragraphs",
             "seed_paragraph_index": seed_index,
             "start_paragraph_index": ordered_indices[0],
             "end_paragraph_index": ordered_indices[-1],
             "paragraph_count": len(rows),
             "sentence_count": sentences,
             "character_count": len(text),
+            "normalized_character_count": len(normalized_text),
             "minimum_sentence_count": STORY_MIN_SENTENCES,
             "minimum_character_count": STORY_MIN_CHARS,
             "story_length_ready": story_length_ready,
@@ -176,6 +196,7 @@ def expand_story_window(
             "boundary_before": before_reason,
             "boundary_after": after_reason,
             "story_fingerprint": fingerprint,
+            "source_text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
             "paragraphs": rows,
             "text": text,
         }

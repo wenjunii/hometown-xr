@@ -405,11 +405,19 @@ def _group_story_records(rows: Iterable[dict]) -> list[dict]:
 def export_stories(
     stories_dir: str | Path = STORIES_DIR,
     export_dir: str | Path = STORIES_DIR.parent / "exports",
+    include_short: bool = False,
 ) -> dict:
     """Write deterministic structured and Markdown story exports."""
     export_path = Path(export_dir)
     export_path.mkdir(parents=True, exist_ok=True)
-    stories = _group_story_records(iter_story_records(stories_dir))
+    all_stories = _group_story_records(iter_story_records(stories_dir))
+    stories = (
+        all_stories
+        if include_short
+        else [
+            row for row in all_stories if row["story"].get("story_length_ready")
+        ]
+    )
     structured_path = export_path / "stories.jsonl.gz"
     _write_gzip_rows(structured_path, stories)
     by_language: dict[str, list[dict]] = defaultdict(list)
@@ -435,13 +443,22 @@ def export_stories(
                     f"{float(seed.get('semantic_score', 0.0)):.3f}\n"
                 )
                 handle.write(
-                    "- **Story-Length Context:** `"
+                    "- **Story-Length Passage:** `"
                     + ("yes" if story.get("story_length_ready") else "no")
                     + "`\n"
                 )
                 handle.write(
                     f"- **Story Size:** {story.get('paragraph_count', 0)} paragraphs, "
                     f"{story.get('sentence_count', 0)} sentences\n"
+                )
+                seed_position = next(
+                    position
+                    for position, paragraph in enumerate(story["paragraphs"], 1)
+                    if paragraph["role"] == "seed"
+                )
+                handle.write(
+                    f"- **Filter-Matched Paragraph:** {seed_position} of "
+                    f"{story.get('paragraph_count', 0)}\n"
                 )
                 handle.write(
                     "- **Keywords:** `"
@@ -455,12 +472,12 @@ def export_stories(
                 handle.write(f"- **Capture Count:** {row['capture_count']}\n")
                 handle.write(f"- **Crawl Dataset:** `{row['crawl_id']}`\n")
                 handle.write(f"- **Source File:** `{row['source_file']}`\n\n")
+                handle.write("#### Extracted Source Story\n\n")
                 for paragraph in story["paragraphs"]:
-                    role = paragraph["role"].replace("_", " ").title()
-                    handle.write(f"**{role}:**\n\n")
                     handle.write(
                         "\n".join(
-                            f"> {line}" for line in str(paragraph["text"]).splitlines()
+                            f"> {line.rstrip()}"
+                            for line in str(paragraph["text"]).splitlines()
                         )
                     )
                     handle.write("\n\n")
@@ -473,6 +490,8 @@ def export_stories(
     return {
         "schema_version": 1,
         "unique_stories": len(stories),
+        "excluded_short_passages": len(all_stories) - len(stories),
+        "include_short": include_short,
         "source_captures": sum(row["capture_count"] for row in stories),
         "story_length_ready": sum(
             bool(row["story"].get("story_length_ready")) for row in stories

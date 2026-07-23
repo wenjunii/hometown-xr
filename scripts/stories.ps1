@@ -11,7 +11,9 @@ param(
 
     [switch]$All,
 
-    [switch]$Apply
+    [switch]$Apply,
+
+    [switch]$IncludeShort
 )
 
 $ErrorActionPreference = "Stop"
@@ -25,6 +27,9 @@ if ($Action -eq "enrich" -and -not $Apply) {
 }
 if ($Apply -and $Action -ne "enrich") {
     throw "Apply is valid only with -Action enrich."
+}
+if ($IncludeShort -and $Action -ne "export") {
+    throw "IncludeShort is valid only with -Action export."
 }
 if ($All -and ($Crawl -or $Source)) {
     throw "All cannot be combined with Crawl or Source."
@@ -47,6 +52,9 @@ if ($Action -in @("status", "plan", "enrich")) {
 }
 if ($Action -eq "enrich") {
     $Arguments += "--yes"
+}
+if ($IncludeShort) {
+    $Arguments += "--include-short"
 }
 
 Push-Location $Root

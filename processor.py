@@ -181,8 +181,9 @@ def _extract_paras(
     stats: ProcessingStats | None = None,
     include_unmatched: bool = False,
 ) -> Iterator[tuple[Paragraph, list[str]]]:
-    raw_paragraphs = [" ".join(value.split()) for value in content.split("\n\n")]
-    raw_paragraphs = [value for value in raw_paragraphs if value]
+    source_paragraphs = [value.strip() for value in content.split("\n\n")]
+    source_paragraphs = [value for value in source_paragraphs if value]
+    raw_paragraphs = [" ".join(value.split()) for value in source_paragraphs]
     paragraphs = [
         " ".join(normalize_extracted_text(value).split()) for value in raw_paragraphs
     ]
@@ -234,7 +235,11 @@ def _extract_paras(
                     if raw_paragraphs[paragraph_index] != text
                     else ""
                 ),
-                story=expand_story_window(paragraphs, paragraph_index).payload,
+                story=expand_story_window(
+                    paragraphs,
+                    paragraph_index,
+                    source_paragraphs=source_paragraphs,
+                ).payload,
             ),
             keywords,
         )

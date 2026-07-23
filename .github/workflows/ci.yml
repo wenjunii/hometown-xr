@@ -48,6 +48,7 @@ jobs:
           python main.py health --help
           python main.py stories --help
           python main.py stories enrich --help
+          python main.py stories export --help
           python main.py evaluation --help
           python main.py evaluation annotate --help
           python main.py evaluation plan
