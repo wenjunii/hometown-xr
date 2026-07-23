@@ -13,6 +13,8 @@ actual personal narratives rather than encyclopedic or commercial text.
 Anchors are encoded once at startup and compared against candidate paragraphs.
 """
 
+import re
+
 CONCEPT_ANCHORS = [
     # ── Hometown & Place of Origin ───────────────────────────────────────
     "I was born and raised in a small town. Every time I go back, "
@@ -112,6 +114,31 @@ CONCEPT_ANCHOR_LANGUAGES = ["en"] * len(CONCEPT_ANCHORS) + list(
 )
 CONCEPT_ANCHORS.extend(MULTILINGUAL_CONCEPT_ANCHORS.values())
 
+_GRANDPARENT_STORY_ANCHOR = (
+    "My grandmother used to tell me stories about our ancestors. "
+    "Those stories made me proud of where my family comes from."
+)
+_ANCHOR_FIDELITY_RULES = {
+    _GRANDPARENT_STORY_ANCHOR: {
+        "rule": "grandparent-story-ancestry-v1",
+        "facets": {
+            "grandparent": re.compile(
+                r"\b(?:grandmother|grandma|grandfather|grandpa|grandparents?)\b",
+                re.IGNORECASE,
+            ),
+            "storytelling": re.compile(
+                r"\b(?:stories|story|tales|told|tell|recounted|recollections)\b",
+                re.IGNORECASE,
+            ),
+            "ancestry": re.compile(
+                r"\b(?:ancestors?|ancestry|heritage|family history|generations?|"
+                r"traditions?|roots|lineage)\b",
+                re.IGNORECASE,
+            ),
+        },
+    }
+}
+
 
 def concept_anchor_language(anchor: str) -> str:
     """Return the language family for a configured semantic anchor."""
@@ -119,3 +146,26 @@ def concept_anchor_language(anchor: str) -> str:
         return CONCEPT_ANCHOR_LANGUAGES[CONCEPT_ANCHORS.index(anchor)]
     except ValueError:
         return "unknown"
+
+
+def concept_anchor_fidelity(anchor: str, text: str) -> dict[str, object]:
+    """Check literal core facets for anchors whose wording is highly specific."""
+    configured = _ANCHOR_FIDELITY_RULES.get(anchor)
+    if configured is None:
+        return {
+            "evaluated": False,
+            "passes": True,
+            "rule": None,
+            "matched_facets": [],
+            "missing_facets": [],
+        }
+    facets = configured["facets"]
+    matched = [name for name, pattern in facets.items() if pattern.search(text)]
+    missing = [name for name in facets if name not in matched]
+    return {
+        "evaluated": True,
+        "passes": not missing,
+        "rule": configured["rule"],
+        "matched_facets": matched,
+        "missing_facets": missing,
+    }

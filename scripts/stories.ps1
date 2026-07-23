@@ -13,7 +13,9 @@ param(
 
     [switch]$Apply,
 
-    [switch]$IncludeShort
+    [switch]$IncludeShort,
+
+    [switch]$IncludeAnchorMismatches
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,6 +32,9 @@ if ($Apply -and $Action -ne "enrich") {
 }
 if ($IncludeShort -and $Action -ne "export") {
     throw "IncludeShort is valid only with -Action export."
+}
+if ($IncludeAnchorMismatches -and $Action -ne "export") {
+    throw "IncludeAnchorMismatches is valid only with -Action export."
 }
 if ($All -and ($Crawl -or $Source)) {
     throw "All cannot be combined with Crawl or Source."
@@ -55,6 +60,9 @@ if ($Action -eq "enrich") {
 }
 if ($IncludeShort) {
     $Arguments += "--include-short"
+}
+if ($IncludeAnchorMismatches) {
+    $Arguments += "--include-anchor-mismatches"
 }
 
 Push-Location $Root

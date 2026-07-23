@@ -31,7 +31,7 @@ def _write_record(handle, index: int, record: dict) -> None:
 
     handle.write(f"### {index}. Match Score: {score:.3f}\n")
     handle.write(f"- **Keywords:** `{keywords}`\n")
-    handle.write(f"- **Concept Anchor:** '{concept}'\n")
+    handle.write(f"- **Nearest Semantic Reference (Not a Summary):** '{concept}'\n")
     handle.write(f"- **Source URL:** [{url}]({url})\n")
     handle.write(f"- **Capture Date:** {date}\n")
     handle.write(f"- **Crawl Dataset:** `{crawl}`\n")

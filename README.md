@@ -303,6 +303,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply` | Reopen only selected matched source files and resume story expansion |
 | `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
+| `.\scripts\stories.ps1 -Action export -IncludeAnchorMismatches` | Include source passages that miss literal facets of a specific semantic reference |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -344,6 +345,7 @@ The underlying Python CLI remains available directly:
 | `python main.py stories enrich --limit 10 --yes` | Backfill a bounded, resumable batch from exact historical sources |
 | `python main.py stories export` | Write story-length verbatim source passages |
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
+| `python main.py stories export --include-anchor-mismatches` | Include broad semantic matches that fail specific reference-fidelity checks |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -462,14 +464,23 @@ structured data, but they are not represented as independently passing the
 filters. Requiring every connective paragraph to repeat the seed keywords would
 fragment ordinary prose rather than produce a coherent extract.
 
+The configured semantic reference is a comparison example used by the embedding
+model. It is not a summary of the matched page, and its people, events, or
+details must not be assumed to occur in the source. For the specific
+grandmother, storytelling, and ancestry reference, normal story exports require
+all three literal facets somewhere in the extracted passage. This prevents a
+broad heritage match from being presented as the referenced grandmother story.
+`-IncludeAnchorMismatches` retains those broad matches for diagnostics.
+
 Matching and deduplication use normalized text. Human-facing story text instead
 preserves the Common Crawl WET/ARC paragraph content and its internal line
 breaks. Each paragraph and the combined passage carry a SHA-256 source-text
 hash; normalized comparison text is retained separately only when it differs.
 This is verbatim text from Common Crawl's extracted-text record, not a
 reconstruction of the original webpage HTML. The structured gzip preserves the
-exact extracted text; Markdown rendering removes invisible trailing spaces
-only. No generative model writes, paraphrases, or completes the story.
+exact extracted text; Markdown rendering repairs character encoding and HTML
+entities for readability and removes invisible trailing spaces. No generative
+model writes, paraphrases, summarizes, or completes the story.
 
 `story_length_ready` means the source window contains at least 350 normalized
 characters and three sentence endings. Normal exports include only these
@@ -576,11 +587,12 @@ it with the isolated audit path below before adopting or selectively recrawling
 historical checkpoint rows.
 
 Reprocess completed Common Crawl sources only after a recall-affecting change,
-such as broader keywords or concept anchors, a lower threshold, a new model
-revision, or different paragraph extraction. Rejected candidates were not all
-retained, so those changes cannot be applied retrospectively to accepted output
-alone. Before a full recrawl, compare a representative sample of completed
-sources in an isolated audit. Do not use `reset` merely to refresh results.
+such as broader keywords or semantic-reference anchors, a lower threshold, a
+new model revision, or different paragraph extraction. Rejected candidates were
+not all retained, so those changes cannot be applied retrospectively to
+accepted output alone. Before a full recrawl, compare a representative sample
+of completed sources in an isolated audit. Do not use `reset` merely to refresh
+results.
 
 Plan first, then explicitly run the bounded audit:
 
@@ -640,8 +652,8 @@ missing or inconsistent.
 ## Model And Dependency Validation
 
 `data/evaluation/model-baseline.json` is the tracked 400-sample semantic model
-baseline. It contains stable sample IDs, scores, selected concept anchors, and
-threshold decisions, but no source paragraphs. After changing PyTorch,
+baseline. It contains stable sample IDs, scores, selected semantic-reference
+anchors, and threshold decisions, but no source paragraphs. After changing PyTorch,
 Transformers, Sentence Transformers, CUDA, model files, or precision behavior,
 capture an ignored candidate on each workstation and compare it:
 
