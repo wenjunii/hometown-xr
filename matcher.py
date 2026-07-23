@@ -22,7 +22,7 @@ import hashlib
 import logging
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from concepts import CONCEPT_ANCHORS
@@ -76,6 +76,7 @@ class Match:
     context_before: str = ""
     context_after: str = ""
     raw_text: str = ""
+    story: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -108,6 +109,7 @@ class MatchDecision:
             context_before=self.paragraph.context_before,
             context_after=self.paragraph.context_after,
             raw_text=self.paragraph.raw_text,
+            story=self.paragraph.story,
         )
 
 

@@ -808,6 +808,25 @@ def main() -> None:
     undo_parser = evaluation_subparsers.add_parser("undo")
     undo_parser.add_argument("--sample-id")
 
+    stories_parser = subparsers.add_parser(
+        "stories",
+        help="expand precise paragraph matches into bounded source stories",
+    )
+    stories_subparsers = stories_parser.add_subparsers(
+        dest="stories_command",
+        required=True,
+    )
+    for action in ("plan", "enrich", "status"):
+        story_action = stories_subparsers.add_parser(action)
+        story_action.add_argument("--crawl", action="append")
+        story_action.add_argument("--source", action="append")
+        story_scope = story_action.add_mutually_exclusive_group()
+        story_scope.add_argument("--limit", type=int, default=10)
+        story_scope.add_argument("--all", action="store_true")
+        if action == "enrich":
+            story_action.add_argument("--yes", action="store_true")
+    stories_subparsers.add_parser("export")
+
     audit_parser = subparsers.add_parser(
         "audit", help="plan or run an isolated audit of completed sources"
     )
@@ -1034,6 +1053,42 @@ def main() -> None:
         if port is not None and not 1 <= port <= 65535:
             parser.error("--port must be between 1 and 65535")
         _evaluation_command(args)
+    elif args.command == "stories":
+        from story_enrichment import (
+            enrich_story_sources,
+            export_stories,
+            plan_story_enrichment,
+        )
+
+        if args.stories_command in {"plan", "enrich", "status"}:
+            limit = None if args.all else args.limit
+            if limit is not None and limit <= 0:
+                parser.error("--limit must be positive")
+        else:
+            limit = None
+        if args.stories_command == "enrich":
+            if not args.yes:
+                parser.error("story enrichment downloads source files; pass --yes")
+            with CrawlerRunLock("story-enrichment"):
+                result = enrich_story_sources(
+                    crawl_ids=args.crawl,
+                    source_files=args.source,
+                    limit=limit,
+                )
+        elif args.stories_command == "export":
+            result = export_stories()
+        else:
+            result = plan_story_enrichment(
+                crawl_ids=getattr(args, "crawl", None),
+                source_files=getattr(args, "source", None),
+                limit=limit,
+            )
+            if args.stories_command == "status":
+                result["shown_sources"] = min(len(result["selection"]), 10)
+                if len(result["selection"]) > 10:
+                    result["selection"] = result["selection"][:10]
+                    result["selection_truncated"] = True
+        print(json.dumps(result, indent=2))
     elif args.command == "audit":
         if not 1 <= args.per_crawl <= AUDIT_MAX_PER_CRAWL:
             parser.error(f"--per-crawl must be between 1 and {AUDIT_MAX_PER_CRAWL}")

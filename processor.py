@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import html
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterator
 
 from warcio.archiveiterator import ArchiveIterator
 
 from config import DOCUMENT_CONTEXT_CHARS, MAX_PARAGRAPH_LENGTH, MIN_PARAGRAPH_LENGTH
 from record_identity import stable_document_id
+from story_context import expand_story_window
 from text_normalization import normalize_extracted_text
 
 
@@ -26,6 +27,7 @@ class Paragraph:
     context_before: str = ""
     context_after: str = ""
     raw_text: str = ""
+    story: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -232,6 +234,7 @@ def _extract_paras(
                     if raw_paragraphs[paragraph_index] != text
                     else ""
                 ),
+                story=expand_story_window(paragraphs, paragraph_index).payload,
             ),
             keywords,
         )

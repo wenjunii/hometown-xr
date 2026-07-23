@@ -18,8 +18,9 @@ Neither model is a generative LLM. The crawler does not call OpenAI, Gemini,
 Anthropic, or another hosted text-generation API.
 
 Before either model sees text, `ftfy` repairs mojibake, decodes HTML entities,
-and normalizes Unicode to NFC. Schema-4 output keeps `raw_paragraph` whenever
-that cleanup changes the source, so matching improves without losing provenance.
+and normalizes Unicode to NFC. Schema-5 output keeps `raw_paragraph` whenever
+that cleanup changes the source and adds a bounded, role-labeled source-context
+window, so matching improves without losing provenance.
 
 A versioned local SQLite cache stores sentence embeddings, raw semantic scores,
 and raw language predictions by normalized text hash. Model revision, precision,
@@ -37,13 +38,14 @@ never copied while live.
 
 The Git repository contains all durable state needed to recreate or resume the
 project on another PC: source, tests, documentation, the compressed database
-checkpoint, committed output and manifests, exports, bounded evaluation replay,
-annotations, and run history. Virtual environments, downloaded models, caches,
-live SQLite files, metrics, derived Parquet datasets, hardware overrides, and
-credential-like files remain local because they are unsafe to copy or can be
-recreated deterministically. `scripts\checkpoint.ps1` scans staged filenames
-and contents before every commit. Credential-like files are unstaged and the
-checkpoint stops, even if a local ignore rule is accidentally removed.
+checkpoint, committed output and manifests, source-context story fragments and
+exports, bounded evaluation replay, annotations, and run history. Virtual
+environments, downloaded models, caches, live SQLite files, metrics, derived
+Parquet datasets, hardware overrides, and credential-like files remain local
+because they are unsafe to copy or can be recreated deterministically.
+`scripts\checkpoint.ps1` scans staged filenames and contents before every
+commit. Credential-like files are unstaged and the checkpoint stops, even if a
+local ignore rule is accidentally removed.
 
 Run the same guard at any time:
 
@@ -101,6 +103,7 @@ WET/ARC sources
     -> versioned score/embedding cache
     -> one shared sentence-transformer on the GPU
     -> FastText language detection
+    -> precise seed plus bounded source-context expansion
     -> source-scoped staged output
     -> atomic shard + manifest commit
     -> filter-signed SQLite checkpoint completion
@@ -296,6 +299,9 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\evaluation.ps1 -Action multilingual` | Report language evidence, anchor gaps, and keyword misses |
 | `.\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25` | Review a focused batch interactively |
 | `.\scripts\retry.ps1 -All -Category http_503 -Limit 25 -Apply` | Reset one bounded failure batch after a dry-run report |
+| `.\scripts\stories.ps1 -Action plan -Limit 10` | Plan a bounded historical source-context backfill without downloading |
+| `.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply` | Reopen only selected matched source files and resume story expansion |
+| `.\scripts\stories.ps1 -Action export` | Deduplicate captures and write structured and Markdown story exports |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -333,6 +339,9 @@ The underlying Python CLI remains available directly:
 | `python main.py database restore` | Restore the local SQLite DB from the shared archive |
 | `python main.py database check` | Confirm local SQLite state matches the shared archive |
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
+| `python main.py stories status --limit 10` | Show completed and pending story-context source fragments |
+| `python main.py stories enrich --limit 10 --yes` | Backfill a bounded, resumable batch from exact historical sources |
+| `python main.py stories export` | Write `stories.jsonl.gz` and per-language Markdown |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -370,15 +379,21 @@ data/
       <source-hash>_<source-name>.jsonl.gz
     zh/
     unknown/
+  stories/
+    _records/
+      <source-hash>.jsonl.gz
+  exports/
+    stories.jsonl.gz
+    stories_<language>.md
 ```
 
-Schema version 4 records add versioned normalized text while retaining the raw
-source paragraph whenever it changed. Schema-2 and schema-3 records remain
-supported and do not need rewriting:
+Schema version 5 records add bounded story context while retaining versioned
+normalized text and the raw source paragraph whenever it changed. Schema-2,
+schema-3, and schema-4 records remain supported and do not need rewriting:
 
 ```json
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "record_id": "<sha256>",
   "content_fingerprint": "<sha256>",
   "crawl_id": "CC-MAIN-2026-12",
@@ -398,7 +413,20 @@ supported and do not need rewriting:
   "matched_keywords": ["home", "grew up"],
   "semantic_score": 0.7312,
   "concept_match": "memories of childhood home",
-  "narrative_score": 12
+  "narrative_score": 12,
+  "story": {
+    "expansion_version": "seed-window-v2",
+    "selection_policy": "precise_seed_with_unfiltered_document_context",
+    "story_length_ready": true,
+    "paragraph_count": 5,
+    "sentence_count": 12,
+    "paragraphs": [
+      {"paragraph_index": 2, "role": "context_before", "text": "..."},
+      {"paragraph_index": 4, "role": "seed", "text": "I remember..."},
+      {"paragraph_index": 6, "role": "context_after", "text": "..."}
+    ],
+    "text": "..."
+  }
 }
 ```
 
@@ -418,6 +446,46 @@ python main.py verify-output
 
 The operation stages a complete replacement, atomically swaps it into place,
 and updates SQLite counts in the same journaled operation.
+
+## Source Story Expansion
+
+The precise semantic, keyword, language, and narrative filters still select
+only the seed paragraph. Story expansion then includes up to two preceding and
+three following paragraphs from the same source document, bounded by headings,
+letter salutations, eight paragraphs, and 12,000 characters. Context paragraphs
+are explicitly labeled `context_before` or `context_after`; they are source
+text and are not represented as independently passing the filters. No
+generative model writes or completes the story.
+
+`story_length_ready` means the source window contains at least 350 characters
+and three sentence endings. It is a useful review threshold, not a claim that
+the narrative is artistically or factually complete.
+
+New schema-5 matches receive this context during crawling. Historical
+schema-2/3/4 matches can be enriched without recrawling the full corpus:
+
+```powershell
+.\scripts\stories.ps1 -Action plan -Limit 10
+.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply
+.\scripts\stories.ps1 -Action export
+```
+
+The backfill downloads only Common Crawl WET/ARC files already named by
+accepted matches. Each source commits to its own fragment under
+`data/stories/_records/`, so interruption is safe and the next invocation skips
+current fragments. Expansion-version changes mark old fragments pending.
+Canonical match shards and existing `matches_<language>.md` exports remain
+unchanged. The final export deduplicates repeated crawl captures by normalized
+story text while retaining every capture in provenance.
+
+After a bounded trial, use `-All` to finish every matched source serially on
+one workstation:
+
+```powershell
+.\scripts\stories.ps1 -Action enrich -All -Apply
+.\scripts\stories.ps1 -Action export
+.\scripts\checkpoint.ps1 -Message "feat: expand matched passages into source stories"
+```
 
 ## Parquet And Deduplication
 
@@ -683,6 +751,8 @@ inference_cache.py      versioned embedding, score, and language cache
 checkpoint.py           integrity verification and handoff compaction
 database_checkpoint.py  compressed SQLite archive, restore, and sync checks
 processor.py            WET/ARC parsing, funnel counters, and shadow candidates
+story_context.py        deterministic seed-to-source-context expansion
+story_enrichment.py     resumable historical backfill and story exports
 text_normalization.py   versioned entity, encoding, and Unicode repair
 matcher.py              keyword, semantic, and narrative filters
 evaluation.py           weighted sampling, annotation history, tuning, and holdout

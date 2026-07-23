@@ -122,6 +122,12 @@ def test_paragraphs_keep_stable_document_context():
     assert paragraph.context_before == first
     assert paragraph.context_after == last
     assert len(paragraph.document_id) == 64
+    assert [row["role"] for row in paragraph.story["paragraphs"]] == [
+        "context_before",
+        "seed",
+        "context_after",
+    ]
+    assert paragraph.story["text"] == "\n\n".join((first, middle, last))
 
 
 def test_paragraphs_match_normalized_text_and_preserve_changed_source():

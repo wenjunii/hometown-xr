@@ -46,6 +46,8 @@ jobs:
           python main.py filters stamp-current --help
           python main.py audit --help
           python main.py health --help
+          python main.py stories --help
+          python main.py stories enrich --help
           python main.py evaluation --help
           python main.py evaluation annotate --help
           python main.py evaluation plan

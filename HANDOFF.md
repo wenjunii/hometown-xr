@@ -6,8 +6,9 @@ RTX 5090 PCs. Never run the crawler on more than one PC at a time.
 ## Shared And Local State
 
 Git and Git LFS synchronize source code, tests, documentation,
-`data/checkpoints/progress.db.gz`, committed JSONL output, manifests, the
-bounded evaluation replay reservoir, run history, and Markdown exports.
+`data/checkpoints/progress.db.gz`, committed JSONL output, manifests,
+`data/stories/` source-context fragments, the bounded evaluation replay
+reservoir, run history, and Markdown/structured exports.
 Together, those files are the complete durable project state required to resume
 on another workstation.
 The tracked evaluation state also includes the semantic model baseline; model
@@ -240,6 +241,20 @@ output unless `refresh-results.ps1` is separately given `-ApplyRefilter`.
 The derived schema-5 dataset adds `passages/` with adjacent-story reconstruction
 and explainable place/time candidates; paragraph-level `stories/`, complete
 `provenance/`, and the curated view remain intact.
+
+Source-context story fragments are durable shared state, unlike Parquet. After
+receiving a checkpoint, inspect and resume their exact-source backfill with:
+
+```powershell
+.\scripts\stories.ps1 -Action status -Limit 10
+.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply
+.\scripts\stories.ps1 -Action export
+```
+
+Only one PC may run story enrichment at a time. It does not change canonical
+matches or the crawl database, and each completed source fragment is resumable.
+Commit the fragments and exports with the normal checkpoint command before
+moving to another PC.
 
 ## After A Crash
 

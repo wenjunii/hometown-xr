@@ -126,6 +126,7 @@ class SourceOutputTransaction:
                 "paragraph_index": match.paragraph_index,
                 "context_before": match.context_before,
                 "context_after": match.context_after,
+                "story": match.story,
                 "filter_signature": self.writer.filter_signature,
                 "run_id": self.writer.run_id,
             }

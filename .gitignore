@@ -69,6 +69,8 @@ data/evaluation/multilingual-report.json
 data/evaluation/model-candidate*.json
 data/evaluation/model-comparison*.json
 data/audits/
+data/stories/.staging/
+data/stories/**/*.tmp
 data/output/_manifests/*.json
 data/output/_manifest-catalog.jsonl.gz.tmp
 data/checkpoints/*.tmp
