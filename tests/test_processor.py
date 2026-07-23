@@ -131,7 +131,11 @@ def test_paragraphs_keep_stable_document_context():
 
 
 def test_paragraphs_match_normalized_text_and_preserve_changed_source():
-    source = "I remember my childhood home &amp; my family\u00e2\u20ac\u2122s kitchen. " + "x" * 150
+    source = (
+        "I remember my childhood home &amp;\n"
+        "my family\u00e2\u20ac\u2122s kitchen. "
+        + "x" * 150
+    )
     rows = list(
         _extract_paras(
             source,
@@ -145,4 +149,6 @@ def test_paragraphs_match_normalized_text_and_preserve_changed_source():
 
     paragraph = rows[0][0]
     assert "home & my family\u2019s kitchen" in paragraph.text
-    assert paragraph.raw_text == source
+    assert paragraph.raw_text == " ".join(source.split())
+    assert paragraph.story["text"] == source
+    assert paragraph.story["paragraphs"][0]["normalized_text"] == paragraph.text

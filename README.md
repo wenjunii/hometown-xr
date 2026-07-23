@@ -301,7 +301,8 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\retry.ps1 -All -Category http_503 -Limit 25 -Apply` | Reset one bounded failure batch after a dry-run report |
 | `.\scripts\stories.ps1 -Action plan -Limit 10` | Plan a bounded historical source-context backfill without downloading |
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply` | Reopen only selected matched source files and resume story expansion |
-| `.\scripts\stories.ps1 -Action export` | Deduplicate captures and write structured and Markdown story exports |
+| `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
+| `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -341,7 +342,8 @@ The underlying Python CLI remains available directly:
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
 | `python main.py stories status --limit 10` | Show completed and pending story-context source fragments |
 | `python main.py stories enrich --limit 10 --yes` | Backfill a bounded, resumable batch from exact historical sources |
-| `python main.py stories export` | Write `stories.jsonl.gz` and per-language Markdown |
+| `python main.py stories export` | Write story-length verbatim source passages |
+| `python main.py stories export --include-short` | Include short context in diagnostic exports |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -415,16 +417,19 @@ schema-3, and schema-4 records remain supported and do not need rewriting:
   "concept_match": "memories of childhood home",
   "narrative_score": 12,
   "story": {
-    "expansion_version": "seed-window-v2",
+    "expansion_version": "seed-window-v5",
     "selection_policy": "precise_seed_with_unfiltered_document_context",
+    "source_text_mode": "verbatim_extracted_paragraphs",
     "story_length_ready": true,
     "paragraph_count": 5,
+    "segment_count": 1,
     "sentence_count": 12,
     "paragraphs": [
       {"paragraph_index": 2, "role": "context_before", "text": "..."},
       {"paragraph_index": 4, "role": "seed", "text": "I remember..."},
       {"paragraph_index": 6, "role": "context_after", "text": "..."}
     ],
+    "source_text_sha256": "<sha256>",
     "text": "..."
   }
 }
@@ -449,17 +454,53 @@ and updates SQLite counts in the same journaled operation.
 
 ## Source Story Expansion
 
-The precise semantic, keyword, language, and narrative filters still select
-only the seed paragraph. Story expansion then includes up to two preceding and
-three following paragraphs from the same source document, bounded by headings,
-letter salutations, eight paragraphs, and 12,000 characters. Context paragraphs
-are explicitly labeled `context_before` or `context_after`; they are source
-text and are not represented as independently passing the filters. No
-generative model writes or completes the story.
+The precise semantic, keyword, language, and narrative filters select the seed
+paragraph that qualifies the source passage. That accepted paragraph remains
+the sole selection authority and is displayed separately in Markdown exports.
+Story expansion normally includes up to two preceding and three following
+paragraphs from the same source document, bounded by headings, letter
+salutations, dangling letter introductions, 12 selected paragraphs, and 12,000
+characters. Context paragraphs remain role-labeled in structured data, but they
+are not represented as independently passing the filters.
 
-`story_length_ready` means the source window contains at least 350 characters
-and three sentence endings. It is a useful review threshold, not a claim that
-the narrative is artistically or factually complete.
+When an accepted paragraph explicitly refers to a relative's death, the
+extractor can scan up to 64 earlier paragraphs for the nearest paragraph that
+names the same relationship and the loss event. It selects that paragraph plus
+up to four following narrative paragraphs, stopping before an embedded letter,
+article, or heading. Any gap between that earlier event and the local seed
+window is recorded as an omission and displayed explicitly. The excerpts stay
+in source order and every selected paragraph remains verbatim source text.
+
+The configured semantic reference is a comparison example used by the embedding
+model. It is not a summary of the matched page, and its people, events, or
+details must not be assumed to occur in the source. It never replaces, rejects,
+or expands the accepted filter paragraph.
+
+Matching and deduplication use normalized text. Human-facing story text instead
+preserves the Common Crawl WET/ARC paragraph content and its internal line
+breaks. Each paragraph and the combined passage carry a SHA-256 source-text
+hash; normalized comparison text is retained separately only when it differs.
+This is verbatim text from Common Crawl's extracted-text record, not a
+reconstruction of the original webpage HTML. The structured gzip preserves the
+exact extracted text; Markdown rendering repairs character encoding and HTML
+entities for readability and removes invisible trailing spaces. Story
+extraction uses only deterministic paragraph positions, literal relationship
+and loss terms, and structural boundaries. No LLM or generative model writes,
+selects, paraphrases, summarizes, or completes the story.
+
+Story headings reference the corresponding number in
+`matches_<language>.md`; they do not use an independent story sequence.
+Repeated crawl captures of the same story are deduplicated, so one heading can
+reference multiple matches, such as `Source Story for Matches 1, 2`. The next
+story may then reference `Match 52` if that is its actual position in the match
+export. Equal-score match ordering is deterministic by capture date and stable
+record ID on every workstation.
+
+`story_length_ready` means the source window contains at least 350 normalized
+characters and three sentence endings. Normal exports include only these
+passages. `-IncludeShort` retains shorter context for diagnostics; it is not
+part of the normal story product. The threshold is useful for review, not a
+claim that a narrative is artistically or factually complete.
 
 New schema-5 matches receive this context during crawling. Historical
 schema-2/3/4 matches can be enriched without recrawling the full corpus:
@@ -476,7 +517,7 @@ accepted matches. Each source commits to its own fragment under
 current fragments. Expansion-version changes mark old fragments pending.
 Canonical match shards and existing `matches_<language>.md` exports remain
 unchanged. The final export deduplicates repeated crawl captures by normalized
-story text while retaining every capture in provenance.
+story text while retaining every capture and source-text hash in provenance.
 
 After a bounded trial, use `-All` to finish every matched source serially on
 one workstation:
@@ -560,11 +601,12 @@ it with the isolated audit path below before adopting or selectively recrawling
 historical checkpoint rows.
 
 Reprocess completed Common Crawl sources only after a recall-affecting change,
-such as broader keywords or concept anchors, a lower threshold, a new model
-revision, or different paragraph extraction. Rejected candidates were not all
-retained, so those changes cannot be applied retrospectively to accepted output
-alone. Before a full recrawl, compare a representative sample of completed
-sources in an isolated audit. Do not use `reset` merely to refresh results.
+such as broader keywords or semantic-reference anchors, a lower threshold, a
+new model revision, or different paragraph extraction. Rejected candidates were
+not all retained, so those changes cannot be applied retrospectively to
+accepted output alone. Before a full recrawl, compare a representative sample
+of completed sources in an isolated audit. Do not use `reset` merely to refresh
+results.
 
 Plan first, then explicitly run the bounded audit:
 
@@ -624,8 +666,8 @@ missing or inconsistent.
 ## Model And Dependency Validation
 
 `data/evaluation/model-baseline.json` is the tracked 400-sample semantic model
-baseline. It contains stable sample IDs, scores, selected concept anchors, and
-threshold decisions, but no source paragraphs. After changing PyTorch,
+baseline. It contains stable sample IDs, scores, selected semantic-reference
+anchors, and threshold decisions, but no source paragraphs. After changing PyTorch,
 Transformers, Sentence Transformers, CUDA, model files, or precision behavior,
 capture an ignored candidate on each workstation and compare it:
 

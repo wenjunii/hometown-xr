@@ -825,7 +825,8 @@ def main() -> None:
         story_scope.add_argument("--all", action="store_true")
         if action == "enrich":
             story_action.add_argument("--yes", action="store_true")
-    stories_subparsers.add_parser("export")
+    stories_export_parser = stories_subparsers.add_parser("export")
+    stories_export_parser.add_argument("--include-short", action="store_true")
 
     audit_parser = subparsers.add_parser(
         "audit", help="plan or run an isolated audit of completed sources"
@@ -1076,7 +1077,7 @@ def main() -> None:
                     limit=limit,
                 )
         elif args.stories_command == "export":
-            result = export_stories()
+            result = export_stories(include_short=args.include_short)
         else:
             result = plan_story_enrichment(
                 crawl_ids=getattr(args, "crawl", None),

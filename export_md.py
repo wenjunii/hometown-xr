@@ -19,6 +19,49 @@ DEFAULT_EXPORT_DIR = DATA_DIR / "exports"
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9_-]+")
 
 
+def _serialized_record(record: dict) -> str:
+    return json.dumps(
+        record,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _record_sort_key(record: dict) -> tuple:
+    return (
+        -float(record.get("semantic_score", 0)),
+        str(record.get("warc_date", "")),
+        str(record.get("record_id", "")),
+        _serialized_record(record),
+    )
+
+
+def build_match_rank_index(
+    output_dir: str | Path = OUTPUT_DIR,
+) -> dict[str, tuple[str, int]]:
+    """Map stable record IDs to deterministic per-language Markdown ranks."""
+    by_language: dict[str, list[dict]] = {}
+    for file_path in sorted(Path(output_dir).glob("*/*.jsonl.gz")):
+        with gzip.open(file_path, "rt", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                by_language.setdefault(
+                    str(record.get("language", "unknown")),
+                    [],
+                ).append(record)
+
+    ranks = {}
+    for language, records in by_language.items():
+        for index, record in enumerate(sorted(records, key=_record_sort_key), 1):
+            record_id = str(record.get("record_id", ""))
+            if record_id:
+                ranks[record_id] = (language, index)
+    return ranks
+
+
 def _write_record(handle, index: int, record: dict) -> None:
     score = float(record.get("semantic_score", 0))
     keywords = ", ".join(record.get("matched_keywords", []))
@@ -31,7 +74,7 @@ def _write_record(handle, index: int, record: dict) -> None:
 
     handle.write(f"### {index}. Match Score: {score:.3f}\n")
     handle.write(f"- **Keywords:** `{keywords}`\n")
-    handle.write(f"- **Concept Anchor:** '{concept}'\n")
+    handle.write(f"- **Nearest Semantic Reference (Not a Summary):** '{concept}'\n")
     handle.write(f"- **Source URL:** [{url}]({url})\n")
     handle.write(f"- **Capture Date:** {date}\n")
     handle.write(f"- **Crawl Dataset:** `{crawl}`\n")
@@ -63,9 +106,13 @@ def export_to_markdown(
     try:
         conn = sqlite3.connect(str(temp_db))
         try:
-            conn.execute("CREATE TABLE records (language TEXT, score REAL, payload TEXT)")
+            conn.execute(
+                "CREATE TABLE records ("
+                "language TEXT, score REAL, warc_date TEXT, "
+                "record_id TEXT, payload TEXT)"
+            )
             batch = []
-            for file_path in files:
+            for file_path in sorted(files):
                 with gzip.open(file_path, "rt", encoding="utf-8") as handle:
                     for line in handle:
                         if not line.strip():
@@ -75,15 +122,26 @@ def export_to_markdown(
                             (
                                 record.get("language", "unknown"),
                                 float(record.get("semantic_score", 0)),
-                                json.dumps(record, ensure_ascii=False),
+                                str(record.get("warc_date", "")),
+                                str(record.get("record_id", "")),
+                                _serialized_record(record),
                             )
                         )
                         if len(batch) >= 1000:
-                            conn.executemany("INSERT INTO records VALUES (?, ?, ?)", batch)
+                            conn.executemany(
+                                "INSERT INTO records VALUES (?, ?, ?, ?, ?)",
+                                batch,
+                            )
                             batch.clear()
             if batch:
-                conn.executemany("INSERT INTO records VALUES (?, ?, ?)", batch)
-            conn.execute("CREATE INDEX idx_records_language_score ON records(language, score DESC)")
+                conn.executemany(
+                    "INSERT INTO records VALUES (?, ?, ?, ?, ?)",
+                    batch,
+                )
+            conn.execute(
+                "CREATE INDEX idx_records_language_score ON records("
+                "language, score DESC, warc_date ASC, record_id ASC)"
+            )
             conn.commit()
 
             language_rows = conn.execute(
@@ -99,7 +157,8 @@ def export_to_markdown(
                     handle.write(f"**Language:** `{language}`\n")
                     handle.write(f"**Total Matches:** {count}\n\n---\n\n")
                     rows = conn.execute(
-                        "SELECT payload FROM records WHERE language = ? ORDER BY score DESC",
+                        "SELECT payload FROM records WHERE language = ? "
+                        "ORDER BY score DESC, warc_date ASC, record_id ASC, payload ASC",
                         (language,),
                     )
                     for index, (payload,) in enumerate(rows, 1):

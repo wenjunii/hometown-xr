@@ -15,6 +15,7 @@ from typing import Iterable
 from config import OUTPUT_DIR, STORIES_DIR, STORY_EXPANSION_VERSION
 from crawl_catalog import get_crawl_info
 from downloader import stream_file
+from export_md import build_match_rank_index
 from output import OutputWriter
 from processor import (
     ProcessingStats,
@@ -22,8 +23,19 @@ from processor import (
     extract_paragraphs_from_wet,
 )
 from record_identity import stable_record_id
+from text_normalization import normalize_extracted_text
 
 STORY_RECORD_SCHEMA_VERSION = 1
+
+
+def _count_label(count: int, singular: str) -> str:
+    return f"{count} {singular}{'' if count == 1 else 's'}"
+
+
+def _match_reference_label(match_numbers: list[int]) -> str:
+    if len(match_numbers) == 1:
+        return f"Match {match_numbers[0]}"
+    return "Matches " + ", ".join(str(number) for number in match_numbers)
 
 
 def _source_key(source_file: str) -> str:
@@ -402,14 +414,41 @@ def _group_story_records(rows: Iterable[dict]) -> list[dict]:
     return stories
 
 
+def _attach_match_references(
+    stories: list[dict],
+    output_dir: str | Path,
+) -> None:
+    ranks = build_match_rank_index(output_dir)
+    for story in stories:
+        language = str(story.get("language", "unknown"))
+        match_numbers = []
+        for capture in story["captures"]:
+            reference = ranks.get(str(capture["record_id"]))
+            if reference is None or reference[0] != language:
+                continue
+            capture["match_number"] = reference[1]
+            match_numbers.append(reference[1])
+        story["match_numbers"] = sorted(set(match_numbers))
+
+
 def export_stories(
     stories_dir: str | Path = STORIES_DIR,
     export_dir: str | Path = STORIES_DIR.parent / "exports",
+    include_short: bool = False,
+    output_dir: str | Path = OUTPUT_DIR,
 ) -> dict:
     """Write deterministic structured and Markdown story exports."""
     export_path = Path(export_dir)
     export_path.mkdir(parents=True, exist_ok=True)
-    stories = _group_story_records(iter_story_records(stories_dir))
+    all_stories = _group_story_records(iter_story_records(stories_dir))
+    _attach_match_references(all_stories, output_dir)
+    stories = (
+        all_stories
+        if include_short
+        else [
+            row for row in all_stories if row["story"].get("story_length_ready")
+        ]
+    )
     structured_path = export_path / "stories.jsonl.gz"
     _write_gzip_rows(structured_path, stories)
     by_language: dict[str, list[dict]] = defaultdict(list)
@@ -427,44 +466,115 @@ def export_stories(
             handle.write("# Expanded Home and Belonging Stories\n\n")
             handle.write(f"**Language:** `{language}`\n")
             handle.write(f"**Unique Stories:** {len(rows)}\n\n---\n\n")
-            for index, row in enumerate(rows, 1):
+            for position, row in enumerate(rows, 1):
                 seed = row["seed"]
                 story = row["story"]
+                match_numbers = row.get("match_numbers", [])
+                heading = (
+                    _match_reference_label(match_numbers)
+                    if match_numbers
+                    else f"Unmapped Match ({row['story_id'][:12]})"
+                )
+                handle.write(f"### Source Story for {heading}\n")
                 handle.write(
-                    f"### {index}. Seed Score: "
+                    "- **Seed Score:** "
                     f"{float(seed.get('semantic_score', 0.0)):.3f}\n"
                 )
                 handle.write(
-                    "- **Story-Length Context:** `"
+                    "- **Story-Length Passage:** `"
                     + ("yes" if story.get("story_length_ready") else "no")
                     + "`\n"
                 )
                 handle.write(
-                    f"- **Story Size:** {story.get('paragraph_count', 0)} paragraphs, "
-                    f"{story.get('sentence_count', 0)} sentences\n"
+                    "- **Story Size:** "
+                    + _count_label(
+                        int(story.get("paragraph_count", 0)),
+                        "source paragraph",
+                    )
+                    + ", "
+                    + _count_label(
+                        int(story.get("sentence_count", 0)),
+                        "sentence",
+                    )
+                    + ", "
+                    + _count_label(
+                        int(story.get("segment_count", 1)),
+                        "excerpt",
+                    )
+                    + "\n"
                 )
+                seed_position = next(
+                    position
+                    for position, paragraph in enumerate(story["paragraphs"], 1)
+                    if paragraph["role"] == "seed"
+                )
+                handle.write(
+                    f"- **Filter-Matched Paragraph:** {seed_position} of "
+                    f"{story.get('paragraph_count', 0)}\n"
+                )
+                if match_numbers:
+                    handle.write(
+                        f"- **Matches Export References:** `matches_{language}.md` "
+                        + ", ".join(f"#{number}" for number in match_numbers)
+                        + "\n"
+                    )
                 handle.write(
                     "- **Keywords:** `"
                     + ", ".join(seed.get("matched_keywords", []))
                     + "`\n"
                 )
                 handle.write(
-                    f"- **Concept Anchor:** '{seed.get('concept_match', '')}'\n"
+                    "- **Nearest Semantic Reference (Not a Summary):** '"
+                    + str(seed.get("concept_match", ""))
+                    + "'\n"
+                )
+                handle.write(
+                    "- **Extraction Method:** deterministic source-paragraph "
+                    "selection; no generated text\n"
                 )
                 handle.write(f"- **Source URL:** [{row['url']}]({row['url']})\n")
                 handle.write(f"- **Capture Count:** {row['capture_count']}\n")
                 handle.write(f"- **Crawl Dataset:** `{row['crawl_id']}`\n")
                 handle.write(f"- **Source File:** `{row['source_file']}`\n\n")
+                seed_paragraph = next(
+                    paragraph
+                    for paragraph in story["paragraphs"]
+                    if paragraph["role"] == "seed"
+                )
+                handle.write("#### Accepted Filter Paragraph\n\n")
+                seed_text = normalize_extracted_text(str(seed_paragraph["text"]))
+                handle.write(
+                    "\n".join(
+                        f"> {line.rstrip()}" for line in seed_text.splitlines()
+                    )
+                )
+                handle.write("\n\n")
+                handle.write("#### Extracted Source Story\n\n")
+                previous_paragraph_index = None
                 for paragraph in story["paragraphs"]:
-                    role = paragraph["role"].replace("_", " ").title()
-                    handle.write(f"**{role}:**\n\n")
+                    paragraph_index = int(paragraph["paragraph_index"])
+                    if (
+                        previous_paragraph_index is not None
+                        and paragraph_index > previous_paragraph_index + 1
+                    ):
+                        omitted = paragraph_index - previous_paragraph_index - 1
+                        handle.write(
+                            f"*{_count_label(omitted, 'intervening source paragraph')} "
+                            "omitted; "
+                            "excerpts remain in source order.*\n\n"
+                        )
+                    display_text = normalize_extracted_text(
+                        str(paragraph["text"])
+                    )
                     handle.write(
                         "\n".join(
-                            f"> {line}" for line in str(paragraph["text"]).splitlines()
+                            f"> {line.rstrip()}"
+                            for line in display_text.splitlines()
                         )
                     )
                     handle.write("\n\n")
-                handle.write("---\n" if index == len(rows) else "---\n\n")
+                    previous_paragraph_index = paragraph_index
+                handle.write("---\n" if position == len(rows) else "---\n\n")
         os.replace(temporary, destination)
         generated.add(destination)
     for old_export in export_path.glob("stories_*.md"):
@@ -473,6 +583,8 @@ def export_stories(
     return {
         "schema_version": 1,
         "unique_stories": len(stories),
+        "excluded_short_passages": len(all_stories) - len(stories),
+        "include_short": include_short,
         "source_captures": sum(row["capture_count"] for row in stories),
         "story_length_ready": sum(
             bool(row["story"].get("story_length_ready")) for row in stories

@@ -112,7 +112,6 @@ CONCEPT_ANCHOR_LANGUAGES = ["en"] * len(CONCEPT_ANCHORS) + list(
 )
 CONCEPT_ANCHORS.extend(MULTILINGUAL_CONCEPT_ANCHORS.values())
 
-
 def concept_anchor_language(anchor: str) -> str:
     """Return the language family for a configured semantic anchor."""
     try:
