@@ -1,6 +1,10 @@
 import gzip
 import json
+import threading
 
+import pytest
+
+import story_enrichment
 from matcher import Match
 from output import OutputWriter
 from story_context import expand_story_window
@@ -181,6 +185,160 @@ def test_story_export_keeps_the_accepted_filter_seed_authoritative(tmp_path):
     assert "grandmother –" in markdown
     assert "family & stories" in markdown
     assert "painful loss" in markdown
+
+
+def test_story_enrichment_stops_between_atomic_source_fragments(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    _write_match(writer, "crawl-data/one.warc.wet.gz", "2026-01-01")
+    _write_match(writer, "crawl-data/two.warc.wet.gz", "2026-02-01")
+    shutdown_event = threading.Event()
+    original_write = story_enrichment._write_gzip_rows
+    writes = 0
+
+    def interrupt_after_first_fragment(path, rows):
+        nonlocal writes
+        original_write(path, rows)
+        writes += 1
+        if writes == 1:
+            shutdown_event.set()
+
+    monkeypatch.setattr(
+        story_enrichment,
+        "_write_gzip_rows",
+        interrupt_after_first_fragment,
+    )
+
+    result = enrich_story_sources(
+        output_dir,
+        stories_dir,
+        limit=2,
+        workers=1,
+        shutdown_event=shutdown_event,
+    )
+    resumed_plan = plan_story_enrichment(output_dir, stories_dir, limit=2)
+
+    assert result["interrupted"]
+    assert result["completed_sources"] == 1
+    assert result["interrupted_sources"] == 0
+    assert result["remaining_selected_sources"] == 1
+    assert resumed_plan["complete_sources"] == 1
+    assert resumed_plan["pending_sources"] == 1
+    assert not list(stories_dir.rglob("*.tmp"))
+
+
+def test_story_enrichment_bounds_parallel_source_workers(tmp_path, monkeypatch):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    for index in range(5):
+        _write_match(
+            writer,
+            f"crawl-data/{index}.warc.wet.gz",
+            f"2026-01-{index + 1:02d}",
+        )
+
+    original_write = story_enrichment._write_gzip_rows
+    release = threading.Event()
+    lock = threading.Lock()
+    active = 0
+    peak = 0
+
+    def observed_write(path, rows):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+            if peak == 3:
+                release.set()
+        try:
+            assert release.wait(timeout=5)
+            original_write(path, rows)
+        finally:
+            with lock:
+                active -= 1
+
+    monkeypatch.setattr(story_enrichment, "_write_gzip_rows", observed_write)
+
+    result = enrich_story_sources(
+        output_dir,
+        stories_dir,
+        limit=5,
+        workers=3,
+    )
+
+    assert result["workers"] == 3
+    assert result["completed_sources"] == 5
+    assert result["remaining_selected_sources"] == 0
+    assert peak == 3
+    assert not list(stories_dir.rglob("*.tmp"))
+
+
+@pytest.mark.parametrize("workers", [0, 17])
+def test_story_enrichment_rejects_unsafe_worker_counts(tmp_path, workers):
+    with pytest.raises(ValueError, match="workers must be between 1 and 16"):
+        enrich_story_sources(
+            tmp_path / "output",
+            tmp_path / "stories",
+            workers=workers,
+        )
+
+
+def test_story_enrichment_stops_submitting_sources_after_parallel_shutdown(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    for index in range(5):
+        _write_match(
+            writer,
+            f"crawl-data/{index}.warc.wet.gz",
+            f"2026-01-{index + 1:02d}",
+        )
+
+    shutdown_event = threading.Event()
+    release = threading.Event()
+    lock = threading.Lock()
+    started = []
+    original_enrich = story_enrichment._enrich_story_source
+
+    def interrupt_first_wave(source_file, records, target_dir, event):
+        with lock:
+            started.append(source_file)
+            if len(started) == 3:
+                shutdown_event.set()
+                release.set()
+        assert release.wait(timeout=5)
+        return original_enrich(source_file, records, target_dir, event)
+
+    monkeypatch.setattr(
+        story_enrichment,
+        "_enrich_story_source",
+        interrupt_first_wave,
+    )
+
+    result = enrich_story_sources(
+        output_dir,
+        stories_dir,
+        limit=5,
+        workers=3,
+        shutdown_event=shutdown_event,
+    )
+    resumed_plan = plan_story_enrichment(output_dir, stories_dir, limit=5)
+
+    assert result["interrupted"]
+    assert result["completed_sources"] == 3
+    assert result["remaining_selected_sources"] == 2
+    assert len(started) == 3
+    assert resumed_plan["complete_sources"] == 3
+    assert resumed_plan["pending_sources"] == 2
+    assert not list(stories_dir.rglob("*.tmp"))
 
 
 def test_outdated_story_fragment_is_pending_and_not_exported(tmp_path):

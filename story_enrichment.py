@@ -6,13 +6,21 @@ import gzip
 import hashlib
 import io
 import json
+import logging
 import os
 from collections import defaultdict
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
-from config import OUTPUT_DIR, STORIES_DIR, STORY_EXPANSION_VERSION
+from config import (
+    OUTPUT_DIR,
+    STORIES_DIR,
+    STORY_ENRICHMENT_MAX_WORKERS,
+    STORY_ENRICHMENT_WORKERS,
+    STORY_EXPANSION_VERSION,
+)
 from crawl_catalog import get_crawl_info
 from downloader import stream_file
 from export_md import build_match_rank_index
@@ -26,6 +34,7 @@ from record_identity import stable_record_id
 from text_normalization import normalize_extracted_text
 
 STORY_RECORD_SCHEMA_VERSION = 1
+logger = logging.getLogger(__name__)
 
 
 def _count_label(count: int, singular: str) -> str:
@@ -160,6 +169,7 @@ def _normalized_match_key(row: dict | object) -> tuple[str, str, str]:
 def _recover_missing_stories(
     source_file: str,
     records: list[dict],
+    shutdown_event=None,
 ) -> tuple[dict[str, dict], dict]:
     crawl_id = str(records[0].get("crawl_id", ""))
     crawl_info = get_crawl_info(crawl_id)
@@ -169,6 +179,13 @@ def _recover_missing_stories(
         targets_by_key[_normalized_match_key(record)].append(record)
     found = {}
     stats = ProcessingStats()
+    if shutdown_event and shutdown_event.is_set():
+        stats.interrupted = True
+        return found, {
+            "records_processed": 0,
+            "eligible_paragraphs": 0,
+            "interrupted": True,
+        }
     with stream_file(source_file, crawl_info) as stream:
         extractor = (
             extract_paragraphs_from_arc
@@ -179,6 +196,7 @@ def _recover_missing_stories(
             stream,
             crawl_id,
             keyword_matcher=None,
+            shutdown_event=shutdown_event,
             stats=stats,
             source_file=source_file,
             include_unmatched=True,
@@ -208,6 +226,7 @@ def _recover_missing_stories(
     return found, {
         "records_processed": stats.records_processed,
         "eligible_paragraphs": stats.eligible_paragraphs,
+        "interrupted": stats.interrupted,
     }
 
 
@@ -270,14 +289,116 @@ def plan_story_enrichment(
     }
 
 
+def _enrich_story_source(
+    source_file: str,
+    records: list[dict],
+    stories_dir: str | Path,
+    shutdown_event=None,
+) -> dict:
+    """Recover and atomically commit one source fragment."""
+    path = _fragment_path(source_file, stories_dir)
+    records_by_id = {str(record["record_id"]): record for record in records}
+    existing = {
+        str(row["record_id"]): row
+        for row in _read_gzip_rows(path)
+        if (
+            str(row.get("record_id", "")) in records_by_id
+            and _valid_story(row.get("story"))
+        )
+    }
+    missing_records = [
+        record for record in records if str(record["record_id"]) not in existing
+    ]
+    recovered = {}
+    embedded = 0
+    for record in missing_records:
+        if _valid_story(record.get("story")):
+            recovered[str(record["record_id"])] = record["story"]
+            embedded += 1
+    unresolved_records = [
+        record
+        for record in missing_records
+        if str(record["record_id"]) not in recovered
+    ]
+    parse_stats = {
+        "records_processed": 0,
+        "eligible_paragraphs": 0,
+        "interrupted": False,
+    }
+    error = None
+    if unresolved_records:
+        try:
+            parsed, parse_stats = _recover_missing_stories(
+                source_file,
+                unresolved_records,
+                shutdown_event=shutdown_event,
+            )
+            recovered.update(parsed)
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+    for record_id, story in recovered.items():
+        existing[record_id] = build_enriched_story(records_by_id[record_id], story)
+    if existing:
+        _write_gzip_rows(
+            path,
+            [existing[record_id] for record_id in sorted(existing)],
+        )
+    expected_ids = set(records_by_id)
+    missing_ids = sorted(expected_ids - set(existing))
+    source_interrupted = bool(parse_stats.get("interrupted"))
+    return {
+        "source_file": source_file,
+        "crawl_id": str(records[0].get("crawl_id", "")),
+        "status": (
+            "interrupted"
+            if source_interrupted and missing_ids
+            else "completed"
+            if not missing_ids
+            else "partial"
+            if existing
+            else "failed"
+        ),
+        "matches": len(records),
+        "stories": len(expected_ids & set(existing)),
+        "embedded_stories": embedded,
+        "recovered_stories": len(recovered) - embedded,
+        "missing_record_ids": missing_ids,
+        "error": error,
+        **parse_stats,
+    }
+
+
+def _unexpected_source_failure(source_file: str, records: list[dict], exc: Exception) -> dict:
+    return {
+        "source_file": source_file,
+        "crawl_id": str(records[0].get("crawl_id", "")),
+        "status": "failed",
+        "matches": len(records),
+        "stories": 0,
+        "embedded_stories": 0,
+        "recovered_stories": 0,
+        "missing_record_ids": sorted(str(record["record_id"]) for record in records),
+        "error": f"{type(exc).__name__}: {exc}",
+        "records_processed": 0,
+        "eligible_paragraphs": 0,
+        "interrupted": False,
+    }
+
+
 def enrich_story_sources(
     output_dir: str | Path = OUTPUT_DIR,
     stories_dir: str | Path = STORIES_DIR,
     crawl_ids: Iterable[str] | None = None,
     source_files: Iterable[str] | None = None,
     limit: int | None = None,
+    workers: int = STORY_ENRICHMENT_WORKERS,
+    shutdown_event=None,
 ) -> dict:
-    """Enrich a resumable source batch and leave canonical match output untouched."""
+    """Enrich a bounded parallel source batch without changing match output."""
+    if not 1 <= workers <= STORY_ENRICHMENT_MAX_WORKERS:
+        raise ValueError(
+            f"workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
+        )
     plan = plan_story_enrichment(
         output_dir,
         stories_dir,
@@ -285,83 +406,85 @@ def enrich_story_sources(
         source_files=source_files,
         limit=limit,
     )
-    selected_files = {row["source_file"] for row in plan["selection"]}
-    groups = _load_source_groups(output_dir, source_files=selected_files)
+    selected_files = sorted(row["source_file"] for row in plan["selection"])
+    groups = _load_source_groups(output_dir, source_files=set(selected_files))
     results = []
-    for source_file in sorted(selected_files):
-        records = groups[source_file]
-        path = _fragment_path(source_file, stories_dir)
-        records_by_id = {str(record["record_id"]): record for record in records}
-        existing = {
-            str(row["record_id"]): row
-            for row in _read_gzip_rows(path)
-            if (
-                str(row.get("record_id", "")) in records_by_id
-                and _valid_story(row.get("story"))
-            )
-        }
-        missing_records = [
-            record for record in records if str(record["record_id"]) not in existing
-        ]
-        recovered = {}
-        embedded = 0
-        for record in missing_records:
-            if _valid_story(record.get("story")):
-                recovered[str(record["record_id"])] = record["story"]
-                embedded += 1
-        unresolved_records = [
-            record
-            for record in missing_records
-            if str(record["record_id"]) not in recovered
-        ]
-        parse_stats = {"records_processed": 0, "eligible_paragraphs": 0}
-        error = None
-        if unresolved_records:
-            try:
-                parsed, parse_stats = _recover_missing_stories(
+    source_queue = iter(selected_files)
+    active = {}
+    effective_workers = min(workers, len(selected_files))
+
+    if effective_workers:
+        with ThreadPoolExecutor(
+            max_workers=effective_workers,
+            thread_name_prefix="story-enrichment",
+        ) as executor:
+
+            def submit_next() -> bool:
+                if shutdown_event and shutdown_event.is_set():
+                    return False
+                try:
+                    source_file = next(source_queue)
+                except StopIteration:
+                    return False
+                future = executor.submit(
+                    _enrich_story_source,
                     source_file,
-                    unresolved_records,
+                    groups[source_file],
+                    stories_dir,
+                    shutdown_event,
                 )
-                recovered.update(parsed)
-            except Exception as exc:
-                error = f"{type(exc).__name__}: {exc}"
-        for record_id, story in recovered.items():
-            existing[record_id] = build_enriched_story(records_by_id[record_id], story)
-        if existing:
-            _write_gzip_rows(
-                path,
-                [existing[record_id] for record_id in sorted(existing)],
-            )
-        expected_ids = set(records_by_id)
-        missing_ids = sorted(expected_ids - set(existing))
-        results.append(
-            {
-                "source_file": source_file,
-                "crawl_id": str(records[0].get("crawl_id", "")),
-                "status": (
-                    "completed"
-                    if not missing_ids
-                    else "partial"
-                    if existing
-                    else "failed"
-                ),
-                "matches": len(records),
-                "stories": len(expected_ids & set(existing)),
-                "embedded_stories": embedded,
-                "recovered_stories": len(recovered) - embedded,
-                "missing_record_ids": missing_ids,
-                "error": error,
-                **parse_stats,
-            }
-        )
+                active[future] = source_file
+                return True
+
+            for _ in range(effective_workers):
+                submit_next()
+
+            while active:
+                completed, _ = wait(active, return_when=FIRST_COMPLETED)
+                for future in completed:
+                    source_file = active.pop(future)
+                    try:
+                        results.append(future.result())
+                    except Exception as exc:
+                        results.append(
+                            _unexpected_source_failure(
+                                source_file,
+                                groups[source_file],
+                                exc,
+                            )
+                        )
+                finished = len(results)
+                if (
+                    finished <= effective_workers
+                    or finished % 10 == 0
+                    or finished == len(selected_files)
+                ):
+                    logger.info(
+                        "Story enrichment progress: %s/%s selected sources finished",
+                        finished,
+                        len(selected_files),
+                    )
+                while len(active) < effective_workers and submit_next():
+                    pass
+
+    results.sort(key=lambda row: row["source_file"])
     return {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "preserves_match_output": True,
         "plan": plan,
+        "workers": workers,
         "completed_sources": sum(row["status"] == "completed" for row in results),
         "partial_sources": sum(row["status"] == "partial" for row in results),
         "failed_sources": sum(row["status"] == "failed" for row in results),
+        "interrupted_sources": sum(
+            row["status"] == "interrupted" for row in results
+        ),
+        "interrupted": bool(
+            (shutdown_event and shutdown_event.is_set())
+            or any(row["status"] == "interrupted" for row in results)
+        ),
+        "remaining_selected_sources": len(selected_files) - len(results),
         "stories_written": sum(row["stories"] for row in results),
         "sources": results,
     }

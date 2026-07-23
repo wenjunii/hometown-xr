@@ -9,6 +9,7 @@ Handles:
 
 import gzip
 import logging
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
@@ -40,7 +41,7 @@ def _make_session() -> requests.Session:
         total=HTTP_RETRIES,
         backoff_factor=HTTP_BACKOFF_FACTOR,
         backoff_jitter=HTTP_BACKOFF_JITTER,
-        status_forcelist=[500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET", "HEAD"],
         respect_retry_after_header=True,
     )
@@ -50,7 +51,16 @@ def _make_session() -> requests.Session:
     return session
 
 
-_session = _make_session()
+_thread_sessions = threading.local()
+
+
+def _get_session() -> requests.Session:
+    """Return one reusable HTTP session per calling thread."""
+    session = getattr(_thread_sessions, "session", None)
+    if session is None:
+        session = _make_session()
+        _thread_sessions.session = session
+    return session
 
 
 def fetch_file_paths(crawl_info: CrawlInfo) -> list[str]:
@@ -72,7 +82,7 @@ def _fetch_wet_paths(crawl_info: CrawlInfo) -> list[str]:
     logger.info(f"Fetching WET file list from {url}")
 
     try:
-        response = _session.get(url, timeout=HTTP_TIMEOUT)
+        response = _get_session().get(url, timeout=HTTP_TIMEOUT)
         response.raise_for_status()
     except Exception as e:
         logger.warning(f"Failed to fetch WET file list from {url}: {e}")
@@ -160,7 +170,7 @@ def stream_file(file_path: str, crawl_info: CrawlInfo) -> Iterator[object]:
     url = f"{CC_BASE_URL}{file_path}"
     logger.debug(f"Streaming file: {url}")
 
-    response = _session.get(url, timeout=HTTP_TIMEOUT, stream=True)
+    response = _get_session().get(url, timeout=HTTP_TIMEOUT, stream=True)
     try:
         response.raise_for_status()
         response.raw.decode_content = True

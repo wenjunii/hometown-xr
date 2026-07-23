@@ -9,6 +9,7 @@ import multiprocessing
 import shutil
 import signal
 import sys
+import threading
 from dataclasses import replace
 
 from config import (
@@ -28,6 +29,8 @@ from config import (
     OUTPUT_DIR,
     PARQUET_DIR,
     SEMANTIC_THRESHOLD,
+    STORY_ENRICHMENT_MAX_WORKERS,
+    STORY_ENRICHMENT_WORKERS,
     HardwareProfile,
     get_hardware_profile,
 )
@@ -628,6 +631,7 @@ def _audit_command(args) -> None:
 
 
 def main() -> None:
+    global _shutdown_event
     parser = argparse.ArgumentParser(
         description="Extract personal home and belonging narratives from Common Crawl"
     )
@@ -825,6 +829,11 @@ def main() -> None:
         story_scope.add_argument("--all", action="store_true")
         if action == "enrich":
             story_action.add_argument("--yes", action="store_true")
+            story_action.add_argument(
+                "--workers",
+                type=int,
+                default=STORY_ENRICHMENT_WORKERS,
+            )
     stories_export_parser = stories_subparsers.add_parser("export")
     stories_export_parser.add_argument("--include-short", action="store_true")
 
@@ -1070,12 +1079,22 @@ def main() -> None:
         if args.stories_command == "enrich":
             if not args.yes:
                 parser.error("story enrichment downloads source files; pass --yes")
-            with CrawlerRunLock("story-enrichment"):
-                result = enrich_story_sources(
-                    crawl_ids=args.crawl,
-                    source_files=args.source,
-                    limit=limit,
+            if not 1 <= args.workers <= STORY_ENRICHMENT_MAX_WORKERS:
+                parser.error(
+                    f"--workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
                 )
+            _shutdown_event = threading.Event()
+            try:
+                with CrawlerRunLock("story-enrichment"):
+                    result = enrich_story_sources(
+                        crawl_ids=args.crawl,
+                        source_files=args.source,
+                        limit=limit,
+                        workers=args.workers,
+                        shutdown_event=_shutdown_event,
+                    )
+            finally:
+                _shutdown_event = None
         elif args.stories_command == "export":
             result = export_stories(include_short=args.include_short)
         else:

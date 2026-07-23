@@ -13,7 +13,10 @@ param(
 
     [switch]$Apply,
 
-    [switch]$IncludeShort
+    [switch]$IncludeShort,
+
+    [ValidateRange(1, 16)]
+    [int]$Workers = 3
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,6 +33,9 @@ if ($Apply -and $Action -ne "enrich") {
 }
 if ($IncludeShort -and $Action -ne "export") {
     throw "IncludeShort is valid only with -Action export."
+}
+if ($PSBoundParameters.ContainsKey("Workers") -and $Action -ne "enrich") {
+    throw "Workers is valid only with -Action enrich."
 }
 if ($All -and ($Crawl -or $Source)) {
     throw "All cannot be combined with Crawl or Source."
@@ -51,7 +57,7 @@ if ($Action -in @("status", "plan", "enrich")) {
     }
 }
 if ($Action -eq "enrich") {
-    $Arguments += "--yes"
+    $Arguments += @("--yes", "--workers", $Workers)
 }
 if ($IncludeShort) {
     $Arguments += "--include-short"
