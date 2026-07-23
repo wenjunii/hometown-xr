@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
-from concepts import concept_anchor_fidelity
 from config import OUTPUT_DIR, STORIES_DIR, STORY_EXPANSION_VERSION
 from crawl_catalog import get_crawl_info
 from downloader import stream_file
@@ -26,6 +25,10 @@ from record_identity import stable_record_id
 from text_normalization import normalize_extracted_text
 
 STORY_RECORD_SCHEMA_VERSION = 1
+
+
+def _count_label(count: int, singular: str) -> str:
+    return f"{count} {singular}{'' if count == 1 else 's'}"
 
 
 def _source_key(source_file: str) -> str:
@@ -378,30 +381,25 @@ def _group_story_records(rows: Iterable[dict]) -> list[dict]:
             )
         )
         representative = captures[0]
-        story = {
-            **representative,
-            "story_id": story_id,
-            "capture_count": len(captures),
-            "captures": [
-                {
-                    "record_id": row["record_id"],
-                    "crawl_id": row["crawl_id"],
-                    "source_file": row["source_file"],
-                    "url": row["url"],
-                    "warc_date": row["warc_date"],
-                }
-                for row in captures
-            ],
-        }
-        story["anchor_fidelity"] = concept_anchor_fidelity(
-            str(story["seed"].get("concept_match", "")),
-            normalize_extracted_text(str(story["story"].get("text", ""))),
+        stories.append(
+            {
+                **representative,
+                "story_id": story_id,
+                "capture_count": len(captures),
+                "captures": [
+                    {
+                        "record_id": row["record_id"],
+                        "crawl_id": row["crawl_id"],
+                        "source_file": row["source_file"],
+                        "url": row["url"],
+                        "warc_date": row["warc_date"],
+                    }
+                    for row in captures
+                ],
+            }
         )
-        stories.append(story)
     stories.sort(
         key=lambda row: (
-            not bool(row["anchor_fidelity"].get("passes")),
-            not bool(row["anchor_fidelity"].get("evaluated")),
             -float(row["seed"].get("semantic_score", 0.0)),
             row["story_id"],
         )
@@ -413,26 +411,16 @@ def export_stories(
     stories_dir: str | Path = STORIES_DIR,
     export_dir: str | Path = STORIES_DIR.parent / "exports",
     include_short: bool = False,
-    include_anchor_mismatches: bool = False,
 ) -> dict:
     """Write deterministic structured and Markdown story exports."""
     export_path = Path(export_dir)
     export_path.mkdir(parents=True, exist_ok=True)
     all_stories = _group_story_records(iter_story_records(stories_dir))
-    length_eligible = (
+    stories = (
         all_stories
         if include_short
         else [
             row for row in all_stories if row["story"].get("story_length_ready")
-        ]
-    )
-    stories = (
-        length_eligible
-        if include_anchor_mismatches
-        else [
-            row
-            for row in length_eligible
-            if row["anchor_fidelity"].get("passes")
         ]
     )
     structured_path = export_path / "stories.jsonl.gz"
@@ -465,8 +453,22 @@ def export_stories(
                     + "`\n"
                 )
                 handle.write(
-                    f"- **Story Size:** {story.get('paragraph_count', 0)} paragraphs, "
-                    f"{story.get('sentence_count', 0)} sentences\n"
+                    "- **Story Size:** "
+                    + _count_label(
+                        int(story.get("paragraph_count", 0)),
+                        "source paragraph",
+                    )
+                    + ", "
+                    + _count_label(
+                        int(story.get("sentence_count", 0)),
+                        "sentence",
+                    )
+                    + ", "
+                    + _count_label(
+                        int(story.get("segment_count", 1)),
+                        "excerpt",
+                    )
+                    + "\n"
                 )
                 seed_position = next(
                     position
@@ -487,21 +489,41 @@ def export_stories(
                     + str(seed.get("concept_match", ""))
                     + "'\n"
                 )
-                fidelity = row["anchor_fidelity"]
-                if fidelity.get("evaluated"):
-                    handle.write(
-                        "- **Reference Fidelity:** `"
-                        + ("pass" if fidelity.get("passes") else "fail")
-                        + "` ("
-                        + ", ".join(fidelity.get("matched_facets", []))
-                        + ")\n"
-                    )
+                handle.write(
+                    "- **Extraction Method:** deterministic source-paragraph "
+                    "selection; no generated text\n"
+                )
                 handle.write(f"- **Source URL:** [{row['url']}]({row['url']})\n")
                 handle.write(f"- **Capture Count:** {row['capture_count']}\n")
                 handle.write(f"- **Crawl Dataset:** `{row['crawl_id']}`\n")
                 handle.write(f"- **Source File:** `{row['source_file']}`\n\n")
+                seed_paragraph = next(
+                    paragraph
+                    for paragraph in story["paragraphs"]
+                    if paragraph["role"] == "seed"
+                )
+                handle.write("#### Accepted Filter Paragraph\n\n")
+                seed_text = normalize_extracted_text(str(seed_paragraph["text"]))
+                handle.write(
+                    "\n".join(
+                        f"> {line.rstrip()}" for line in seed_text.splitlines()
+                    )
+                )
+                handle.write("\n\n")
                 handle.write("#### Extracted Source Story\n\n")
+                previous_paragraph_index = None
                 for paragraph in story["paragraphs"]:
+                    paragraph_index = int(paragraph["paragraph_index"])
+                    if (
+                        previous_paragraph_index is not None
+                        and paragraph_index > previous_paragraph_index + 1
+                    ):
+                        omitted = paragraph_index - previous_paragraph_index - 1
+                        handle.write(
+                            f"*{_count_label(omitted, 'intervening source paragraph')} "
+                            "omitted; "
+                            "excerpts remain in source order.*\n\n"
+                        )
                     display_text = normalize_extracted_text(
                         str(paragraph["text"])
                     )
@@ -512,6 +534,7 @@ def export_stories(
                         )
                     )
                     handle.write("\n\n")
+                    previous_paragraph_index = paragraph_index
                 handle.write("---\n" if index == len(rows) else "---\n\n")
         os.replace(temporary, destination)
         generated.add(destination)
@@ -521,10 +544,8 @@ def export_stories(
     return {
         "schema_version": 1,
         "unique_stories": len(stories),
-        "excluded_short_passages": len(all_stories) - len(length_eligible),
-        "excluded_anchor_mismatches": len(length_eligible) - len(stories),
+        "excluded_short_passages": len(all_stories) - len(stories),
         "include_short": include_short,
-        "include_anchor_mismatches": include_anchor_mismatches,
         "source_captures": sum(row["capture_count"] for row in stories),
         "story_length_ready": sum(
             bool(row["story"].get("story_length_ready")) for row in stories

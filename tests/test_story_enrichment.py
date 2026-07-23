@@ -111,7 +111,7 @@ def test_story_export_excludes_short_passages_by_default(tmp_path):
     assert inclusive["include_short"]
 
 
-def test_specific_anchor_fidelity_excludes_a_broad_similarity_match(tmp_path):
+def test_story_export_keeps_the_accepted_filter_seed_authoritative(tmp_path):
     anchor = (
         "My grandmother used to tell me stories about our ancestors. "
         "Those stories made me proud of where my family comes from."
@@ -157,22 +157,17 @@ def test_specific_anchor_fidelity_excludes_a_broad_similarity_match(tmp_path):
     )
     enrich_story_sources(output_dir, stories_dir, limit=2)
 
-    strict = export_stories(stories_dir, export_dir)
+    result = export_stories(stories_dir, export_dir)
     markdown = (export_dir / "stories_en.md").read_text(encoding="utf-8")
-    inclusive = export_stories(
-        stories_dir,
-        export_dir,
-        include_anchor_mismatches=True,
-    )
 
-    assert strict["unique_stories"] == 1
-    assert strict["excluded_anchor_mismatches"] == 1
-    assert "Reference Fidelity:** `pass`" in markdown
+    assert result["unique_stories"] == 2
+    assert "excluded_anchor_mismatches" not in result
     assert "Nearest Semantic Reference (Not a Summary)" in markdown
+    assert markdown.count("#### Accepted Filter Paragraph") == 2
+    assert "deterministic source-paragraph selection; no generated text" in markdown
     assert "grandmother –" in markdown
     assert "family & stories" in markdown
-    assert "painful loss" not in markdown
-    assert inclusive["unique_stories"] == 2
+    assert "painful loss" in markdown
 
 
 def test_outdated_story_fragment_is_pending_and_not_exported(tmp_path):

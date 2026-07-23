@@ -303,7 +303,6 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply` | Reopen only selected matched source files and resume story expansion |
 | `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
-| `.\scripts\stories.ps1 -Action export -IncludeAnchorMismatches` | Include source passages that miss literal facets of a specific semantic reference |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -345,7 +344,6 @@ The underlying Python CLI remains available directly:
 | `python main.py stories enrich --limit 10 --yes` | Backfill a bounded, resumable batch from exact historical sources |
 | `python main.py stories export` | Write story-length verbatim source passages |
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
-| `python main.py stories export --include-anchor-mismatches` | Include broad semantic matches that fail specific reference-fidelity checks |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -419,11 +417,12 @@ schema-3, and schema-4 records remain supported and do not need rewriting:
   "concept_match": "memories of childhood home",
   "narrative_score": 12,
   "story": {
-    "expansion_version": "seed-window-v4",
+    "expansion_version": "seed-window-v5",
     "selection_policy": "precise_seed_with_unfiltered_document_context",
     "source_text_mode": "verbatim_extracted_paragraphs",
     "story_length_ready": true,
     "paragraph_count": 5,
+    "segment_count": 1,
     "sentence_count": 12,
     "paragraphs": [
       {"paragraph_index": 2, "role": "context_before", "text": "..."},
@@ -456,21 +455,26 @@ and updates SQLite counts in the same journaled operation.
 ## Source Story Expansion
 
 The precise semantic, keyword, language, and narrative filters select the seed
-paragraph that qualifies the source passage. Story expansion then includes up
-to two preceding and three following paragraphs from the same source document,
-bounded by headings, letter salutations, dangling letter introductions, eight
-paragraphs, and 12,000 characters. Context paragraphs remain role-labeled in
-structured data, but they are not represented as independently passing the
-filters. Requiring every connective paragraph to repeat the seed keywords would
-fragment ordinary prose rather than produce a coherent extract.
+paragraph that qualifies the source passage. That accepted paragraph remains
+the sole selection authority and is displayed separately in Markdown exports.
+Story expansion normally includes up to two preceding and three following
+paragraphs from the same source document, bounded by headings, letter
+salutations, dangling letter introductions, 12 selected paragraphs, and 12,000
+characters. Context paragraphs remain role-labeled in structured data, but they
+are not represented as independently passing the filters.
+
+When an accepted paragraph explicitly refers to a relative's death, the
+extractor can scan up to 64 earlier paragraphs for the nearest paragraph that
+names the same relationship and the loss event. It selects that paragraph plus
+up to four following narrative paragraphs, stopping before an embedded letter,
+article, or heading. Any gap between that earlier event and the local seed
+window is recorded as an omission and displayed explicitly. The excerpts stay
+in source order and every selected paragraph remains verbatim source text.
 
 The configured semantic reference is a comparison example used by the embedding
 model. It is not a summary of the matched page, and its people, events, or
-details must not be assumed to occur in the source. For the specific
-grandmother, storytelling, and ancestry reference, normal story exports require
-all three literal facets somewhere in the extracted passage. This prevents a
-broad heritage match from being presented as the referenced grandmother story.
-`-IncludeAnchorMismatches` retains those broad matches for diagnostics.
+details must not be assumed to occur in the source. It never replaces, rejects,
+or expands the accepted filter paragraph.
 
 Matching and deduplication use normalized text. Human-facing story text instead
 preserves the Common Crawl WET/ARC paragraph content and its internal line
@@ -479,8 +483,10 @@ hash; normalized comparison text is retained separately only when it differs.
 This is verbatim text from Common Crawl's extracted-text record, not a
 reconstruction of the original webpage HTML. The structured gzip preserves the
 exact extracted text; Markdown rendering repairs character encoding and HTML
-entities for readability and removes invisible trailing spaces. No generative
-model writes, paraphrases, summarizes, or completes the story.
+entities for readability and removes invisible trailing spaces. Story
+extraction uses only deterministic paragraph positions, literal relationship
+and loss terms, and structural boundaries. No LLM or generative model writes,
+selects, paraphrases, summarizes, or completes the story.
 
 `story_length_ready` means the source window contains at least 350 normalized
 characters and three sentence endings. Normal exports include only these

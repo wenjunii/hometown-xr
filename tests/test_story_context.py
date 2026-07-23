@@ -100,3 +100,61 @@ def test_story_window_preserves_verbatim_source_paragraphs():
     assert story["paragraphs"][1]["normalized_text"] == normalized[1]
     assert len(story["source_text_sha256"]) == 64
     assert all(len(row["source_text_sha256"]) == 64 for row in story["paragraphs"])
+
+
+def test_story_window_links_a_referenced_family_loss_without_generation():
+    paragraphs = [
+        "On April 4, my youngest brother Michael died.",
+        "I was the oldest and he the youngest. We were very close.",
+        "Michael knew that the family supported him and never stopped loving him.",
+        "His death devastated me. I could not believe we would never talk again.",
+        "Michael was buried next to our grandfather. Some griefs cannot be overcome.",
+        "On April 6, the following newspaper article appeared:",
+        "JEWISH LEADERS SEEK EXONERATION",
+        "The quoted article discussed a different part of the case.",
+        "Dear Mary and Bernard:",
+        "The enclosed letter discussed the newspaper coverage.",
+        "I read the letter again and realized that Sandra was a friend.",
+        "The letter helped me understand why I had been fighting my legacy.",
+        "My family's strength during my brother's death proved that I could never "
+        "forget where I came from. I was proud of my heritage.",
+        "On April 18 I wrote Sandra to tell her of my brother's death.",
+        "Dear Mary and Bernard:",
+    ]
+
+    story = expand_story_window(paragraphs, 12).payload
+
+    assert story["selection_policy"] == (
+        "precise_seed_with_deterministic_source_links"
+    )
+    assert story["source_text_mode"] == "verbatim_selected_source_paragraphs"
+    assert [row["paragraph_index"] for row in story["paragraphs"]] == [
+        0,
+        1,
+        2,
+        3,
+        4,
+        10,
+        11,
+        12,
+        13,
+    ]
+    assert [row["role"] for row in story["paragraphs"][:5]] == [
+        "referenced_event",
+        "referenced_context",
+        "referenced_context",
+        "referenced_context",
+        "referenced_context",
+    ]
+    assert story["segment_count"] == 2
+    assert story["omissions"] == [
+        {
+            "after_paragraph_index": 4,
+            "before_paragraph_index": 10,
+            "paragraph_count": 5,
+        }
+    ]
+    assert story["linked_context"]["strategy"] == "kinship_loss_reference_v1"
+    assert story["linked_context"]["matched_kinship"] == "brother"
+    assert "quoted article" not in story["text"]
+    assert "enclosed letter" not in story["text"]
