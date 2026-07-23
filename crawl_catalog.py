@@ -10,6 +10,7 @@ so new crawls are picked up automatically without code changes.
 """
 
 import logging
+import threading
 from dataclasses import dataclass
 
 import requests
@@ -64,6 +65,7 @@ LEGACY_CRAWLS = [
 
 # Cache for the live crawl list (fetched once per session)
 _modern_crawls_cache: list[str] | None = None
+_modern_crawls_lock = threading.Lock()
 
 
 def _fetch_modern_crawl_ids() -> list[str]:
@@ -80,28 +82,40 @@ def _fetch_modern_crawl_ids() -> list[str]:
     if _modern_crawls_cache is not None:
         return _modern_crawls_cache
 
-    logger.info(f"Fetching available crawls from {COLLINFO_URL}")
-    try:
-        response = requests.get(COLLINFO_URL, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+    with _modern_crawls_lock:
+        if _modern_crawls_cache is not None:
+            return _modern_crawls_cache
 
-        # Filter out legacy ARC file indexes that don't have WET files
-        legacy_indexes = {"CC-MAIN-2012", "CC-MAIN-2009-2010", "CC-MAIN-2008-2009"}
+        logger.info(f"Fetching available crawls from {COLLINFO_URL}")
+        try:
+            response = requests.get(COLLINFO_URL, timeout=30)
+            response.raise_for_status()
+            data = response.json()
 
-        # Each entry has an "id" field like "CC-MAIN-2026-12"
-        crawl_ids = [
-            entry["id"] for entry in data if "id" in entry and entry["id"] not in legacy_indexes
-        ]
-        logger.info(f"Found {len(crawl_ids)} modern crawls available")
+            # Filter out legacy ARC file indexes that don't have WET files
+            legacy_indexes = {
+                "CC-MAIN-2012",
+                "CC-MAIN-2009-2010",
+                "CC-MAIN-2008-2009",
+            }
 
-        _modern_crawls_cache = crawl_ids
-        return crawl_ids
+            # Each entry has an "id" like "CC-MAIN-2026-12".
+            crawl_ids = [
+                entry["id"]
+                for entry in data
+                if "id" in entry and entry["id"] not in legacy_indexes
+            ]
+            logger.info(f"Found {len(crawl_ids)} modern crawls available")
 
-    except Exception as e:
-        logger.warning(f"Failed to fetch live crawl list: {e}. Using hardcoded fallback list.")
-        _modern_crawls_cache = _FALLBACK_MODERN_CRAWLS
-        return _FALLBACK_MODERN_CRAWLS
+            _modern_crawls_cache = crawl_ids
+            return crawl_ids
+
+        except Exception as e:
+            logger.warning(
+                f"Failed to fetch live crawl list: {e}. Using hardcoded fallback list."
+            )
+            _modern_crawls_cache = _FALLBACK_MODERN_CRAWLS
+            return _FALLBACK_MODERN_CRAWLS
 
 
 # Hardcoded fallback in case the API is unreachable

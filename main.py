@@ -29,6 +29,8 @@ from config import (
     OUTPUT_DIR,
     PARQUET_DIR,
     SEMANTIC_THRESHOLD,
+    STORY_ENRICHMENT_MAX_WORKERS,
+    STORY_ENRICHMENT_WORKERS,
     HardwareProfile,
     get_hardware_profile,
 )
@@ -827,6 +829,11 @@ def main() -> None:
         story_scope.add_argument("--all", action="store_true")
         if action == "enrich":
             story_action.add_argument("--yes", action="store_true")
+            story_action.add_argument(
+                "--workers",
+                type=int,
+                default=STORY_ENRICHMENT_WORKERS,
+            )
     stories_export_parser = stories_subparsers.add_parser("export")
     stories_export_parser.add_argument("--include-short", action="store_true")
 
@@ -1072,6 +1079,10 @@ def main() -> None:
         if args.stories_command == "enrich":
             if not args.yes:
                 parser.error("story enrichment downloads source files; pass --yes")
+            if not 1 <= args.workers <= STORY_ENRICHMENT_MAX_WORKERS:
+                parser.error(
+                    f"--workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
+                )
             _shutdown_event = threading.Event()
             try:
                 with CrawlerRunLock("story-enrichment"):
@@ -1079,6 +1090,7 @@ def main() -> None:
                         crawl_ids=args.crawl,
                         source_files=args.source,
                         limit=limit,
+                        workers=args.workers,
                         shutdown_event=_shutdown_event,
                     )
             finally:
