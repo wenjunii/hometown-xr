@@ -160,6 +160,7 @@ def _normalized_match_key(row: dict | object) -> tuple[str, str, str]:
 def _recover_missing_stories(
     source_file: str,
     records: list[dict],
+    shutdown_event=None,
 ) -> tuple[dict[str, dict], dict]:
     crawl_id = str(records[0].get("crawl_id", ""))
     crawl_info = get_crawl_info(crawl_id)
@@ -169,6 +170,13 @@ def _recover_missing_stories(
         targets_by_key[_normalized_match_key(record)].append(record)
     found = {}
     stats = ProcessingStats()
+    if shutdown_event and shutdown_event.is_set():
+        stats.interrupted = True
+        return found, {
+            "records_processed": 0,
+            "eligible_paragraphs": 0,
+            "interrupted": True,
+        }
     with stream_file(source_file, crawl_info) as stream:
         extractor = (
             extract_paragraphs_from_arc
@@ -179,6 +187,7 @@ def _recover_missing_stories(
             stream,
             crawl_id,
             keyword_matcher=None,
+            shutdown_event=shutdown_event,
             stats=stats,
             source_file=source_file,
             include_unmatched=True,
@@ -208,6 +217,7 @@ def _recover_missing_stories(
     return found, {
         "records_processed": stats.records_processed,
         "eligible_paragraphs": stats.eligible_paragraphs,
+        "interrupted": stats.interrupted,
     }
 
 
@@ -276,6 +286,7 @@ def enrich_story_sources(
     crawl_ids: Iterable[str] | None = None,
     source_files: Iterable[str] | None = None,
     limit: int | None = None,
+    shutdown_event=None,
 ) -> dict:
     """Enrich a resumable source batch and leave canonical match output untouched."""
     plan = plan_story_enrichment(
@@ -289,6 +300,8 @@ def enrich_story_sources(
     groups = _load_source_groups(output_dir, source_files=selected_files)
     results = []
     for source_file in sorted(selected_files):
+        if shutdown_event and shutdown_event.is_set():
+            break
         records = groups[source_file]
         path = _fragment_path(source_file, stories_dir)
         records_by_id = {str(record["record_id"]): record for record in records}
@@ -314,13 +327,18 @@ def enrich_story_sources(
             for record in missing_records
             if str(record["record_id"]) not in recovered
         ]
-        parse_stats = {"records_processed": 0, "eligible_paragraphs": 0}
+        parse_stats = {
+            "records_processed": 0,
+            "eligible_paragraphs": 0,
+            "interrupted": False,
+        }
         error = None
         if unresolved_records:
             try:
                 parsed, parse_stats = _recover_missing_stories(
                     source_file,
                     unresolved_records,
+                    shutdown_event=shutdown_event,
                 )
                 recovered.update(parsed)
             except Exception as exc:
@@ -334,12 +352,15 @@ def enrich_story_sources(
             )
         expected_ids = set(records_by_id)
         missing_ids = sorted(expected_ids - set(existing))
+        source_interrupted = bool(parse_stats.get("interrupted"))
         results.append(
             {
                 "source_file": source_file,
                 "crawl_id": str(records[0].get("crawl_id", "")),
                 "status": (
-                    "completed"
+                    "interrupted"
+                    if source_interrupted and missing_ids
+                    else "completed"
                     if not missing_ids
                     else "partial"
                     if existing
@@ -362,6 +383,14 @@ def enrich_story_sources(
         "completed_sources": sum(row["status"] == "completed" for row in results),
         "partial_sources": sum(row["status"] == "partial" for row in results),
         "failed_sources": sum(row["status"] == "failed" for row in results),
+        "interrupted_sources": sum(
+            row["status"] == "interrupted" for row in results
+        ),
+        "interrupted": bool(
+            (shutdown_event and shutdown_event.is_set())
+            or any(row["status"] == "interrupted" for row in results)
+        ),
+        "remaining_selected_sources": len(selected_files) - len(results),
         "stories_written": sum(row["stories"] for row in results),
         "sources": results,
     }

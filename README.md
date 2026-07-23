@@ -519,6 +519,13 @@ Canonical match shards and existing `matches_<language>.md` exports remain
 unchanged. The final export deduplicates repeated crawl captures by normalized
 story text while retaining every capture and source-text hash in provenance.
 
+Press `Ctrl+C` once to request a graceful stop. The active parser exits at the
+next archive-record boundary, reports `"interrupted": true`, releases the run
+lock, and leaves the current unresolved source pending. Wait for the JSON
+summary and PowerShell prompt before closing the terminal. A second `Ctrl+C`
+forces immediate exit and should be reserved for a stalled network operation.
+Rerun the same enrichment command to resume from the committed source fragments.
+
 After a bounded trial, use `-All` to finish every matched source serially on
 one workstation:
 

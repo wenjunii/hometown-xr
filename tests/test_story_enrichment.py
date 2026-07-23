@@ -1,6 +1,8 @@
 import gzip
 import json
+import threading
 
+import story_enrichment
 from matcher import Match
 from output import OutputWriter
 from story_context import expand_story_window
@@ -181,6 +183,49 @@ def test_story_export_keeps_the_accepted_filter_seed_authoritative(tmp_path):
     assert "grandmother –" in markdown
     assert "family & stories" in markdown
     assert "painful loss" in markdown
+
+
+def test_story_enrichment_stops_between_atomic_source_fragments(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    _write_match(writer, "crawl-data/one.warc.wet.gz", "2026-01-01")
+    _write_match(writer, "crawl-data/two.warc.wet.gz", "2026-02-01")
+    shutdown_event = threading.Event()
+    original_write = story_enrichment._write_gzip_rows
+    writes = 0
+
+    def interrupt_after_first_fragment(path, rows):
+        nonlocal writes
+        original_write(path, rows)
+        writes += 1
+        if writes == 1:
+            shutdown_event.set()
+
+    monkeypatch.setattr(
+        story_enrichment,
+        "_write_gzip_rows",
+        interrupt_after_first_fragment,
+    )
+
+    result = enrich_story_sources(
+        output_dir,
+        stories_dir,
+        limit=2,
+        shutdown_event=shutdown_event,
+    )
+    resumed_plan = plan_story_enrichment(output_dir, stories_dir, limit=2)
+
+    assert result["interrupted"]
+    assert result["completed_sources"] == 1
+    assert result["interrupted_sources"] == 0
+    assert result["remaining_selected_sources"] == 1
+    assert resumed_plan["complete_sources"] == 1
+    assert resumed_plan["pending_sources"] == 1
+    assert not list(stories_dir.rglob("*.tmp"))
 
 
 def test_outdated_story_fragment_is_pending_and_not_exported(tmp_path):
