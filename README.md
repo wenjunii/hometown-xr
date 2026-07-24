@@ -837,3 +837,10 @@ tests/                  unit, regression, and integration tests
 
 MIT. See [LICENSE](LICENSE). Common Crawl data remains subject to the
 [Common Crawl Terms of Use](https://commoncrawl.org/terms-of-use).
+
+## Project Extensions
+
+- [wenjunii/home-podcast](https://github.com/wenjunii/home-podcast)
+- [wenjunii/td-imagefx-library](https://github.com/wenjunii/td-imagefx-library)
+- [wenjunii/flexgpu-touchdesigner](https://github.com/wenjunii/flexgpu-touchdesigner)
+- [wenjunii/voice-to-visual-sdtd](https://github.com/wenjunii/voice-to-visual-sdtd)
