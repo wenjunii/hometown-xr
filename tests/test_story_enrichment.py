@@ -187,6 +187,40 @@ def test_story_export_keeps_the_accepted_filter_seed_authoritative(tmp_path):
     assert "painful loss" in markdown
 
 
+def test_story_export_uses_clean_markers_for_blank_source_lines(tmp_path):
+    paragraph = (
+        "I remember the stories my grandmother shared about our family and the "
+        "home where she grew up. Those memories connected me to relatives whose "
+        "lives had shaped our traditions long before I was born. My family returned "
+        "there each summer, and every visit helped me understand why the place "
+        "continued to matter. I remained proud of that heritage and carried those "
+        "stories into my own life. They gave me a lasting sense of belonging."
+    )
+    source_paragraph = paragraph.replace(
+        "My family returned",
+        "\n \nMy family returned",
+    )
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    export_dir = tmp_path / "exports"
+    writer = OutputWriter(output_dir)
+    _write_match(
+        writer,
+        "crawl-data/blank-line.warc.wet.gz",
+        "2026-01-01",
+        paragraphs=[paragraph],
+        source_paragraphs=[source_paragraph],
+    )
+
+    enrich_story_sources(output_dir, stories_dir, limit=1)
+    export_stories(stories_dir, export_dir, output_dir=output_dir)
+    markdown = (export_dir / "stories_en.md").read_text(encoding="utf-8")
+
+    assert "\n>\n" in markdown
+    assert "\n> \n" not in markdown
+    assert all(line == line.rstrip() for line in markdown.splitlines())
+
+
 def test_story_enrichment_stops_between_atomic_source_fragments(
     tmp_path,
     monkeypatch,

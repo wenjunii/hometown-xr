@@ -41,6 +41,14 @@ def _count_label(count: int, singular: str) -> str:
     return f"{count} {singular}{'' if count == 1 else 's'}"
 
 
+def _markdown_blockquote(text: str) -> str:
+    lines = []
+    for raw_line in normalize_extracted_text(text).splitlines():
+        line = raw_line.rstrip()
+        lines.append(f"> {line}" if line else ">")
+    return "\n".join(lines)
+
+
 def _match_reference_label(match_numbers: list[int]) -> str:
     if len(match_numbers) == 1:
         return f"Match {match_numbers[0]}"
@@ -665,12 +673,7 @@ def export_stories(
                     if paragraph["role"] == "seed"
                 )
                 handle.write("#### Accepted Filter Paragraph\n\n")
-                seed_text = normalize_extracted_text(str(seed_paragraph["text"]))
-                handle.write(
-                    "\n".join(
-                        f"> {line.rstrip()}" for line in seed_text.splitlines()
-                    )
-                )
+                handle.write(_markdown_blockquote(str(seed_paragraph["text"])))
                 handle.write("\n\n")
                 handle.write("#### Extracted Source Story\n\n")
                 previous_paragraph_index = None
@@ -686,15 +689,7 @@ def export_stories(
                             "omitted; "
                             "excerpts remain in source order.*\n\n"
                         )
-                    display_text = normalize_extracted_text(
-                        str(paragraph["text"])
-                    )
-                    handle.write(
-                        "\n".join(
-                            f"> {line.rstrip()}"
-                            for line in display_text.splitlines()
-                        )
-                    )
+                    handle.write(_markdown_blockquote(str(paragraph["text"])))
                     handle.write("\n\n")
                     previous_paragraph_index = paragraph_index
                 handle.write("---\n" if position == len(rows) else "---\n\n")
