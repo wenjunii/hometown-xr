@@ -301,6 +301,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\retry.ps1 -All -Category http_503 -Limit 25 -Apply` | Reset one bounded failure batch after a dry-run report |
 | `.\scripts\stories.ps1 -Action plan -Limit 10` | Plan a bounded historical source-context backfill without downloading |
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Workers 3 -Apply` | Reopen matched sources with bounded parallel story expansion |
+| `.\scripts\stories.ps1 -Action stop` | Request a graceful story-enrichment stop from another terminal |
 | `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
@@ -342,6 +343,7 @@ The underlying Python CLI remains available directly:
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
 | `python main.py stories status --limit 10` | Show completed and pending story-context source fragments |
 | `python main.py stories enrich --limit 10 --workers 3 --yes` | Backfill exact historical sources with bounded parallel workers |
+| `python main.py stories stop` | Request a graceful story-enrichment stop from another terminal |
 | `python main.py stories export` | Write story-length verbatim source passages |
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
@@ -526,13 +528,27 @@ the semantic model or use the GPU. `-Workers 1` restores serial operation, while
 conservative default for the 3080, 4090, and 5090 PCs because it improves source
 throughput without placing a large request burst on Common Crawl.
 
-Press `Ctrl+C` once to request a graceful stop. Each active parser exits at the
-next archive-record boundary, reports `"interrupted": true`, releases the run
-lock, and leaves unresolved sources pending. No new sources are submitted after
-the request. Wait for the JSON summary and PowerShell prompt before closing the
-terminal. A second `Ctrl+C` forces immediate exit and should be reserved for a
-stalled network operation. Rerun the same command to resume from committed
-source fragments.
+Press `Ctrl+C` once to request a graceful stop. The PowerShell wrapper records
+the request for the actual Python worker process, even when the Windows virtual
+environment launcher does not forward the console signal. It immediately prints
+an acknowledgement while each active parser exits at the next archive-record
+boundary. The run then reports `"interrupted": true`, releases the lock, and
+leaves unresolved sources pending. No new sources are submitted after the
+request. Wait for the JSON summary and PowerShell prompt before closing the
+terminal.
+
+If the original terminal cannot receive keyboard input, request the same safe
+stop from a second PowerShell window:
+
+```powershell
+cd C:\Users\wenju\.gemini\antigravity\scratch\cc-home-extractor
+.\scripts\stories.ps1 -Action stop
+```
+
+The stop request targets only the PID in the current story-enrichment lock, and
+the `Ctrl+C` handler uses a unique token for the current invocation even before
+that lock exists. A stale request therefore cannot stop a later run. Rerun the
+original enrichment command to resume from committed source fragments.
 
 After a bounded trial, use `-All` to finish every matched source on one
 workstation:

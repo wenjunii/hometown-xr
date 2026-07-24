@@ -56,14 +56,17 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 _shutdown_event = None
+_shutdown_signal_count = 0
 
 
 def _signal_handler(signum, frame) -> None:
+    global _shutdown_signal_count
     del signum, frame
-    if _shutdown_event and _shutdown_event.is_set():
-        logger.warning("Second shutdown request received; exiting immediately.")
-        raise SystemExit(1)
     if _shutdown_event:
+        if _shutdown_signal_count:
+            logger.warning("Second shutdown request received; exiting immediately.")
+            raise SystemExit(1)
+        _shutdown_signal_count = 1
         _shutdown_event.set()
     logger.info("Shutdown requested. Returning active sources to the checkpoint safely...")
 
@@ -165,9 +168,10 @@ def run(
     strategy: str = "round-robin",
     chunk_size: int = 100,
 ) -> None:
-    global _shutdown_event
+    global _shutdown_event, _shutdown_signal_count
     context = multiprocessing.get_context("spawn")
     _shutdown_event = context.Event()
+    _shutdown_signal_count = 0
     from signatures import build_run_manifest
 
     effective_strategy = strategy if len(crawl_ids) > 1 else "oldest"
@@ -260,6 +264,7 @@ def run(
     finally:
         metrics.close()
         _shutdown_event = None
+        _shutdown_signal_count = 0
 
 
 def show_status() -> None:
@@ -589,7 +594,7 @@ def _evaluation_command(args) -> None:
 
 
 def _audit_command(args) -> None:
-    global _shutdown_event
+    global _shutdown_event, _shutdown_signal_count
     from audit import build_audit_plan, run_audit
     from signatures import build_filter_signature
 
@@ -612,6 +617,7 @@ def _audit_command(args) -> None:
         return
     context = multiprocessing.get_context("spawn")
     _shutdown_event = context.Event()
+    _shutdown_signal_count = 0
     try:
         with CrawlerRunLock("audit"):
             print(
@@ -628,10 +634,11 @@ def _audit_command(args) -> None:
             )
     finally:
         _shutdown_event = None
+        _shutdown_signal_count = 0
 
 
 def main() -> None:
-    global _shutdown_event
+    global _shutdown_event, _shutdown_signal_count
     parser = argparse.ArgumentParser(
         description="Extract personal home and belonging narratives from Common Crawl"
     )
@@ -819,6 +826,10 @@ def main() -> None:
     stories_subparsers = stories_parser.add_subparsers(
         dest="stories_command",
         required=True,
+    )
+    stories_subparsers.add_parser(
+        "stop",
+        help="request a graceful stop from another terminal",
     )
     for action in ("plan", "enrich", "status"):
         story_action = stories_subparsers.add_parser(action)
@@ -1064,6 +1075,7 @@ def main() -> None:
             parser.error("--port must be between 1 and 65535")
         _evaluation_command(args)
     elif args.command == "stories":
+        from story_control import request_story_shutdown, watch_story_shutdown
         from story_enrichment import (
             enrich_story_sources,
             export_stories,
@@ -1076,7 +1088,9 @@ def main() -> None:
                 parser.error("--limit must be positive")
         else:
             limit = None
-        if args.stories_command == "enrich":
+        if args.stories_command == "stop":
+            result = request_story_shutdown()
+        elif args.stories_command == "enrich":
             if not args.yes:
                 parser.error("story enrichment downloads source files; pass --yes")
             if not 1 <= args.workers <= STORY_ENRICHMENT_MAX_WORKERS:
@@ -1084,17 +1098,20 @@ def main() -> None:
                     f"--workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
                 )
             _shutdown_event = threading.Event()
+            _shutdown_signal_count = 0
             try:
                 with CrawlerRunLock("story-enrichment"):
-                    result = enrich_story_sources(
-                        crawl_ids=args.crawl,
-                        source_files=args.source,
-                        limit=limit,
-                        workers=args.workers,
-                        shutdown_event=_shutdown_event,
-                    )
+                    with watch_story_shutdown(_shutdown_event):
+                        result = enrich_story_sources(
+                            crawl_ids=args.crawl,
+                            source_files=args.source,
+                            limit=limit,
+                            workers=args.workers,
+                            shutdown_event=_shutdown_event,
+                        )
             finally:
                 _shutdown_event = None
+                _shutdown_signal_count = 0
         elif args.stories_command == "export":
             result = export_stories(include_short=args.include_short)
         else:

@@ -16,7 +16,7 @@ class CrawlerAlreadyRunning(RuntimeError):
     pass
 
 
-def _pid_is_running(pid: int) -> bool:
+def pid_is_running(pid: int) -> bool:
     if pid <= 0:
         return False
     if sys.platform == "win32":
@@ -43,6 +43,17 @@ def _pid_is_running(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def read_run_lock(path: str | Path = RUN_LOCK_PATH) -> dict | None:
+    """Return the current lock payload, or None when no lock exists."""
+    lock_path = Path(path)
+    try:
+        return json.loads(lock_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError):
+        return {"path": str(lock_path), "state": "unreadable"}
 
 
 class CrawlerRunLock:
@@ -74,10 +85,10 @@ class CrawlerRunLock:
                     os.O_CREAT | os.O_EXCL | os.O_WRONLY,
                 )
             except FileExistsError:
-                existing = self._read_existing()
+                existing = read_run_lock(self.path) or {}
                 same_host = existing.get("host") == socket.gethostname()
                 pid = int(existing.get("pid", 0) or 0)
-                if same_host and not _pid_is_running(pid):
+                if same_host and not pid_is_running(pid):
                     self.path.unlink(missing_ok=True)
                     continue
                 details = json.dumps(existing, sort_keys=True)
@@ -91,12 +102,6 @@ class CrawlerRunLock:
                 return
 
         raise CrawlerAlreadyRunning(f"Could not acquire crawler lock {self.path}")
-
-    def _read_existing(self) -> dict:
-        try:
-            return json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return {"path": str(self.path), "state": "unreadable"}
 
     def release(self) -> None:
         if self._owned:

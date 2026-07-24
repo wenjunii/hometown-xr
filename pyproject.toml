@@ -67,6 +67,7 @@ py-modules = [
     "signatures",
     "story_reconstruction",
     "story_context",
+    "story_control",
     "story_enrichment",
     "text_normalization",
 ]
