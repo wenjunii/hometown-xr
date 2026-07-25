@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hometown-xr-extractor"
-version = "0.8.0"
+version = "0.9.0"
 description = "Resumable multilingual Common Crawl narrative extractor"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -69,6 +69,8 @@ py-modules = [
     "story_context",
     "story_control",
     "story_enrichment",
+    "story_operations",
+    "story_products",
     "text_normalization",
 ]
 

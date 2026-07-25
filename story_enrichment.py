@@ -8,6 +8,7 @@ import io
 import json
 import logging
 import os
+import time
 from collections import defaultdict
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime, timezone
@@ -31,6 +32,14 @@ from processor import (
     extract_paragraphs_from_wet,
 )
 from record_identity import stable_record_id
+from story_operations import (
+    AdaptiveWorkerController,
+    StoryFailureLedger,
+    StoryRunTelemetry,
+    read_story_run_state,
+    story_failure_ledger_path,
+    story_run_state_path,
+)
 from text_normalization import normalize_extracted_text
 
 STORY_RECORD_SCHEMA_VERSION = 1
@@ -178,6 +187,7 @@ def _recover_missing_stories(
     source_file: str,
     records: list[dict],
     shutdown_event=None,
+    progress_callback=None,
 ) -> tuple[dict[str, dict], dict]:
     crawl_id = str(records[0].get("crawl_id", ""))
     crawl_info = get_crawl_info(crawl_id)
@@ -187,6 +197,7 @@ def _recover_missing_stories(
         targets_by_key[_normalized_match_key(record)].append(record)
     found = {}
     stats = ProcessingStats()
+    last_progress_records = 0
     if shutdown_event and shutdown_event.is_set():
         stats.interrupted = True
         return found, {
@@ -209,6 +220,15 @@ def _recover_missing_stories(
             source_file=source_file,
             include_unmatched=True,
         ):
+            if (
+                progress_callback
+                and stats.records_processed - last_progress_records >= 1_000
+            ):
+                progress_callback(
+                    stats.records_processed,
+                    stats.eligible_paragraphs,
+                )
+                last_progress_records = stats.records_processed
             parsed_id = stable_record_id(
                 paragraph.crawl_id,
                 source_file,
@@ -231,6 +251,11 @@ def _recover_missing_stories(
                 found[str(record["record_id"])] = paragraph.story
                 if len(found) == len(targets):
                     break
+    if progress_callback:
+        progress_callback(
+            stats.records_processed,
+            stats.eligible_paragraphs,
+        )
     return found, {
         "records_processed": stats.records_processed,
         "eligible_paragraphs": stats.eligible_paragraphs,
@@ -262,25 +287,30 @@ def plan_story_enrichment(
         set(source_files) if source_files else None,
     )
     pending = []
+    retryable = []
     complete_sources = 0
     complete_matches = 0
+    failure_ledger = StoryFailureLedger(story_failure_ledger_path(stories_dir))
     for source_file, records in sorted(groups.items()):
         expected = {str(record["record_id"]) for record in records}
         completed = _fragment_record_ids(_fragment_path(source_file, stories_dir))
         missing = sorted(expected - completed)
         if missing:
-            pending.append(
-                {
-                    "source_file": source_file,
-                    "crawl_id": str(records[0].get("crawl_id", "")),
-                    "matches": len(records),
-                    "missing_matches": len(missing),
-                }
-            )
+            row = {
+                "source_file": source_file,
+                "crawl_id": str(records[0].get("crawl_id", "")),
+                "matches": len(records),
+                "missing_matches": len(missing),
+                "retry_state": failure_ledger.state(source_file),
+            }
+            pending.append(row)
+            if row["retry_state"] == "ready":
+                retryable.append(row)
         else:
             complete_sources += 1
             complete_matches += len(records)
-    selected = pending[:limit] if limit is not None else pending
+    selected = retryable[:limit] if limit is not None else retryable
+    failure_summary = failure_ledger.summary()
     return {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -292,8 +322,17 @@ def plan_story_enrichment(
         "complete_matches": complete_matches,
         "pending_sources": len(pending),
         "pending_matches": sum(row["missing_matches"] for row in pending),
+        "retryable_sources": len(retryable),
+        "cooldown_sources": sum(
+            row["retry_state"] == "cooldown" for row in pending
+        ),
+        "quarantined_sources": sum(
+            row["retry_state"] == "quarantined" for row in pending
+        ),
+        "failure_ledger": failure_summary,
         "selected_sources": len(selected),
         "selection": selected,
+        "runtime": read_story_run_state(stories_dir),
     }
 
 
@@ -302,6 +341,7 @@ def _enrich_story_source(
     records: list[dict],
     stories_dir: str | Path,
     shutdown_event=None,
+    progress_callback=None,
 ) -> dict:
     """Recover and atomically commit one source fragment."""
     path = _fragment_path(source_file, stories_dir)
@@ -333,6 +373,13 @@ def _enrich_story_source(
         "eligible_paragraphs": 0,
         "interrupted": False,
     }
+
+    def report_progress(records_processed: int, eligible_paragraphs: int) -> None:
+        parse_stats["records_processed"] = records_processed
+        parse_stats["eligible_paragraphs"] = eligible_paragraphs
+        if progress_callback:
+            progress_callback(records_processed, eligible_paragraphs)
+
     error = None
     if unresolved_records:
         try:
@@ -340,6 +387,7 @@ def _enrich_story_source(
                 source_file,
                 unresolved_records,
                 shutdown_event=shutdown_event,
+                progress_callback=report_progress,
             )
             recovered.update(parsed)
         except Exception as exc:
@@ -399,14 +447,25 @@ def enrich_story_sources(
     crawl_ids: Iterable[str] | None = None,
     source_files: Iterable[str] | None = None,
     limit: int | None = None,
-    workers: int = STORY_ENRICHMENT_WORKERS,
+    workers: int | str = STORY_ENRICHMENT_WORKERS,
     shutdown_event=None,
 ) -> dict:
     """Enrich a bounded parallel source batch without changing match output."""
-    if not 1 <= workers <= STORY_ENRICHMENT_MAX_WORKERS:
-        raise ValueError(
-            f"workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
-        )
+    auto_workers = str(workers).lower() == "auto"
+    if not auto_workers:
+        try:
+            numeric_workers = int(workers)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}, "
+                "or 'auto'"
+            ) from exc
+        if not 1 <= numeric_workers <= STORY_ENRICHMENT_MAX_WORKERS:
+            raise ValueError(
+                f"workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}, "
+                "or 'auto'"
+            )
+        workers = numeric_workers
     plan = plan_story_enrichment(
         output_dir,
         stories_dir,
@@ -419,61 +478,116 @@ def enrich_story_sources(
     results = []
     source_queue = iter(selected_files)
     active = {}
-    effective_workers = min(workers, len(selected_files))
+    controller = AdaptiveWorkerController(workers, len(selected_files))
+    failure_ledger = StoryFailureLedger(story_failure_ledger_path(stories_dir))
+    telemetry = StoryRunTelemetry(
+        story_run_state_path(stories_dir),
+        worker_mode=controller.mode,
+        configured_workers=workers,
+        target_workers=controller.target,
+        maximum_workers=controller.maximum,
+        selected_sources=len(selected_files),
+    )
+    run_status = "completed"
 
-    if effective_workers:
-        with ThreadPoolExecutor(
-            max_workers=effective_workers,
-            thread_name_prefix="story-enrichment",
-        ) as executor:
+    try:
+        if controller.maximum:
+            with ThreadPoolExecutor(
+                max_workers=controller.maximum,
+                thread_name_prefix="story-enrichment",
+            ) as executor:
 
-            def submit_next() -> bool:
-                if shutdown_event and shutdown_event.is_set():
-                    return False
-                try:
-                    source_file = next(source_queue)
-                except StopIteration:
-                    return False
-                future = executor.submit(
-                    _enrich_story_source,
-                    source_file,
-                    groups[source_file],
-                    stories_dir,
-                    shutdown_event,
-                )
-                active[future] = source_file
-                return True
-
-            for _ in range(effective_workers):
-                submit_next()
-
-            while active:
-                completed, _ = wait(active, return_when=FIRST_COMPLETED)
-                for future in completed:
-                    source_file = active.pop(future)
+                def submit_next() -> bool:
+                    if shutdown_event and shutdown_event.is_set():
+                        return False
                     try:
-                        results.append(future.result())
-                    except Exception as exc:
-                        results.append(
-                            _unexpected_source_failure(
+                        source_file = next(source_queue)
+                    except StopIteration:
+                        return False
+                    records = groups[source_file]
+                    future = executor.submit(
+                        _enrich_story_source,
+                        source_file,
+                        records,
+                        stories_dir,
+                        shutdown_event,
+                        lambda records_processed, eligible_paragraphs, source=source_file: (
+                            telemetry.source_progress(
+                                source,
+                                records_processed,
+                                eligible_paragraphs,
+                            )
+                        ),
+                    )
+                    active[future] = {
+                        "source_file": source_file,
+                        "started": time.monotonic(),
+                    }
+                    telemetry.source_started(
+                        source_file,
+                        str(records[0].get("crawl_id", "")),
+                    )
+                    return True
+
+                for _ in range(controller.target):
+                    submit_next()
+
+                while active:
+                    completed, _ = wait(active, return_when=FIRST_COMPLETED)
+                    for future in completed:
+                        active_row = active.pop(future)
+                        source_file = str(active_row["source_file"])
+                        try:
+                            result = future.result()
+                        except Exception as exc:
+                            result = _unexpected_source_failure(
                                 source_file,
                                 groups[source_file],
                                 exc,
                             )
+                        result["duration_seconds"] = round(
+                            time.monotonic() - float(active_row["started"]),
+                            3,
                         )
-                finished = len(results)
-                if (
-                    finished <= effective_workers
-                    or finished % 10 == 0
-                    or finished == len(selected_files)
-                ):
-                    logger.info(
-                        "Story enrichment progress: %s/%s selected sources finished",
-                        finished,
-                        len(selected_files),
-                    )
-                while len(active) < effective_workers and submit_next():
-                    pass
+                        results.append(result)
+                        failure_ledger.record_result(result)
+                        if controller.observe(result):
+                            adjustment = controller.adjustments[-1]
+                            logger.info(
+                                "Adaptive story workers changed from %s to %s (%s)",
+                                adjustment["from"],
+                                adjustment["to"],
+                                adjustment["reason"],
+                            )
+                        telemetry.source_finished(
+                            result,
+                            target_workers=controller.target,
+                            adjustments=controller.adjustments,
+                        )
+                    finished = len(results)
+                    if (
+                        finished <= controller.maximum
+                        or finished % 10 == 0
+                        or finished == len(selected_files)
+                    ):
+                        logger.info(
+                            "Story enrichment progress: %s/%s selected sources finished",
+                            finished,
+                            len(selected_files),
+                        )
+                    while len(active) < controller.target and submit_next():
+                        pass
+        if shutdown_event and shutdown_event.is_set():
+            run_status = "interrupted"
+        elif any(
+            row.get("status") in {"failed", "partial"} for row in results
+        ):
+            run_status = "completed_with_failures"
+    except Exception:
+        run_status = "failed"
+        raise
+    finally:
+        telemetry.finish(run_status)
 
     results.sort(key=lambda row: row["source_file"])
     return {
@@ -482,6 +596,10 @@ def enrich_story_sources(
         "preserves_match_output": True,
         "plan": plan,
         "workers": workers,
+        "worker_mode": controller.mode,
+        "maximum_workers": controller.maximum,
+        "final_target_workers": controller.target,
+        "worker_adjustments": controller.adjustments,
         "completed_sources": sum(row["status"] == "completed" for row in results),
         "partial_sources": sum(row["status"] == "partial" for row in results),
         "failed_sources": sum(row["status"] == "failed" for row in results),
@@ -494,6 +612,8 @@ def enrich_story_sources(
         ),
         "remaining_selected_sources": len(selected_files) - len(results),
         "stories_written": sum(row["stories"] for row in results),
+        "failure_ledger": failure_ledger.summary(),
+        "runtime_path": str(story_run_state_path(stories_dir)),
         "sources": results,
     }
 
@@ -569,6 +689,12 @@ def export_stories(
     output_dir: str | Path = OUTPUT_DIR,
 ) -> dict:
     """Write deterministic structured and Markdown story exports."""
+    from story_products import (
+        build_story_quality_report,
+        story_gap_rows,
+        write_story_quality_report,
+    )
+
     export_path = Path(export_dir)
     export_path.mkdir(parents=True, exist_ok=True)
     all_stories = _group_story_records(iter_story_records(stories_dir))
@@ -582,6 +708,44 @@ def export_stories(
     )
     structured_path = export_path / "stories.jsonl.gz"
     _write_gzip_rows(structured_path, stories)
+    complete_stories = [
+        row for row in all_stories if row["story"].get("story_length_ready")
+    ]
+    short_stories = [
+        row for row in all_stories if not row["story"].get("story_length_ready")
+    ]
+    complete_path = export_path / "stories_complete.jsonl.gz"
+    short_path = export_path / "stories_short.jsonl.gz"
+    partial_path = export_path / "stories_partial.jsonl.gz"
+    provenance_path = export_path / "stories_provenance.jsonl.gz"
+    _write_gzip_rows(complete_path, complete_stories)
+    _write_gzip_rows(short_path, short_stories)
+    gap_rows = story_gap_rows(stories_dir, output_dir)
+    _write_gzip_rows(partial_path, gap_rows)
+    provenance_rows = []
+    for story in all_stories:
+        for capture in story["captures"]:
+            provenance_rows.append(
+                {
+                    "story_id": story["story_id"],
+                    "record_id": capture["record_id"],
+                    "crawl_id": capture["crawl_id"],
+                    "source_file": capture["source_file"],
+                    "url": capture["url"],
+                    "warc_date": capture["warc_date"],
+                    "language": story.get("language", "unknown"),
+                    "story_length_ready": bool(
+                        story["story"].get("story_length_ready")
+                    ),
+                    "match_number": capture.get("match_number"),
+                }
+            )
+    provenance_rows.sort(
+        key=lambda row: (str(row["story_id"]), str(row["record_id"]))
+    )
+    _write_gzip_rows(provenance_path, provenance_rows)
+    quality_report = build_story_quality_report(stories_dir, output_dir)
+    quality_paths = write_story_quality_report(quality_report, export_path)
     by_language: dict[str, list[dict]] = defaultdict(list)
     for story in stories:
         by_language[str(story.get("language", "unknown"))].append(story)
@@ -707,7 +871,18 @@ def export_stories(
         "story_length_ready": sum(
             bool(row["story"].get("story_length_ready")) for row in stories
         ),
+        "tiers": {
+            "complete": len(complete_stories),
+            "short": len(short_stories),
+            "partial_or_missing_sources": len(gap_rows),
+            "provenance_rows": len(provenance_rows),
+        },
         "languages": {language: len(rows) for language, rows in sorted(by_language.items())},
         "structured_path": str(structured_path),
+        "complete_path": str(complete_path),
+        "short_path": str(short_path),
+        "partial_path": str(partial_path),
+        "provenance_path": str(provenance_path),
+        "quality_report": quality_paths,
         "markdown_paths": [str(path) for path in sorted(generated)],
     }

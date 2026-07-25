@@ -342,7 +342,14 @@ def test_story_enrichment_stops_submitting_sources_after_parallel_shutdown(
     started = []
     original_enrich = story_enrichment._enrich_story_source
 
-    def interrupt_first_wave(source_file, records, target_dir, event):
+    def interrupt_first_wave(
+        source_file,
+        records,
+        target_dir,
+        event,
+        progress_callback=None,
+    ):
+        del progress_callback
         with lock:
             started.append(source_file)
             if len(started) == 3:
@@ -373,6 +380,36 @@ def test_story_enrichment_stops_submitting_sources_after_parallel_shutdown(
     assert resumed_plan["complete_sources"] == 3
     assert resumed_plan["pending_sources"] == 2
     assert not list(stories_dir.rglob("*.tmp"))
+
+
+def test_story_enrichment_cools_down_persistent_source_failures(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    _write_match(writer, "crawl-data/failing.warc.wet.gz", "2026-01-01")
+    monkeypatch.setattr(story_enrichment, "_valid_story", lambda _story: False)
+
+    def fail_recovery(*_args, **_kwargs):
+        raise RuntimeError("503 Server Error")
+
+    monkeypatch.setattr(
+        story_enrichment,
+        "_recover_missing_stories",
+        fail_recovery,
+    )
+
+    result = enrich_story_sources(output_dir, stories_dir, limit=1)
+    plan = plan_story_enrichment(output_dir, stories_dir, limit=1)
+
+    assert result["failed_sources"] == 1
+    assert result["failure_ledger"]["cooldown_sources"] == 1
+    assert plan["pending_sources"] == 1
+    assert plan["retryable_sources"] == 0
+    assert plan["cooldown_sources"] == 1
+    assert plan["selected_sources"] == 0
 
 
 def test_outdated_story_fragment_is_pending_and_not_exported(tmp_path):

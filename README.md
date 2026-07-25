@@ -301,9 +301,16 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\retry.ps1 -All -Category http_503 -Limit 25 -Apply` | Reset one bounded failure batch after a dry-run report |
 | `.\scripts\stories.ps1 -Action plan -Limit 10` | Plan a bounded historical source-context backfill without downloading |
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Workers 3 -Apply` | Reopen matched sources with bounded parallel story expansion |
+| `.\scripts\stories.ps1 -Action enrich -All -Workers auto -Apply` | Adapt story download concurrency to throughput and server pressure |
+| `.\scripts\stories.ps1 -Action status -Limit 10` | Show coverage, active sources, throughput, ETA, cooldowns, and quarantines |
+| `.\scripts\stories.ps1 -Action failures -Limit 20` | Inspect persistent story-enrichment failures |
+| `.\scripts\stories.ps1 -Action retry -All` | Dry-run resetting story cooldowns and quarantines |
+| `.\scripts\stories.ps1 -Action retry -All -Apply` | Reset selected story failures for another attempt |
 | `.\scripts\stories.ps1 -Action stop` | Request a graceful story-enrichment stop from another terminal |
 | `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
+| `.\scripts\stories.ps1 -Action report` | Rebuild the story research-quality report |
+| `.\scripts\stories.ps1 -Action verify` | Build and verify the story-fragment checksum catalog |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -343,9 +350,14 @@ The underlying Python CLI remains available directly:
 | `python main.py parquet --dedupe exact` | Build partitioned Parquet output |
 | `python main.py stories status --limit 10` | Show completed and pending story-context source fragments |
 | `python main.py stories enrich --limit 10 --workers 3 --yes` | Backfill exact historical sources with bounded parallel workers |
+| `python main.py stories enrich --all --workers auto --yes` | Use conservative adaptive story-source concurrency |
+| `python main.py stories failures --limit 20` | Show durable failure attempts, categories, and retry state |
+| `python main.py stories retry --all --yes` | Reset all story failure cooldowns and quarantines |
 | `python main.py stories stop` | Request a graceful story-enrichment stop from another terminal |
 | `python main.py stories export` | Write story-length verbatim source passages |
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
+| `python main.py stories report` | Write coverage, quality, diversity, and integrity reports |
+| `python main.py stories verify` | Build and verify the fragment checksum catalog |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -384,11 +396,20 @@ data/
     zh/
     unknown/
   stories/
+    _catalog.json.gz
     _records/
       <source-hash>.jsonl.gz
+    _state/
+      failures.jsonl.gz
   exports/
     stories.jsonl.gz
+    stories_complete.jsonl.gz
+    stories_short.jsonl.gz
+    stories_partial.jsonl.gz
+    stories_provenance.jsonl.gz
     stories_<language>.md
+    story_quality_report.json
+    story_quality_report.md
 ```
 
 Schema version 5 records add bounded story context while retaining versioned
@@ -528,6 +549,25 @@ the semantic model or use the GPU. `-Workers 1` restores serial operation, while
 conservative default for the 3080, 4090, and 5090 PCs because it improves source
 throughput without placing a large request burst on Common Crawl.
 
+`-Workers auto` starts with three source workers and can rise to eight after
+repeated successful sources. It reduces concurrency after connection failures,
+timeouts, or HTTP 429/5xx pressure. The controller responds to source throughput
+and server health rather than total CPU utilization because story enrichment is
+normally download-bound. Numeric worker settings remain fixed.
+
+Each run atomically updates the ignored local
+`data/stories/_state/run-state.json`. `-Action status` combines that state with
+durable coverage and reports active sources, worker mode, current target,
+sources/hour, ETA, records scanned, and run outcomes. The state is marked stale
+if its process no longer exists.
+
+Failed and partial sources are recorded in
+`data/stories/_state/failures.jsonl.gz` with a stable category, attempt count,
+exponential cooldown, last error, and missing match count. Four unsuccessful
+attempts quarantine a source instead of retrying it forever. Review with
+`-Action failures`; `-Action retry` is a dry-run unless `-Apply` is present and
+can target `-All`, `-Crawl`, or `-Source`.
+
 Press `Ctrl+C` once to request a graceful stop. The PowerShell wrapper records
 the request for the actual Python worker process, even when the Windows virtual
 environment launcher does not forward the console signal. It immediately prints
@@ -549,6 +589,21 @@ The stop request targets only the PID in the current story-enrichment lock, and
 the `Ctrl+C` handler uses a unique token for the current invocation even before
 that lock exists. A stale request therefore cannot stop a later run. Rerun the
 original enrichment command to resume from committed source fragments.
+
+Exports and integrity maintenance require the enrichment lock to be free. The
+normal export writes five machine-readable products: the selected canonical
+view, complete story-length passages, short valid context, partial or missing
+source gaps, and a flattened provenance table. It also writes JSON and Markdown
+quality reports covering source and match coverage, duplicates, languages,
+domain concentration, failure state, and whitespace-normalized correspondence between the
+accepted filter paragraph and the source seed.
+
+Every product remains deterministic source extraction; no LLM generates,
+summarizes, or rewrites story text. At checkpoint time, every story fragment is
+parsed and `_catalog.json.gz` records its source identity, record IDs, byte
+count, and SHA-256 checksum. Checkpointing stops if a fragment is malformed or
+catalog verification fails. Full project health also reports story integrity,
+so a damaged transfer is visible before another workstation resumes.
 
 After a bounded trial, use `-All` to finish every matched source on one
 workstation:

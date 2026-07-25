@@ -831,6 +831,27 @@ def main() -> None:
         "stop",
         help="request a graceful stop from another terminal",
     )
+    stories_failures_parser = stories_subparsers.add_parser(
+        "failures",
+        help="show persistent story source failures and retry state",
+    )
+    stories_failures_parser.add_argument("--limit", type=int, default=20)
+    stories_retry_parser = stories_subparsers.add_parser(
+        "retry",
+        help="plan or reset persistent story source failures",
+    )
+    stories_retry_parser.add_argument("--crawl", action="append")
+    stories_retry_parser.add_argument("--source", action="append")
+    stories_retry_parser.add_argument("--all", action="store_true")
+    stories_retry_parser.add_argument("--yes", action="store_true")
+    stories_subparsers.add_parser(
+        "report",
+        help="write the story research-quality report",
+    )
+    stories_subparsers.add_parser(
+        "verify",
+        help="build and verify the story-fragment integrity catalog",
+    )
     for action in ("plan", "enrich", "status"):
         story_action = stories_subparsers.add_parser(action)
         story_action.add_argument("--crawl", action="append")
@@ -842,7 +863,7 @@ def main() -> None:
             story_action.add_argument("--yes", action="store_true")
             story_action.add_argument(
                 "--workers",
-                type=int,
+                type=str,
                 default=STORY_ENRICHMENT_WORKERS,
             )
     stories_export_parser = stories_subparsers.add_parser("export")
@@ -1081,6 +1102,10 @@ def main() -> None:
             export_stories,
             plan_story_enrichment,
         )
+        from story_operations import (
+            reset_story_failures,
+            story_failure_status,
+        )
 
         if args.stories_command in {"plan", "enrich", "status"}:
             limit = None if args.all else args.limit
@@ -1090,13 +1115,39 @@ def main() -> None:
             limit = None
         if args.stories_command == "stop":
             result = request_story_shutdown()
+        elif args.stories_command == "failures":
+            if args.limit < 0:
+                parser.error("--limit cannot be negative")
+            result = story_failure_status()
+            result["shown_failures"] = min(args.limit, len(result["failures"]))
+            result["failures"] = result["failures"][: args.limit]
+        elif args.stories_command == "retry":
+            if not (args.all or args.crawl or args.source):
+                parser.error("story retry requires --all, --crawl, or --source")
+            if args.all and (args.crawl or args.source):
+                parser.error("--all cannot be combined with --crawl or --source")
+            with CrawlerRunLock("story-retry"):
+                result = reset_story_failures(
+                    source_files=set(args.source or []),
+                    crawl_ids=set(args.crawl or []),
+                    reset_all=args.all,
+                    apply=args.yes,
+                )
         elif args.stories_command == "enrich":
             if not args.yes:
                 parser.error("story enrichment downloads source files; pass --yes")
-            if not 1 <= args.workers <= STORY_ENRICHMENT_MAX_WORKERS:
-                parser.error(
-                    f"--workers must be between 1 and {STORY_ENRICHMENT_MAX_WORKERS}"
-                )
+            if str(args.workers).lower() != "auto":
+                try:
+                    args.workers = int(args.workers)
+                except ValueError:
+                    parser.error("--workers must be 'auto' or an integer")
+                if not 1 <= args.workers <= STORY_ENRICHMENT_MAX_WORKERS:
+                    parser.error(
+                        "--workers must be 'auto' or between 1 and "
+                        f"{STORY_ENRICHMENT_MAX_WORKERS}"
+                    )
+            else:
+                args.workers = "auto"
             _shutdown_event = threading.Event()
             _shutdown_signal_count = 0
             try:
@@ -1113,7 +1164,36 @@ def main() -> None:
                 _shutdown_event = None
                 _shutdown_signal_count = 0
         elif args.stories_command == "export":
-            result = export_stories(include_short=args.include_short)
+            with CrawlerRunLock("story-export"):
+                result = export_stories(include_short=args.include_short)
+        elif args.stories_command == "report":
+            from story_products import (
+                build_story_quality_report,
+                write_story_quality_report,
+            )
+
+            with CrawlerRunLock("story-report"):
+                report = build_story_quality_report()
+                result = {
+                    "report": report,
+                    "paths": write_story_quality_report(
+                        report,
+                        DATA_DIR / "exports",
+                    ),
+                }
+        elif args.stories_command == "verify":
+            from story_products import build_story_catalog, verify_story_integrity
+
+            with CrawlerRunLock("story-integrity"):
+                catalog = build_story_catalog()
+                result = {
+                    "catalog": catalog,
+                    "verification": (
+                        verify_story_integrity()
+                        if catalog["valid"]
+                        else {"valid": False}
+                    ),
+                }
         else:
             result = plan_story_enrichment(
                 crawl_ids=getattr(args, "crawl", None),
