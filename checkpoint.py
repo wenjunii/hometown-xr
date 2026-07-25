@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from config import DB_ARCHIVE_PATH, DB_PATH, OUTPUT_DIR
+from config import DB_ARCHIVE_PATH, DB_PATH, OUTPUT_DIR, STORIES_DIR
 from database_checkpoint import archive_database
 from output import OutputWriter
 from progress import ProgressTracker
@@ -46,9 +46,17 @@ def create_checkpoint(
     compact_database: bool = True,
     force_vacuum: bool = False,
     db_archive_path: str | Path | None = None,
+    stories_dir: str | Path | None = None,
 ) -> dict:
     """Verify durable state and compact metadata for a workstation handoff."""
     writer = OutputWriter(output_dir)
+    story_root = (
+        Path(stories_dir)
+        if stories_dir is not None
+        else STORIES_DIR
+        if Path(output_dir).resolve() == OUTPUT_DIR.resolve()
+        else Path(output_dir).parent / "stories"
+    )
     tracker = ProgressTracker(db_path)
     summary = tracker.get_summary()
     if summary["processing"]:
@@ -59,6 +67,21 @@ def create_checkpoint(
         raise RuntimeError(
             f"output verification found {verification_before['integrity_errors']} errors"
         )
+    story_catalog = None
+    story_verification = None
+    if verify:
+        from story_products import build_story_catalog, verify_story_integrity
+
+        story_catalog = build_story_catalog(story_root)
+        if not story_catalog["valid"]:
+            raise RuntimeError(
+                "story catalog found invalid source fragments; handoff was stopped"
+            )
+        story_verification = verify_story_integrity(story_root)
+        if not story_verification["valid"]:
+            raise RuntimeError(
+                "story integrity verification failed; handoff was stopped"
+            )
 
     manifest_result = writer.compact_manifest_catalog() if compact_manifests else None
     database_result = (
@@ -93,6 +116,8 @@ def create_checkpoint(
         "status": "ready",
         "progress": summary,
         "verification": verification_after or verification_before,
+        "story_catalog": story_catalog,
+        "story_verification": story_verification,
         "manifest_compaction": manifest_result,
         "database_compaction": database_result,
         "database_archive": archive_result,

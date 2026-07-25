@@ -1,7 +1,8 @@
 param(
     [string]$Message = "chore: checkpoint extractor state",
     [switch]$NoPush,
-    [switch]$ForceVacuum
+    [switch]$ForceVacuum,
+    [switch]$SkipStoryRefresh
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,6 +52,14 @@ try {
     }
     if (-not $NoPush) {
         Update-OriginBranch -Branch $Branch
+    }
+
+    if (-not $SkipStoryRefresh) {
+        Write-Host "Refreshing deterministic story exports before checkpointing..."
+        & $Python (Join-Path $Root "main.py") stories export
+        if ($LASTEXITCODE -ne 0) {
+            throw "Story export refresh failed with exit code $LASTEXITCODE."
+        }
     }
 
     $CheckpointArgs = @((Join-Path $Root "main.py"), "checkpoint")

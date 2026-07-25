@@ -1,5 +1,15 @@
 param(
-    [ValidateSet("status", "plan", "enrich", "export", "stop")]
+    [ValidateSet(
+        "status",
+        "plan",
+        "enrich",
+        "export",
+        "stop",
+        "failures",
+        "retry",
+        "report",
+        "verify"
+    )]
     [string]$Action = "status",
 
     [string[]]$Crawl,
@@ -15,8 +25,19 @@ param(
 
     [switch]$IncludeShort,
 
-    [ValidateRange(1, 16)]
-    [int]$Workers = 3
+    [ValidateScript({
+        $ParsedWorkers = 0
+        if (
+            $_ -eq "auto" -or
+            ([int]::TryParse($_, [ref]$ParsedWorkers) -and
+                $ParsedWorkers -ge 1 -and
+                $ParsedWorkers -le 16)
+        ) {
+            return $true
+        }
+        throw "Workers must be 'auto' or an integer from 1 through 16."
+    })]
+    [string]$Workers = "auto"
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,8 +51,8 @@ if (-not (Test-Path -LiteralPath $Python)) {
 if ($Action -eq "enrich" -and -not $Apply) {
     throw "Enrichment downloads Common Crawl source files; pass -Apply after reviewing the plan."
 }
-if ($Apply -and $Action -ne "enrich") {
-    throw "Apply is valid only with -Action enrich."
+if ($Apply -and $Action -notin @("enrich", "retry")) {
+    throw "Apply is valid only with -Action enrich or retry."
 }
 if ($IncludeShort -and $Action -ne "export") {
     throw "IncludeShort is valid only with -Action export."
@@ -39,8 +60,23 @@ if ($IncludeShort -and $Action -ne "export") {
 if ($PSBoundParameters.ContainsKey("Workers") -and $Action -ne "enrich") {
     throw "Workers is valid only with -Action enrich."
 }
+if (
+    $PSBoundParameters.ContainsKey("Limit") -and
+    $Action -notin @("status", "plan", "enrich", "failures")
+) {
+    throw "Limit is valid only with status, plan, enrich, or failures."
+}
 if ($All -and ($Crawl -or $Source)) {
     throw "All cannot be combined with Crawl or Source."
+}
+if (
+    ($All -or $Crawl -or $Source) -and
+    $Action -notin @("status", "plan", "enrich", "retry")
+) {
+    throw "All, Crawl, and Source are not valid with Action $Action."
+}
+if ($Action -eq "retry" -and -not ($All -or $Crawl -or $Source)) {
+    throw "Retry requires All, Crawl, or Source."
 }
 
 if ($Action -eq "enrich" -and -not ("HometownXrStoryCtrlC" -as [type])) {
@@ -122,6 +158,23 @@ if ($Action -in @("status", "plan", "enrich")) {
     }
     foreach ($SourceFile in $Source) {
         $Arguments += @("--source", $SourceFile)
+    }
+}
+if ($Action -eq "failures") {
+    $Arguments += @("--limit", $Limit)
+}
+if ($Action -eq "retry") {
+    if ($All) {
+        $Arguments += "--all"
+    }
+    foreach ($CrawlId in $Crawl) {
+        $Arguments += @("--crawl", $CrawlId)
+    }
+    foreach ($SourceFile in $Source) {
+        $Arguments += @("--source", $SourceFile)
+    }
+    if ($Apply) {
+        $Arguments += "--yes"
     }
 }
 if ($Action -eq "enrich") {

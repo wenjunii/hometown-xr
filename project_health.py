@@ -235,6 +235,13 @@ def build_health_checks(payload: dict, full: bool = False) -> list[dict]:
             f"{output['integrity_errors']} integrity error(s)",
             "Run output verification and restore damaged shards" if not output["valid"] else None,
         )
+        stories = payload["stories"]
+        add(
+            "story_integrity",
+            "pass" if stories["valid"] else "fail",
+            f"{stories['integrity_errors']} integrity error(s)",
+            "Rebuild and verify a stopped story checkpoint" if not stories["valid"] else None,
+        )
     return checks
 
 
@@ -269,6 +276,9 @@ def collect_project_health(profile_name: str = "auto", full: bool = False) -> di
     }
     if full:
         payload["output"] = verify_output_integrity()
+        from story_products import verify_story_integrity
+
+        payload["stories"] = verify_story_integrity()
     checks = build_health_checks(payload, full=full)
     payload["checks"] = checks
     payload["status"] = (
