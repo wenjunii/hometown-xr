@@ -114,14 +114,18 @@ protected, use a shared working branch until its pull request is approved and
 merged; the script does not bypass repository protection.
 
 Checkpointing verifies every output checksum, compacts manifests and SQLite,
-merges replay/run history, and creates the deterministic compressed database
-archive before Git stages anything.
+merges replay/run history, creates the deterministic compressed database
+archive, and refreshes story exports, provenance, quality reports, and the story
+integrity catalog before Git stages anything. This includes every non-ignored
+source fragment under `data/stories/_records/`.
 
 The compatibility form is
 `.\scripts\handoff.ps1 -Direction push -Message "checkpoint: hand off crawler state"`.
 Use `-NoPush` with `checkpoint.ps1` to create the verified local commit without
 sending it. `-ForceVacuum` forces a full SQLite vacuum; normal checkpoints
 vacuum only after a schema migration or when enough free pages exist.
+`-SkipStoryRefresh` is available only for an intentional code-only send; it
+does not exclude already changed story files from staging.
 
 Do not copy a live SQLite database, WAL sidecar, staging directory, or Parquet
 export. A clean shutdown leaves interrupted sources pending and keeps their old
@@ -253,8 +257,11 @@ receiving a checkpoint, inspect and resume their exact-source backfill with:
 
 Only one PC may run story enrichment at a time. It does not change canonical
 matches or the crawl database, and each completed source fragment is resumable.
-Commit the fragments and exports with the normal checkpoint command before
-moving to another PC.
+The PowerShell entry point uses adaptive workers by default, beginning at three
+and rising as high as eight when Common Crawl remains healthy. Commit the
+fragments and exports with the normal checkpoint command before moving to
+another PC; the checkpoint performs one final export refresh and checksum
+catalog build before staging.
 
 ## After A Crash
 

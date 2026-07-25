@@ -1,0 +1,97 @@
+{
+  "coverage": {
+    "complete_sources": 1775,
+    "enriched_matches": 1843,
+    "match_coverage": 0.53952,
+    "missing_matches": 1573,
+    "orphan_story_records": 0,
+    "partial_or_missing_sources": 1498,
+    "source_coverage": 0.542316,
+    "stale_story_records": 0,
+    "total_matches": 3416,
+    "total_sources": 3273
+  },
+  "deterministic_extraction": true,
+  "failures": {
+    "categories": {},
+    "cooldown_sources": 0,
+    "quarantined_sources": 0,
+    "ready_sources": 0,
+    "sources": 0
+  },
+  "filter_signatures": {
+    "unknown": 1843
+  },
+  "gap_sources": 1498,
+  "generated_at": "2026-07-25T20:43:53.019489+00:00",
+  "generated_text": false,
+  "languages": {
+    "de": 1,
+    "en": 1741,
+    "es": 3,
+    "fr": 17,
+    "it": 15,
+    "nl": 1,
+    "no": 13,
+    "pt": 47,
+    "sv": 5
+  },
+  "maximum_domain_share": 0.090071,
+  "schema_version": 1,
+  "stories": {
+    "duplicate_captures": 678,
+    "short_valid_context": 30,
+    "source_captures": 1843,
+    "story_length_ready": 1135,
+    "unique_stories": 1165
+  },
+  "top_domains": [
+    {
+      "captures": 166,
+      "domain": "digitalmedia.fws.gov"
+    },
+    {
+      "captures": 154,
+      "domain": "www.archive.org"
+    },
+    {
+      "captures": 61,
+      "domain": "www.shorpy.com"
+    },
+    {
+      "captures": 61,
+      "domain": "infomotions.com"
+    },
+    {
+      "captures": 52,
+      "domain": "digital.library.msstate.edu"
+    },
+    {
+      "captures": 48,
+      "domain": "www.nizkor.org"
+    },
+    {
+      "captures": 44,
+      "domain": "www.poetrysoup.com"
+    },
+    {
+      "captures": 41,
+      "domain": "archive.org"
+    },
+    {
+      "captures": 25,
+      "domain": "brandedinthe80s.com"
+    },
+    {
+      "captures": 21,
+      "domain": "blog.picajet.com"
+    }
+  ],
+  "verbatim_integrity": {
+    "exact_seed_paragraph_differences": 1600,
+    "fragment_error_examples": [],
+    "invalid_fragments": 0,
+    "valid": true,
+    "whitespace_collapsed_seed_mismatches": 0
+  }
+}

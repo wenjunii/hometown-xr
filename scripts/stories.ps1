@@ -37,7 +37,7 @@ param(
         }
         throw "Workers must be 'auto' or an integer from 1 through 16."
     })]
-    [string]$Workers = "3"
+    [string]$Workers = "auto"
 )
 
 $ErrorActionPreference = "Stop"

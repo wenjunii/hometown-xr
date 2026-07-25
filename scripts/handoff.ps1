@@ -12,7 +12,9 @@ param(
 
     [switch]$SkipVerify,
 
-    [switch]$RefreshResults
+    [switch]$RefreshResults,
+
+    [switch]$SkipStoryRefresh
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,6 +29,9 @@ if (Test-Path -LiteralPath $Lock) {
 Push-Location $Root
 try {
     if ($Direction -eq "pull") {
+        if ($SkipStoryRefresh) {
+            throw "SkipStoryRefresh is valid only with -Direction push."
+        }
         if (-not (Test-Path -LiteralPath $Python)) {
             throw "Virtual environment is missing. Run .\scripts\setup.ps1 -Profile $Profile first."
         }
@@ -79,7 +84,10 @@ try {
     }
     else {
         $Checkpoint = Join-Path $PSScriptRoot "checkpoint.ps1"
-        & $Checkpoint -Message $Message -ForceVacuum:$ForceVacuum
+        & $Checkpoint `
+            -Message $Message `
+            -ForceVacuum:$ForceVacuum `
+            -SkipStoryRefresh:$SkipStoryRefresh
         if ($LASTEXITCODE -ne 0) {
             throw "Git handoff failed with exit code $LASTEXITCODE."
         }

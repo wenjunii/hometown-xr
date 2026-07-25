@@ -86,6 +86,10 @@ from the current non-detached branch, checks that the matching remote branch is
 not ahead before checkpointing, and confirms the pushed commit against that
 remote branch. Both PCs must use the same branch. Because `main` is protected,
 use a shared working branch until its pull request is approved and merged.
+Before staging, the send command refreshes the deterministic story exports,
+quality report, provenance table, and integrity catalog from all committed
+source fragments. Use `-SkipStoryRefresh` only for a code-only checkpoint where
+the story products are intentionally unchanged.
 
 ## Architecture
 
@@ -530,7 +534,7 @@ schema-2/3/4 matches can be enriched without recrawling the full corpus:
 
 ```powershell
 .\scripts\stories.ps1 -Action plan -Limit 10
-.\scripts\stories.ps1 -Action enrich -Limit 10 -Workers 3 -Apply
+.\scripts\stories.ps1 -Action enrich -Limit 10 -Apply
 .\scripts\stories.ps1 -Action export
 ```
 
@@ -542,18 +546,15 @@ Canonical match shards and existing `matches_<language>.md` exports remain
 unchanged. The final export deduplicates repeated crawl captures by normalized
 story text while retaining every capture and source-text hash in provenance.
 
-Story enrichment uses three concurrent source workers by default on every
-workstation. This phase is network, gzip, and CPU parsing work; it does not load
-the semantic model or use the GPU. `-Workers 1` restores serial operation, while
-`-Workers 2` through `-Workers 16` sets an explicit bounded limit. Three is the
-conservative default for the 3080, 4090, and 5090 PCs because it improves source
-throughput without placing a large request burst on Common Crawl.
-
-`-Workers auto` starts with three source workers and can rise to eight after
-repeated successful sources. It reduces concurrency after connection failures,
-timeouts, or HTTP 429/5xx pressure. The controller responds to source throughput
-and server health rather than total CPU utilization because story enrichment is
-normally download-bound. Numeric worker settings remain fixed.
+Story enrichment defaults to adaptive workers in `scripts\stories.ps1`. It
+starts with three concurrent source workers and can rise to eight after repeated
+successful sources. This phase is network, gzip, and CPU parsing work; it does
+not load the semantic model or use the GPU. The controller reduces concurrency
+after connection failures, timeouts, or HTTP 429/5xx pressure and responds to
+source throughput and server health rather than total CPU utilization because
+story enrichment is normally download-bound. `-Workers 1` restores serial
+operation, while `-Workers 2` through `-Workers 16` sets a fixed bounded limit.
+Pass `-Workers auto` explicitly when invoking `main.py` directly.
 
 Each run atomically updates the ignored local
 `data/stories/_state/run-state.json`. `-Action status` combines that state with
@@ -609,10 +610,17 @@ After a bounded trial, use `-All` to finish every matched source on one
 workstation:
 
 ```powershell
-.\scripts\stories.ps1 -Action enrich -All -Workers 3 -Apply
+.\scripts\stories.ps1 -Action enrich -All -Apply
 .\scripts\stories.ps1 -Action export
 .\scripts\checkpoint.ps1 -Message "feat: expand matched passages into source stories"
 ```
+
+The final checkpoint refreshes the story exports again, builds
+`data/stories/_catalog.json.gz`, scans the complete staged transfer for
+credentials, commits all non-ignored durable fragments and products, pushes the
+current branch, and verifies its remote commit. It never adds downloaded models,
+the live database, caches, Parquet files, hardware overrides, runtime telemetry,
+or credential-like paths.
 
 ## Parquet And Deduplication
 
@@ -881,6 +889,8 @@ database_checkpoint.py  compressed SQLite archive, restore, and sync checks
 processor.py            WET/ARC parsing, funnel counters, and shadow candidates
 story_context.py        deterministic seed-to-source-context expansion
 story_enrichment.py     resumable historical backfill and story exports
+story_operations.py     adaptive workers, live telemetry, failures, and retries
+story_products.py       integrity catalog, tiered exports, and quality reports
 text_normalization.py   versioned entity, encoding, and Unicode repair
 matcher.py              keyword, semantic, and narrative filters
 evaluation.py           weighted sampling, annotation history, tuning, and holdout
