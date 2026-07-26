@@ -13,41 +13,79 @@ from pathlib import Path
 from config import PROJECT_ROOT
 
 
+def _vulnerability_allowlist(policy: dict) -> dict[str, set[str]]:
+    raw = policy.get("temporarily_allowed_vulnerabilities", {})
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        str(package).lower(): {str(identifier) for identifier in identifiers}
+        for package, identifiers in raw.items()
+        if isinstance(identifiers, list)
+    }
+
+
 def evaluate_audit_report(report: dict, policy: dict, today: date | None = None) -> dict:
     current_date = today or datetime.now(timezone.utc).date()
     review_by = date.fromisoformat(str(policy["review_by"]))
-    allowed = {str(name).lower() for name in policy.get("temporarily_allowed_packages", [])}
+    allowed = _vulnerability_allowlist(policy)
     findings = []
-    unexpected = []
+    unexpected_packages = []
+    unexpected_vulnerabilities = []
+    observed: dict[str, set[str]] = {}
     for dependency in report.get("dependencies", []):
         vulnerabilities = dependency.get("vulns") or []
         if not vulnerabilities:
             continue
+        package = str(dependency.get("name", "unknown"))
+        normalized_package = package.lower()
+        identifiers = sorted(
+            {str(item.get("id", "unknown")) for item in vulnerabilities}
+        )
+        observed.setdefault(normalized_package, set()).update(identifiers)
         row = {
-            "package": str(dependency.get("name", "unknown")),
+            "package": package,
             "version": dependency.get("version"),
-            "vulnerability_ids": sorted(
-                {str(item.get("id", "unknown")) for item in vulnerabilities}
-            ),
+            "vulnerability_ids": identifiers,
         }
         findings.append(row)
-        if row["package"].lower() not in allowed:
-            unexpected.append(row)
+        package_allowlist = allowed.get(normalized_package)
+        if package_allowlist is None:
+            unexpected_packages.append(row)
+        unreviewed = sorted(set(identifiers) - (package_allowlist or set()))
+        if unreviewed:
+            unexpected_vulnerabilities.append(
+                {
+                    "package": package,
+                    "version": dependency.get("version"),
+                    "vulnerability_ids": unreviewed,
+                }
+            )
 
     errors = []
     if current_date > review_by:
         errors.append(f"vulnerability exception expired on {review_by.isoformat()}")
-    if unexpected:
+    if unexpected_vulnerabilities:
         errors.append(
-            "unexpected vulnerable packages: "
-            + ", ".join(sorted({row["package"] for row in unexpected}))
+            "unreviewed vulnerabilities: "
+            + ", ".join(
+                f"{row['package']}:{identifier}"
+                for row in unexpected_vulnerabilities
+                for identifier in row["vulnerability_ids"]
+            )
         )
+    unused_allowances = {
+        package: sorted(identifiers - observed.get(package, set()))
+        for package, identifiers in allowed.items()
+        if identifiers - observed.get(package, set())
+    }
     return {
         "valid": not errors,
         "review_by": review_by.isoformat(),
         "days_until_review": (review_by - current_date).days,
         "vulnerable_packages": findings,
-        "unexpected_packages": unexpected,
+        "unexpected_packages": unexpected_packages,
+        "unexpected_vulnerabilities": unexpected_vulnerabilities,
+        "unused_allowances": unused_allowances,
         "errors": errors,
     }
 

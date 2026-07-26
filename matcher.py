@@ -231,6 +231,7 @@ class SemanticMatcher:
             SEMANTIC_MODEL_NAME,
             device=device,
             revision=SEMANTIC_MODEL_REVISION,
+            trust_remote_code=False,
         )
         if self.precision == "fp16":
             self.model.half()
