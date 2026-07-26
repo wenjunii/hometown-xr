@@ -158,10 +158,19 @@ separate, and the pinned sentence-transformer constrains compatible
 Transformers releases. CI tests these profile relationships on every change.
 The current model stack has upstream security advisories and is covered by the
 dated migration policy in `.github/dependency-policy.json`; it is not treated as
-silently clean. CI runs `pip-audit`, rejects unlisted vulnerable packages, and
-fails when the exception expires. Complete the tracked model comparison, human
-evaluation minimums, and all three workstation benchmarks before upgrading the
-shared locks.
+silently clean. GitHub repeats the same advisories for mirrored dependency
+manifests, so the alert count is larger than the number of unique issues. CI
+runs `pip-audit` and permits only the exact reviewed vulnerability IDs in that
+policy. A new advisory, a vulnerable package outside the list, or policy expiry
+fails the build.
+
+Runtime exposure is narrowed to the configured sentence-transformer model at a
+pinned commit. Remote model code is disabled, the pinned snapshot uses
+Safetensors weights, and operators must not supply arbitrary models,
+checkpoints, tokenizers, or training configurations. These controls reduce
+exposure but do not make the vulnerable libraries clean. Complete the tracked
+model comparison, human evaluation minimums, and identical 3080, 4090, and 5090
+benchmarks before upgrading the shared CUDA and model locks.
 
 Verify the environment and checkpoint:
 

@@ -153,8 +153,24 @@ def validate_dependency_profiles(
     )
     errors.extend(policy.get("errors", []))
     if policy.get("status") == "migration_required" and not policy.get("expired"):
+        allowlist = policy.get("temporarily_allowed_vulnerabilities")
+        if not isinstance(allowlist, dict) or not allowlist:
+            errors.append(
+                "dependency policy must list exact temporarily allowed vulnerability IDs"
+            )
+        elif any(
+            not isinstance(identifiers, list) or not identifiers
+            for identifiers in allowlist.values()
+        ):
+            errors.append(
+                "each temporary dependency exception must contain vulnerability IDs"
+            )
+        if policy.get("temporarily_allowed_packages"):
+            errors.append(
+                "broad package-wide vulnerability exceptions are not permitted"
+            )
         warnings.append(
-            "Torch and Transformers have accepted temporary advisories; "
+            "Torch and Transformers have exact, temporary advisory exceptions; "
             f"review in {policy['days_until_review']} day(s)"
         )
 
