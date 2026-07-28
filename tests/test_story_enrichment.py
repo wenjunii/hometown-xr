@@ -1,6 +1,7 @@
 import gzip
 import json
 import threading
+from types import SimpleNamespace
 
 import pytest
 
@@ -60,6 +61,23 @@ def _write_match(
     transaction = writer.begin_source(source)
     transaction.write_matches([match], [("en", 0.99)])
     transaction.commit()
+
+
+def test_legacy_entity_encoded_match_key_matches_normalized_source_text():
+    encoded = {
+        "url": "https://example.test/legacy",
+        "warc_date": "2013-05-16T09:26:21Z",
+        "paragraph": "I couldn&#39;t forget my h&eacute;ritage.",
+    }
+    parsed = SimpleNamespace(
+        url=encoded["url"],
+        warc_date=encoded["warc_date"],
+        text="I couldn't forget my héritage.",
+    )
+
+    assert story_enrichment._normalized_match_key(
+        encoded
+    ) == story_enrichment._normalized_match_key(parsed)
 
 
 def test_embedded_story_enrichment_is_resumable_and_exports_deduplicated_stories(

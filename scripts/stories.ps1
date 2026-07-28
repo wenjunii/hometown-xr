@@ -16,6 +16,8 @@ param(
 
     [string[]]$Source,
 
+    [string[]]$Category,
+
     [ValidateRange(1, 1000000)]
     [int]$Limit = 10,
 
@@ -60,6 +62,9 @@ if ($IncludeShort -and $Action -ne "export") {
 if ($PSBoundParameters.ContainsKey("Workers") -and $Action -ne "enrich") {
     throw "Workers is valid only with -Action enrich."
 }
+if ($Category -and $Action -ne "retry") {
+    throw "Category is valid only with -Action retry."
+}
 if (
     $PSBoundParameters.ContainsKey("Limit") -and
     $Action -notin @("status", "plan", "enrich", "failures")
@@ -75,8 +80,8 @@ if (
 ) {
     throw "All, Crawl, and Source are not valid with Action $Action."
 }
-if ($Action -eq "retry" -and -not ($All -or $Crawl -or $Source)) {
-    throw "Retry requires All, Crawl, or Source."
+if ($Action -eq "retry" -and -not ($All -or $Crawl -or $Source -or $Category)) {
+    throw "Retry requires All, Crawl, Source, or Category."
 }
 
 if ($Action -eq "enrich" -and -not ("HometownXrStoryCtrlC" -as [type])) {
@@ -172,6 +177,9 @@ if ($Action -eq "retry") {
     }
     foreach ($SourceFile in $Source) {
         $Arguments += @("--source", $SourceFile)
+    }
+    foreach ($FailureCategory in $Category) {
+        $Arguments += @("--category", $FailureCategory)
     }
     if ($Apply) {
         $Arguments += "--yes"

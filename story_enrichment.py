@@ -180,7 +180,7 @@ def _normalized_match_key(row: dict | object) -> tuple[str, str, str]:
         url = str(row.url)
         warc_date = str(row.warc_date)
         text = str(row.text)
-    return url, warc_date, " ".join(text.split())
+    return url, warc_date, " ".join(normalize_extracted_text(text).split())
 
 
 def _recover_missing_stories(

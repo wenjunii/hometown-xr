@@ -318,7 +318,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action status -Limit 10` | Show coverage, active sources, throughput, ETA, cooldowns, and quarantines |
 | `.\scripts\stories.ps1 -Action failures -Limit 20` | Inspect persistent story-enrichment failures |
 | `.\scripts\stories.ps1 -Action retry -All` | Dry-run resetting story cooldowns and quarantines |
-| `.\scripts\stories.ps1 -Action retry -All -Apply` | Reset selected story failures for another attempt |
+| `.\scripts\stories.ps1 -Action retry -Category missing_records -Apply` | Reset only legacy source-record misses after reviewing the dry run |
 | `.\scripts\stories.ps1 -Action stop` | Request a graceful story-enrichment stop from another terminal |
 | `.\scripts\stories.ps1 -Action export` | Export story-length verbatim source passages |
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
@@ -365,7 +365,7 @@ The underlying Python CLI remains available directly:
 | `python main.py stories enrich --limit 10 --workers 3 --yes` | Backfill exact historical sources with bounded parallel workers |
 | `python main.py stories enrich --all --workers auto --yes` | Use conservative adaptive story-source concurrency |
 | `python main.py stories failures --limit 20` | Show durable failure attempts, categories, and retry state |
-| `python main.py stories retry --all --yes` | Reset all story failure cooldowns and quarantines |
+| `python main.py stories retry --category missing_records --yes` | Reset one reviewed story failure category |
 | `python main.py stories stop` | Request a graceful story-enrichment stop from another terminal |
 | `python main.py stories export` | Write story-length verbatim source passages |
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
@@ -576,7 +576,20 @@ Failed and partial sources are recorded in
 exponential cooldown, last error, and missing match count. Four unsuccessful
 attempts quarantine a source instead of retrying it forever. Review with
 `-Action failures`; `-Action retry` is a dry-run unless `-Apply` is present and
-can target `-All`, `-Crawl`, or `-Source`.
+can target `-All`, `-Crawl`, `-Source`, or `-Category`. Category filters combine
+with crawl or source filters when both are supplied. Historical match shards
+that preserve HTML entities are normalized during exact source recovery, so
+their accepted paragraph can be paired with the decoded WET/ARC text without
+changing either canonical matches or source story text.
+
+After updating from a version without that compatibility normalization, review
+and requeue only the affected failures:
+
+```powershell
+.\scripts\stories.ps1 -Action retry -Category missing_records
+.\scripts\stories.ps1 -Action retry -Category missing_records -Apply
+.\scripts\stories.ps1 -Action enrich -All -Apply
+```
 
 Press `Ctrl+C` once to request a graceful stop. The PowerShell wrapper records
 the request for the actual Python worker process, even when the Windows virtual
