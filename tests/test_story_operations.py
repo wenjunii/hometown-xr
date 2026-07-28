@@ -66,6 +66,18 @@ def test_failure_ledger_clears_completed_source_and_resets_selected(tmp_path):
     assert ledger.rows() == []
 
 
+def test_failure_ledger_resets_only_selected_category(tmp_path):
+    path = tmp_path / "failures.jsonl.gz"
+    ledger = StoryFailureLedger(path)
+    ledger.record_result(_result("missing", error=None))
+    ledger.record_result(_result("server"))
+
+    removed = ledger.reset(categories={"missing_records"})
+
+    assert [row["source_file"] for row in removed] == ["missing"]
+    assert [row["source_file"] for row in ledger.rows()] == ["server"]
+
+
 def test_failure_ledger_refuses_corrupt_durable_state(tmp_path):
     path = tmp_path / "failures.jsonl.gz"
     with gzip.open(path, "wt", encoding="utf-8") as handle:
@@ -123,6 +135,7 @@ def test_run_telemetry_reports_active_sources_rate_and_completion(tmp_path):
     telemetry.finish("interrupted")
     finished = read_story_run_state(stories_dir)
     assert finished["status"] == "interrupted"
+    assert not finished["process_running"]
     assert finished["finished_sources"] == 1
     assert finished["remaining_run_sources"] == 1
     assert finished["unresolved_sources"] == 0

@@ -263,6 +263,18 @@ fragments and exports with the normal checkpoint command before moving to
 another PC; the checkpoint performs one final export refresh and checksum
 catalog build before staging.
 
+If status shows quarantined `missing_records` after upgrading from an older
+story extractor, dry-run and then reset only that compatibility category:
+
+```powershell
+.\scripts\stories.ps1 -Action retry -Category missing_records
+.\scripts\stories.ps1 -Action retry -Category missing_records -Apply
+.\scripts\stories.ps1 -Action enrich -All -Apply
+```
+
+The recovery compares normalized identities but stores verbatim source context;
+it does not rewrite accepted matches or involve an LLM.
+
 ## After A Crash
 
 A normal `Ctrl+C` releases source claims immediately. After power loss, wait

@@ -842,6 +842,7 @@ def main() -> None:
     )
     stories_retry_parser.add_argument("--crawl", action="append")
     stories_retry_parser.add_argument("--source", action="append")
+    stories_retry_parser.add_argument("--category", action="append")
     stories_retry_parser.add_argument("--all", action="store_true")
     stories_retry_parser.add_argument("--yes", action="store_true")
     stories_subparsers.add_parser(
@@ -1122,14 +1123,17 @@ def main() -> None:
             result["shown_failures"] = min(args.limit, len(result["failures"]))
             result["failures"] = result["failures"][: args.limit]
         elif args.stories_command == "retry":
-            if not (args.all or args.crawl or args.source):
-                parser.error("story retry requires --all, --crawl, or --source")
+            if not (args.all or args.crawl or args.source or args.category):
+                parser.error(
+                    "story retry requires --all, --crawl, --source, or --category"
+                )
             if args.all and (args.crawl or args.source):
                 parser.error("--all cannot be combined with --crawl or --source")
             with CrawlerRunLock("story-retry"):
                 result = reset_story_failures(
                     source_files=set(args.source or []),
                     crawl_ids=set(args.crawl or []),
+                    categories=set(args.category or []),
                     reset_all=args.all,
                     apply=args.yes,
                 )

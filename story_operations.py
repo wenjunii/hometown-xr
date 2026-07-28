@@ -212,16 +212,26 @@ class StoryFailureLedger:
         *,
         source_files: set[str] | None = None,
         crawl_ids: set[str] | None = None,
+        categories: set[str] | None = None,
         reset_all: bool = False,
     ) -> list[dict]:
         selected = []
         with self._lock:
             for source_file, row in list(self._rows.items()):
-                if not (
+                has_location_scope = bool(source_files or crawl_ids)
+                location_matches = (
                     reset_all
+                    or not has_location_scope
                     or (source_files and source_file in source_files)
                     or (crawl_ids and str(row.get("crawl_id", "")) in crawl_ids)
-                ):
+                )
+                category_matches = not categories or str(
+                    row.get("category", "other")
+                ) in categories
+                has_selector = bool(
+                    reset_all or source_files or crawl_ids or categories
+                )
+                if not (has_selector and location_matches and category_matches):
                     continue
                 selected.append(self._rows.pop(source_file))
             if selected:
@@ -458,7 +468,11 @@ def read_story_run_state(stories_dir: str | Path = STORIES_DIR) -> dict | None:
     except (FileNotFoundError, OSError, ValueError):
         return None
     same_host = payload.get("host") == socket.gethostname()
-    running = same_host and pid_is_running(int(payload.get("pid", 0) or 0))
+    running = (
+        payload.get("status") == "running"
+        and same_host
+        and pid_is_running(int(payload.get("pid", 0) or 0))
+    )
     payload["process_running"] = running
     if payload.get("status") == "running" and not running:
         payload["status"] = "stale"
@@ -488,6 +502,7 @@ def reset_story_failures(
     *,
     source_files: set[str] | None = None,
     crawl_ids: set[str] | None = None,
+    categories: set[str] | None = None,
     reset_all: bool = False,
     apply: bool = False,
 ) -> dict:
@@ -496,15 +511,24 @@ def reset_story_failures(
         row
         for row in ledger.rows()
         if (
-            reset_all
-            or (source_files and str(row["source_file"]) in source_files)
-            or (crawl_ids and str(row.get("crawl_id", "")) in crawl_ids)
+            bool(reset_all or source_files or crawl_ids or categories)
+            and (
+                reset_all
+                or not (source_files or crawl_ids)
+                or (source_files and str(row["source_file"]) in source_files)
+                or (crawl_ids and str(row.get("crawl_id", "")) in crawl_ids)
+            )
+            and (
+                not categories
+                or str(row.get("category", "other")) in categories
+            )
         )
     ]
     reset_rows = (
         ledger.reset(
             source_files=source_files,
             crawl_ids=crawl_ids,
+            categories=categories,
             reset_all=reset_all,
         )
         if apply
@@ -514,6 +538,7 @@ def reset_story_failures(
         "schema_version": STORY_OPERATIONS_SCHEMA_VERSION,
         "selected_sources": len(selected),
         "selection": selected,
+        "categories": sorted(categories or []),
         "applied": apply,
         "reset_sources": len(reset_rows),
         "remaining": ledger.summary(),
