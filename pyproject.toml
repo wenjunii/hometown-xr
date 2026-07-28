@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75,<76"]
+requires = ["setuptools>=75,<84"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,15 +10,15 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = { file = "LICENSE" }
 dependencies = [
-    "boto3==1.43.47",
+    "boto3==1.43.57",
     "fasttext-wheel==0.9.2",
     "ftfy==6.3.1",
-    "numpy==1.26.4",
+    "numpy==2.2.6",
     "pyarrow==25.0.0",
     "requests==2.34.2",
-    "sentence-transformers==2.7.0",
+    "sentence-transformers==5.6.1",
     "torch==2.1.0",
-    "tqdm==4.68.4",
+    "tqdm==4.70.0",
     "transformers==4.40.2",
     "warcio==1.8.1",
 ]
