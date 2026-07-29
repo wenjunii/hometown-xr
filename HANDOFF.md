@@ -7,8 +7,9 @@ RTX 5090 PCs. Never run the crawler on more than one PC at a time.
 
 Git and Git LFS synchronize source code, tests, documentation,
 `data/checkpoints/progress.db.gz`, committed JSONL output, manifests,
-`data/stories/` source-context fragments, the bounded evaluation replay
-reservoir, run history, and Markdown/structured exports.
+`data/stories/_packs/` source-context checkpoints, human story reviews, the
+bounded evaluation replay reservoir, run history, and Markdown/structured
+exports.
 Together, those files are the complete durable project state required to resume
 on another workstation.
 The tracked evaluation state also includes the semantic model baseline; model
@@ -28,6 +29,7 @@ The following remain local to each PC:
 - `data/evaluation/model-comparison*.json`
 - `data/dependency-audit.local.json`
 - `data/progress.db` (restored working copy)
+- `data/stories/_records/` (restored exact-source working fragments)
 - uncheckpointed live candidate evaluation samples
 - `.env*`, credential files, private keys, and service-account files
 
@@ -116,8 +118,10 @@ merged; the script does not bypass repository protection.
 Checkpointing verifies every output checksum, compacts manifests and SQLite,
 merges replay/run history, creates the deterministic compressed database
 archive, and refreshes story exports, provenance, quality reports, and the story
-integrity catalog before Git stages anything. This includes every non-ignored
-source fragment under `data/stories/_records/`.
+integrity catalog before Git stages anything. It then packs every verified local
+fragment into at most 64 deterministic Git LFS files under
+`data/stories/_packs/`; the thousands of individual `_records` files remain
+ignored local working state.
 
 The compatibility form is
 `.\scripts\handoff.ps1 -Direction push -Message "checkpoint: hand off crawler state"`.
@@ -143,11 +147,13 @@ Set-ExecutionPolicy -Scope Process Bypass
 The receive script checks every Git command, permits only a fast-forward pull,
 refuses to overwrite a working database that differs from its current archive,
 pulls Git LFS objects, atomically restores and validates `data/progress.db`,
-and then runs `health --full --strict`, covering the runtime profile, Git state,
-database digest, active leases, dependency locks, filter/evaluation readiness,
-hardware metrics, model baseline, and output checks. `-SkipVerify` skips those
-diagnostics but still restores the checkpoint, so a virtual environment is
-required. Rerun `scripts\setup.ps1` whenever dependency lock files changed.
+restores exact local story fragments from verified packs, and then runs
+`health --full --strict`, covering the runtime profile, Git state, database
+digest, active leases, dependency locks, filter/evaluation readiness, hardware
+metrics, model baseline, output checks, and story-pack integrity. Existing
+changed or extra local fragments block the pull. `-SkipVerify` skips diagnostics
+but still restores the checkpoint, so a virtual environment is required. Rerun
+`scripts\setup.ps1` whenever dependency lock files changed.
 
 During the one-time upgrade from the formerly tracked raw database, any command
 that opens a missing project DB also restores the validated archive. This keeps
@@ -158,6 +164,17 @@ Inspect filter-signature coverage without changing checkpoint state:
 ```powershell
 .\scripts\filter-state.ps1
 ```
+
+Print the complete prioritized maintenance plan without changing state:
+
+```powershell
+.\scripts\maintenance.ps1 -Profile 3080
+```
+
+The plan reports crawl progress and failure waves, historical filter-audit
+readiness, remaining human labels, and missing real 3080/4090/5090 evidence. It
+never assigns labels or declares the model-stack migration complete without all
+required measurements.
 
 After a recall-affecting filter change, plan an isolated audit before stamping
 or resetting historical work:
@@ -261,7 +278,17 @@ The PowerShell entry point uses adaptive workers by default, beginning at three
 and rising as high as eight when Common Crawl remains healthy. Commit the
 fragments and exports with the normal checkpoint command before moving to
 another PC; the checkpoint performs one final export refresh and checksum
-catalog build before staging.
+catalog/pack build before staging.
+
+Search and human-review the complete exported stories locally:
+
+```powershell
+.\scripts\stories.ps1 -Action serve -OpenBrowser
+.\scripts\stories.ps1 -Action review-export
+```
+
+The review file and selected exact-source exports synchronize at the next
+checkpoint. No LLM writes story text or review decisions.
 
 If status shows quarantined `missing_records` after upgrading from an older
 story extractor, dry-run and then reset only that compatibility category:

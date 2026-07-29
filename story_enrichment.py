@@ -23,6 +23,7 @@ from config import (
     STORY_EXPANSION_VERSION,
 )
 from crawl_catalog import get_crawl_info
+from deterministic_gzip import gzip_binary_writer
 from downloader import stream_file
 from export_md import build_match_rank_index
 from output import OutputWriter
@@ -76,7 +77,7 @@ def _write_gzip_rows(path: Path, rows: Iterable[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     with temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+        with gzip_binary_writer(raw) as compressed:
             with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(

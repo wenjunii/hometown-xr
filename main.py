@@ -29,6 +29,7 @@ from config import (
     OUTPUT_DIR,
     PARQUET_DIR,
     SEMANTIC_THRESHOLD,
+    STORIES_DIR,
     STORY_ENRICHMENT_MAX_WORKERS,
     STORY_ENRICHMENT_WORKERS,
     HardwareProfile,
@@ -679,6 +680,18 @@ def main() -> None:
     )
     health_parser.add_argument("--full", action="store_true")
     health_parser.add_argument("--strict", action="store_true")
+    maintenance_parser = subparsers.add_parser(
+        "maintenance",
+        help="build a read-only prioritized project maintenance plan",
+    )
+    maintenance_subparsers = maintenance_parser.add_subparsers(
+        dest="maintenance_command",
+        required=True,
+    )
+    maintenance_plan_parser = maintenance_subparsers.add_parser("plan")
+    maintenance_plan_parser.add_argument(
+        "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+    )
     metrics_parser = subparsers.add_parser(
         "metrics", help="show current or historical operational metrics"
     )
@@ -852,6 +865,30 @@ def main() -> None:
     stories_subparsers.add_parser(
         "verify",
         help="build and verify the story-fragment integrity catalog",
+    )
+    stories_subparsers.add_parser(
+        "pack",
+        help="build deterministic synchronized story packs",
+    )
+    stories_unpack_parser = stories_subparsers.add_parser(
+        "unpack",
+        help="restore local source fragments from synchronized story packs",
+    )
+    stories_unpack_parser.add_argument("--replace", action="store_true")
+    stories_subparsers.add_parser(
+        "pack-status",
+        help="compare local source fragments with synchronized story packs",
+    )
+    stories_serve_parser = stories_subparsers.add_parser(
+        "serve",
+        help="open the searchable local story review workbench",
+    )
+    stories_serve_parser.add_argument("--host", default="127.0.0.1")
+    stories_serve_parser.add_argument("--port", type=int, default=8770)
+    stories_serve_parser.add_argument("--open-browser", action="store_true")
+    stories_subparsers.add_parser(
+        "review-export",
+        help="export stories selected in the review workbench",
     )
     for action in ("plan", "enrich", "status"):
         story_action = stories_subparsers.add_parser(action)
@@ -1034,6 +1071,10 @@ def main() -> None:
             print(
                 json.dumps(result, indent=2)
             )
+    elif args.command == "maintenance":
+        from maintenance import collect_maintenance_plan
+
+        print(json.dumps(collect_maintenance_plan(args.profile), indent=2))
     elif args.command == "model-validation":
         from model_regression import capture_model_snapshot, compare_model_snapshots
 
@@ -1107,6 +1148,21 @@ def main() -> None:
             reset_story_failures,
             story_failure_status,
         )
+        from story_packing import (
+            build_story_packs,
+            restore_story_packs,
+            story_pack_catalog_path,
+            story_pack_status,
+            verify_story_packs,
+        )
+
+        if (
+            args.stories_command
+            not in {"pack", "unpack", "pack-status"}
+            and story_pack_catalog_path().exists()
+            and not any((STORIES_DIR / "_records").glob("*.jsonl.gz"))
+        ):
+            restore_story_packs()
 
         if args.stories_command in {"plan", "enrich", "status"}:
             limit = None if args.all else args.limit
@@ -1185,16 +1241,51 @@ def main() -> None:
                         DATA_DIR / "exports",
                     ),
                 }
+        elif args.stories_command == "pack":
+            with CrawlerRunLock("story-pack"):
+                packed = build_story_packs()
+                result = {
+                    "packs": packed,
+                    "verification": verify_story_packs(),
+                }
+        elif args.stories_command == "unpack":
+            with CrawlerRunLock("story-unpack"):
+                result = restore_story_packs(replace=args.replace)
+        elif args.stories_command == "pack-status":
+            result = story_pack_status()
+        elif args.stories_command == "serve":
+            if not 1 <= args.port <= 65535:
+                parser.error("--port must be between 1 and 65535")
+            from story_workbench import serve_story_workbench
+
+            serve_story_workbench(
+                host=args.host,
+                port=args.port,
+                open_browser=args.open_browser,
+            )
+            return
+        elif args.stories_command == "review-export":
+            from story_review import export_reviewed_stories
+
+            with CrawlerRunLock("story-review-export"):
+                result = export_reviewed_stories()
         elif args.stories_command == "verify":
             from story_products import build_story_catalog, verify_story_integrity
 
             with CrawlerRunLock("story-integrity"):
                 catalog = build_story_catalog()
+                packs = build_story_packs() if catalog["valid"] else None
                 result = {
                     "catalog": catalog,
                     "verification": (
                         verify_story_integrity()
                         if catalog["valid"]
+                        else {"valid": False}
+                    ),
+                    "packs": packs,
+                    "pack_verification": (
+                        verify_story_packs()
+                        if packs and packs["valid"]
                         else {"valid": False}
                     ),
                 }

@@ -48,6 +48,7 @@ py-modules = [
     "keywords",
     "language_detector",
     "main",
+    "maintenance",
     "matcher",
     "metrics",
     "model_regression",
@@ -70,7 +71,11 @@ py-modules = [
     "story_control",
     "story_enrichment",
     "story_operations",
+    "story_packing",
     "story_products",
+    "story_review",
+    "story_workbench",
+    "deterministic_gzip",
     "text_normalization",
 ]
 

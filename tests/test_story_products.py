@@ -68,6 +68,21 @@ def test_story_catalog_detects_fragment_tampering(tmp_path):
     assert damaged["fragment_failures"]
 
 
+def test_story_catalog_rebuild_is_byte_stable(tmp_path):
+    output_dir = tmp_path / "output"
+    stories_dir = tmp_path / "stories"
+    writer = OutputWriter(output_dir)
+    _write_match(writer, "crawl-data/stable.warc.wet.gz", "2026-01-01")
+    enrich_story_sources(output_dir, stories_dir, limit=1)
+
+    build_story_catalog(stories_dir)
+    catalog_path = stories_dir / "_catalog.json.gz"
+    first = catalog_path.read_bytes()
+    build_story_catalog(stories_dir)
+
+    assert catalog_path.read_bytes() == first
+
+
 def test_story_catalog_retains_structurally_valid_stale_fragments(tmp_path):
     output_dir = tmp_path / "output"
     stories_dir = tmp_path / "stories"

@@ -33,6 +33,7 @@ from config import (
     REPLAY_PATH,
     SEMANTIC_THRESHOLD,
 )
+from deterministic_gzip import gzip_binary_writer
 from quality import classify_content
 from record_identity import stable_record_id
 
@@ -68,7 +69,7 @@ def _atomic_gzip_jsonl(path: Path, rows: Iterable[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     with temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+        with gzip_binary_writer(raw) as compressed:
             with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(

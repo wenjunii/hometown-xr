@@ -38,8 +38,9 @@ never copied while live.
 
 The Git repository contains all durable state needed to recreate or resume the
 project on another PC: source, tests, documentation, the compressed database
-checkpoint, committed output and manifests, source-context story fragments and
-exports, bounded evaluation replay, annotations, and run history. Virtual
+checkpoint, committed output and manifests, deterministic source-context story
+packs and exports, human story reviews, bounded evaluation replay, annotations,
+and run history. Virtual
 environments, downloaded models, caches, live SQLite files, metrics, derived
 Parquet datasets, hardware overrides, and credential-like files remain local
 because they are unsafe to copy or can be recreated deterministically.
@@ -87,9 +88,10 @@ not ahead before checkpointing, and confirms the pushed commit against that
 remote branch. Both PCs must use the same branch. Because `main` is protected,
 use a shared working branch until its pull request is approved and merged.
 Before staging, the send command refreshes the deterministic story exports,
-quality report, provenance table, and integrity catalog from all committed
-source fragments. Use `-SkipStoryRefresh` only for a code-only checkpoint where
-the story products are intentionally unchanged.
+human-selected export, quality report, provenance table, integrity catalog, and
+64-file story pack checkpoint from the local source fragments. Use
+`-SkipStoryRefresh` only for a code-only checkpoint where the story products
+are intentionally unchanged.
 
 ## Architecture
 
@@ -299,6 +301,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\setup.ps1 -Profile 3080 -Tune -Dev` | Also tune this PC and install development tools |
 | `.\scripts\run.ps1 -Profile 3080 run --all` | Start or resume using the selected hardware profile |
 | `.\scripts\health.ps1 -Profile 3080 -Full -Strict` | Check runtime, Git, checkpoint, dependencies, filters, evaluation, metrics, and output |
+| `.\scripts\maintenance.ps1 -Profile 3080` | Print a read-only prioritized crawl, audit, evaluation, and migration plan |
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 -WorkerCount 1,4,7` | Compare worker counts on identical isolated real sources |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
@@ -324,6 +327,11 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action export -IncludeShort` | Include short source context for diagnostics |
 | `.\scripts\stories.ps1 -Action report` | Rebuild the story research-quality report |
 | `.\scripts\stories.ps1 -Action verify` | Build and verify the story-fragment checksum catalog |
+| `.\scripts\stories.ps1 -Action serve -OpenBrowser` | Search, inspect, and human-review complete source stories locally |
+| `.\scripts\stories.ps1 -Action review-export` | Export only stories marked Selected without rewriting source text |
+| `.\scripts\stories.ps1 -Action pack-status` | Compare local source fragments with the synchronized story packs |
+| `.\scripts\stories.ps1 -Action pack` | Rebuild and verify deterministic story packs |
+| `.\scripts\stories.ps1 -Action unpack` | Restore missing local source fragments from synchronized packs |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -342,6 +350,7 @@ The underlying Python CLI remains available directly:
 | `python main.py run --limit 5` | Process at most five ready sources globally |
 | `python main.py status` | Show checkpoint progress |
 | `python main.py health --profile 3080 --full --strict` | Fail on unsafe runtime, Git, database, dependency, or output state |
+| `python main.py maintenance plan --profile 3080` | Build a read-only evidence-based maintenance plan |
 | `python main.py metrics` | Show concise latest rates, funnel, failures, resources, and ETA |
 | `python main.py metrics --history --limit 20` | Show compact recent run history |
 | `python main.py metrics --compare-profiles` | Compare aggregate workstation throughput/resources |
@@ -371,6 +380,11 @@ The underlying Python CLI remains available directly:
 | `python main.py stories export --include-short` | Include short context in diagnostic exports |
 | `python main.py stories report` | Write coverage, quality, diversity, and integrity reports |
 | `python main.py stories verify` | Build and verify the fragment checksum catalog |
+| `python main.py stories serve --open-browser` | Serve the local searchable story review workbench |
+| `python main.py stories review-export` | Export human-selected exact-source stories |
+| `python main.py stories pack-status` | Check local fragment changes against synchronized packs |
+| `python main.py stories pack` | Build deterministic synchronized packs |
+| `python main.py stories unpack` | Restore missing local fragments from verified packs |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
@@ -555,6 +569,26 @@ Canonical match shards and existing `matches_<language>.md` exports remain
 unchanged. The final export deduplicates repeated crawl captures by normalized
 story text while retaining every capture and source-text hash in provenance.
 
+Open the local Story Explorer after export:
+
+```powershell
+.\scripts\stories.ps1 -Action serve -OpenBrowser
+```
+
+The workbench searches all complete stories by text, language, domain, keyword,
+and review state. It displays the accepted filter paragraph, semantic reference,
+exact role-labeled source paragraphs, and explicit omission boundaries. Mark a
+story `Selected`, `Rejected`, or `Unsure`; those human decisions are stored in
+`data/stories/reviews.jsonl`. No model assigns review decisions. Export the
+selected corpus with:
+
+```powershell
+.\scripts\stories.ps1 -Action review-export
+```
+
+`stories_reviewed.jsonl.gz` and `stories_reviewed.md` retain the exact extracted
+story text plus review metadata. They never paraphrase or generate a story.
+
 Story enrichment defaults to adaptive workers in `scripts\stories.ps1`. It
 starts with three concurrent source workers and can rise to eight after repeated
 successful sources. This phase is network, gzip, and CPU parsing work; it does
@@ -628,6 +662,20 @@ count, and SHA-256 checksum. Checkpointing stops if a fragment is malformed or
 catalog verification fails. Full project health also reports story integrity,
 so a damaged transfer is visible before another workstation resumes.
 
+The per-source files under `data/stories/_records/` are ignored local working
+state. Checkpointing packs their exact bytes into at most 64 Git LFS objects
+under `data/stories/_packs/`, writes a checksum catalog, and verifies every
+embedded fragment. Setup and handoff restore missing local fragments
+automatically; existing changed or extra fragments block a pull until they are
+checkpointed. `pack-status`, `pack`, and `unpack` expose those operations
+directly.
+
+Tracked gzip products are byte reproducible: writers use a zero timestamp,
+omit temporary filenames from the gzip header, sort structured fields, and
+replace files atomically. Rebuilding unchanged catalogs, packs, exports,
+database archives, replay data, or metrics history therefore produces the same
+compressed bytes.
+
 After a bounded trial, use `-All` to finish every matched source on one
 workstation:
 
@@ -638,11 +686,11 @@ workstation:
 ```
 
 The final checkpoint refreshes the story exports again, builds
-`data/stories/_catalog.json.gz`, scans the complete staged transfer for
-credentials, commits all non-ignored durable fragments and products, pushes the
-current branch, and verifies its remote commit. It never adds downloaded models,
-the live database, caches, Parquet files, hardware overrides, runtime telemetry,
-or credential-like paths.
+`data/stories/_catalog.json.gz` and verified story packs, scans the complete
+staged transfer for credentials, commits all non-ignored durable products,
+pushes the current branch, and verifies its remote commit. It never adds
+downloaded models, the live database, caches, Parquet files, hardware overrides,
+runtime telemetry, or credential-like paths.
 
 ## Parquet And Deduplication
 
@@ -913,6 +961,11 @@ story_context.py        deterministic seed-to-source-context expansion
 story_enrichment.py     resumable historical backfill and story exports
 story_operations.py     adaptive workers, live telemetry, failures, and retries
 story_products.py       integrity catalog, tiered exports, and quality reports
+story_packing.py        deterministic 64-pack story checkpoint and exact restore
+story_review.py         searchable story index, human decisions, and selected export
+story_workbench.py      local story search and review UI
+maintenance.py          read-only crawl, audit, evaluation, and migration plan
+deterministic_gzip.py   reproducible gzip writer without timestamp or filename
 text_normalization.py   versioned entity, encoding, and Unicode repair
 matcher.py              keyword, semantic, and narrative filters
 evaluation.py           weighted sampling, annotation history, tuning, and holdout

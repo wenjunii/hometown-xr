@@ -120,6 +120,12 @@ try {
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
 
+    $StoryPackCatalog = Join-Path $Root "data\stories\_packs\catalog.json.gz"
+    if (Test-Path -LiteralPath $StoryPackCatalog) {
+        & $VenvPython (Join-Path $Root "main.py") stories unpack
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+
     & $VenvPython (Join-Path $Root "main.py") doctor --profile $Profile
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     if ($Tune) {

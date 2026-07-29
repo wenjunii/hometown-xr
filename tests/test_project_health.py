@@ -1,4 +1,5 @@
-from project_health import build_health_checks
+from project_health import build_health_checks, collect_story_storage_health
+from story_packing import build_story_packs
 
 
 def _payload():
@@ -51,3 +52,18 @@ def test_health_checks_fail_unsafe_handoff_state():
         "crawler_lock",
         "database_checkpoint",
     }
+
+
+def test_story_health_accepts_verified_packs_without_local_fragments(tmp_path):
+    stories = tmp_path / "stories"
+    records = stories / "_records"
+    records.mkdir(parents=True)
+    (records / f"{'a' * 20}.jsonl.gz").write_bytes(b"exact fragment bytes")
+    build_story_packs(stories)
+    (records / f"{'a' * 20}.jsonl.gz").unlink()
+
+    fragments, packs = collect_story_storage_health(stories)
+
+    assert fragments["valid"]
+    assert fragments["restorable_from_packs"]
+    assert packs["valid"]

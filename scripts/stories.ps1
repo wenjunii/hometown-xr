@@ -8,7 +8,12 @@ param(
         "failures",
         "retry",
         "report",
-        "verify"
+        "verify",
+        "pack",
+        "unpack",
+        "pack-status",
+        "serve",
+        "review-export"
     )]
     [string]$Action = "status",
 
@@ -26,6 +31,15 @@ param(
     [switch]$Apply,
 
     [switch]$IncludeShort,
+
+    [switch]$Replace,
+
+    [string]$BindHost = "127.0.0.1",
+
+    [ValidateRange(1, 65535)]
+    [int]$Port = 8770,
+
+    [switch]$OpenBrowser,
 
     [ValidateScript({
         $ParsedWorkers = 0
@@ -58,6 +72,19 @@ if ($Apply -and $Action -notin @("enrich", "retry")) {
 }
 if ($IncludeShort -and $Action -ne "export") {
     throw "IncludeShort is valid only with -Action export."
+}
+if ($Replace -and $Action -ne "unpack") {
+    throw "Replace is valid only with -Action unpack."
+}
+if (
+    (
+        $PSBoundParameters.ContainsKey("BindHost") -or
+        $PSBoundParameters.ContainsKey("Port") -or
+        $OpenBrowser
+    ) -and
+    $Action -ne "serve"
+) {
+    throw "BindHost, Port, and OpenBrowser are valid only with -Action serve."
 }
 if ($PSBoundParameters.ContainsKey("Workers") -and $Action -ne "enrich") {
     throw "Workers is valid only with -Action enrich."
@@ -190,6 +217,15 @@ if ($Action -eq "enrich") {
 }
 if ($IncludeShort) {
     $Arguments += "--include-short"
+}
+if ($Replace) {
+    $Arguments += "--replace"
+}
+if ($Action -eq "serve") {
+    $Arguments += @("--host", $BindHost, "--port", $Port)
+    if ($OpenBrowser) {
+        $Arguments += "--open-browser"
+    }
 }
 Push-Location $Root
 $ForwarderInstalled = $false

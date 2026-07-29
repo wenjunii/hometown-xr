@@ -13,6 +13,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from config import OUTPUT_DIR, STORIES_DIR, STORY_EXPANSION_VERSION
+from deterministic_gzip import gzip_binary_writer
 from story_operations import (
     StoryFailureLedger,
     story_failure_ledger_path,
@@ -87,7 +88,7 @@ def _write_gzip_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     with temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+        with gzip_binary_writer(raw) as compressed:
             with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                 handle.write(
                     json.dumps(

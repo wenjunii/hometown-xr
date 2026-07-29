@@ -1,6 +1,6 @@
 # Story Research Quality Report
 
-Generated: `2026-07-29T05:34:30.441579+00:00`
+Generated: `2026-07-29T06:21:13.737358+00:00`
 
 ## Coverage
 

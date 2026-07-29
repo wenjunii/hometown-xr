@@ -9,6 +9,7 @@ import sqlite3
 from pathlib import Path
 
 from config import DB_ARCHIVE_PATH, DB_PATH
+from deterministic_gzip import gzip_binary_writer
 
 
 def _sha256(path: Path) -> str:
@@ -63,7 +64,7 @@ def archive_database(
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix(target.suffix + ".tmp")
     with source.open("rb") as input_handle, temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as compressed:
+        with gzip_binary_writer(raw, compresslevel=9) as compressed:
             for chunk in iter(lambda: input_handle.read(1024 * 1024), b""):
                 compressed.write(chunk)
     os.replace(temporary, target)
