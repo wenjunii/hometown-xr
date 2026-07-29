@@ -1,7 +1,65 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `nl`
-**Unique Stories:** 1
+**Unique Stories:** 2
+
+---
+
+### Source Story for Match 1
+- **Seed Score:** 0.472
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 29 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_nl.md` #1
+- **Keywords:** `naar huis`
+- **Nearest Semantic Reference (Not a Summary):** 'Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.zdh.nl/](http://www.zdh.nl/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609537376.43/wet/CC-MAIN-20140416005217-00521-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Zendings-Diaconessenhuis Bethanië
+> GastenverblijfGastenweekendsGebedswandelingZaalverhuurProjecten
+> HomeAgendaActueelMeedoenPresentatieContactLinks
+> “Ik heb Bethanië als een pleisterplaats ervaren. Ik kwam moe en gebroken aan. De stilte was heerlijk, de omgeving prachtig en God heeft me diep aangeraakt. Met vernieuwde kracht en levenslust ben ik weer naar huis gegaan." Jitty, deelnemer Stilteweekend april 2014
+> "Hartelijk bedankt voor jullie geweldige gastvrijheid. Wat een bijzondere plek van rust is het hier. De Heer heeft met name tot me gesproken door de beelden van de Gebedsweg in de tuin: bijzonder!" Janneke, 30 mei 2013
+> "Wil je innerlijke rust en de weg naar Gods liefde vinden, geef jezelf dan op voor een Stilteweekend. Heel erg bedankt dat ik hier mocht zijn en voor alle goede zorgen en steun." Ingrid, deelnemer Stilteweekend, april 2014
+> "Héél hartelijk bedankt voor de goede zorgen!! We hebben genoten van de rust en een zeer gezegende retraite gehad." Oudstenraad Evangeliegemeente Eemnes, maart 2013
+> Zendings-Diaconessenhuis Bethanië	Plek van gastvrijheid, ontmoeting, stilte en bezinning
+> Zendings-Diaconessenhuis Bethanië in Amerongen is te vergelijken met een protestants klooster. Als diaconessen vormen we samen een leefgemeenschap en stellen ons leven in dienst van God. Onder het motto ‘Ontvangen en doorgeven met hart en handen’ bieden we gastvrijheid aan mensen die behoefte hebben aan stilte en rust.
+> Wij nodigen u graag uit voor een verblijf om even uit de hectiek van het dagelijks leven te stappen. Of misschien heeft u baat bij een weekend vol ontspanning, bezinning en geloofsopbouw? Bekijk onze agenda voor de eerstvolgende activiteiten.
+> U bent van harte welkom! Recent nieuws
+> Zr. Elizabeth 70 jaar diacones!	Zr. Elizabeth Schneider 70 jaar diacones
+> “Op mijn 13e jaar voelde ik dat mijn kinderhart voor God bestemd was.” Zo omschrijft zuster Elizabeth Schneider haar roeping. Op 27 februari a.s. is ze maar liefst 70 jaar diacones.
+> Lees meer...
+> Aanmelden nieuwsbrief
+> Live luisterenElke laatste zondag van de maand om 19:00 uur.
+> Opnamen terugluisteren op kerkdienstgemist.nl IdentiteitAchtergrondGetuigenissenWereldwijd
+> Website door Inxpact
+
+#### Extracted Source Story
+
+> Zendings-Diaconessenhuis Bethanië
+> GastenverblijfGastenweekendsGebedswandelingZaalverhuurProjecten
+> HomeAgendaActueelMeedoenPresentatieContactLinks
+> “Ik heb Bethanië als een pleisterplaats ervaren. Ik kwam moe en gebroken aan. De stilte was heerlijk, de omgeving prachtig en God heeft me diep aangeraakt. Met vernieuwde kracht en levenslust ben ik weer naar huis gegaan." Jitty, deelnemer Stilteweekend april 2014
+> "Hartelijk bedankt voor jullie geweldige gastvrijheid. Wat een bijzondere plek van rust is het hier. De Heer heeft met name tot me gesproken door de beelden van de Gebedsweg in de tuin: bijzonder!" Janneke, 30 mei 2013
+> "Wil je innerlijke rust en de weg naar Gods liefde vinden, geef jezelf dan op voor een Stilteweekend. Heel erg bedankt dat ik hier mocht zijn en voor alle goede zorgen en steun." Ingrid, deelnemer Stilteweekend, april 2014
+> "Héél hartelijk bedankt voor de goede zorgen!! We hebben genoten van de rust en een zeer gezegende retraite gehad." Oudstenraad Evangeliegemeente Eemnes, maart 2013
+> Zendings-Diaconessenhuis Bethanië	Plek van gastvrijheid, ontmoeting, stilte en bezinning
+> Zendings-Diaconessenhuis Bethanië in Amerongen is te vergelijken met een protestants klooster. Als diaconessen vormen we samen een leefgemeenschap en stellen ons leven in dienst van God. Onder het motto ‘Ontvangen en doorgeven met hart en handen’ bieden we gastvrijheid aan mensen die behoefte hebben aan stilte en rust.
+> Wij nodigen u graag uit voor een verblijf om even uit de hectiek van het dagelijks leven te stappen. Of misschien heeft u baat bij een weekend vol ontspanning, bezinning en geloofsopbouw? Bekijk onze agenda voor de eerstvolgende activiteiten.
+> U bent van harte welkom! Recent nieuws
+> Zr. Elizabeth 70 jaar diacones!	Zr. Elizabeth Schneider 70 jaar diacones
+> “Op mijn 13e jaar voelde ik dat mijn kinderhart voor God bestemd was.” Zo omschrijft zuster Elizabeth Schneider haar roeping. Op 27 februari a.s. is ze maar liefst 70 jaar diacones.
+> Lees meer...
+> Aanmelden nieuwsbrief
+> Live luisterenElke laatste zondag van de maand om 19:00 uur.
+> Opnamen terugluisteren op kerkdienstgemist.nl IdentiteitAchtergrondGetuigenissenWereldwijd
+> Website door Inxpact
 
 ---
 

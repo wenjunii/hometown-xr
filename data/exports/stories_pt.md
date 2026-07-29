@@ -1,7 +1,7 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `pt`
-**Unique Stories:** 42
+**Unique Stories:** 55
 
 ---
 
@@ -42,6 +42,184 @@
 > mrs-g0mez likes this concretiza-ndo reblogged this from caaaaaandy ummundoalone reblogged this from mother-monster-paws-up neoq-eav reblogged this from caaaaaandy neoq-eav likes this abandona-da reblogged this from caaaaaandy thinkingofyouagain reblogged this from caaaaaandy caaaaaandy reblogged this from mother-monster-paws-up sagittariusdoll likes this reason-for-my-smile likes this thaisabastos reblogged this from mother-monster-paws-up desbriado reblogged this from mother-monster-paws-up thisismothermonster reblogged this from mother-monster-paws-up leporco reblogged this from our-heaven efeito-t-e-q-u-i-l-a reblogged this from our-heaven our-heaven reblogged this from whois-dead panem-hooker reblogged this from mother-monster-paws-up afuckingmind reblogged this from daniel-carmona vampires-lost-control reblogged this from mother-monster-paws-up love-with-tequila reblogged this from foivocesaudadeeeu delena-girl reblogged this from mother-monster-paws-up monsterthis-bitch reblogged this from fanloversofgaga daniel-carmona reblogged this from yeahmylifesucks daniel-carmona likes this nuvensechuva reblogged this from yeahmylifesucks nuvensechuva likes this killtheconformist reblogged this from satan-is-gay mysunshineonacloudday reblogged this from lumineer-s showmeyourteeth-bitch reblogged this from mothermonsterg nove-titans reblogged this from mother-monster-paws-up mss-carolyn reblogged this from filha-do-coveiro launicarealidad reblogged this from mothermonsterg just-a-little-rocker reblogged this from garoto-de-allstar cocaine-bby reblogged this from satan-is-gay always-unlucky likes this lazineess reblogged this from mother-monster-paws-up welcome-to-my-suicide likes this i-want-your-psycho reblogged this from mother-monster-paws-up circle-of-death likes this itsmafa reblogged this from isartpop glitter-as-grease reblogged this from fanloversofgaga darling-we-are-dreaming reblogged this from yeahmylifesucks rad1oativ3-bl0od reblogged this from seekingparadiseforyou thelosersteam likes this rad1oativ3-bl0od likes this nightmares-of-a-zombie reblogged this from aff-fuckyou onehunterofdreams reblogged this from isartpop one-eyed-one-heard reblogged this from isartpop tinytammy likes this devils-nevercry reblogged this from satan-is-gay Show more notesLoading...
 > Follow
 > theme by modernise
+
+---
+
+### Source Story for Matches 2, 3
+- **Seed Score:** 0.569
+- **Story-Length Passage:** `yes`
+- **Story Size:** 6 source paragraphs, 88 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 3 of 6
+- **Matches Export References:** `matches_pt.md` #2, #3
+- **Keywords:** `saudade`
+- **Nearest Semantic Reference (Not a Summary):** 'My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.livrosgratis.com.br/download_livro_45095/o_quarto_segredo](http://www.livrosgratis.com.br/download_livro_45095/o_quarto_segredo)
+- **Capture Count:** 2
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021537160/wet/CC-MAIN-20140305121217-00035-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> num dia desses, conseguirei levar meus pais l�. Talvez antes do que eu imagine...
+> Deixe-me tentar lembrar daquele dia... O que foi que eu beb�? Acho que algum refrigerante... N�o consigo me
+> lembrar.
+> �, algumas coisas se apagam de nossa mem�ria.
+> Olhei para o meu rel�gio e vi que n�o se passaram nem cinco minutos desde que comecei a divagar...
+> A Magia do tempo, essa �gua que corre por baixo da ponte, sem jamais voltar...
+> Como pude reviver algumas horas maravilhosas em t�o poucos minutos?
+> Qu�o misteriosa � nossa mente!
+> Quem dera pud�ssemos us�-la s� para o bem, a satisfa��o, a alegria, a constru��o.
+> Quem sabe, num dia distante, n'outros tempo e lugar, possa meu Esp�rito imortal, habitante de um novo ve�culo
+> terrestre, viver nessa realidade, hoje utopia.
+> Utopia... John Lennon criou a vers�o norte-americana da Sociedade Alternativa de Raul Seixas e Paulo Coelho, a
+> 'New Utopia'.
+> Ser� que tem mais gente que, neste momento, pensa como eu?
+> Espero que sim.
+> Me deu saudades. Assim, sem mais nem menos.
+> Do J.R., do Raul Seixas, do Marcelo Nova.
+> Saudades das 'lulinhas fritas'.
+> Saudades da pessoa que um dia eu fui.
+> Saudades da pessoa que eu gostaria de ter sido.
+> Mas, quem sabe, o tempo deu, n�o uma parada, pois ele n�o para, mas uma freiadinha, para que eu possa recuperar
+> o rumo.
+> Bem, deixa eu me vestir, que o tempo passa e o frio est� me cutucando as costelas.
+> Peguei a roupa toda, sem me esquecer do agasalho.
+> 'Achei' no arm�rio um casaco de couro, preto, dos tempos de faculdade.
+> Ele ainda serviria? S� experimentando para ver...
+> Puxa, serve como uma luva!
+> Vou com ele, disse para mim mesmo.
+> Pela primeira vez em muito tempo, eu estava me importando com o que vestir... Bom sinal, pensei.
+> Vestido, pronto, resolv� passar um perfume esquecido no meu criado-mudo.
+> Bom perfume, esse Drakar Noir.
+> Tinha cheiro de sucesso, o mesmo cheiro de sucesso que tem aquele restaurante chique, do qual esquec� o nome.
+> O cheiro do sucesso que eu sempre desejara.
+> Mas, agora, estava decidido: n�o desejaria mais o sucesso, apenas. Iria persegu�-lo, com afinco e disposi��o.
+> -- "Bom dia, papai! Bom dia, mam�e" disse eu ao entrar na sala, aonde ambos assistiam a um telejornal matutino
+> qualquer.
+> -- "Bom dia, filho!" disse meu pai.
+> -- "Bom dia, Betinho!" falou minha m�e.
+> Eu sorr�.
+> Era a primeira vez que eu era chamado de 'Betinho'.
+> Era a primeira vez que eu desejava voltar a ser crian�a, voltar a aprender tudo de novo.
+> Voltar a estudar, voltar a crescer.
+> Voltar a me apaixonar pelas meninas.
+> Voltar a desejar segurar nas m�os de algu�m que me atra�a n�o sei bem qual o motivo.
+> Voltar a querer assistir a filmes puros e inocentes, como aquele da 'Leoa Elza' ou a s�rie 'Daktari'.
+> Voltar a sonhar com o seriado 'Al�m da Imagina��o'.
+> Sei que esses tempos n�o voltam mais.
+> Mas � bom sonhar, mesmo com o imposs�vel.
+> Sentei-me � mesa, em sil�ncio, para n�o perturbar a televis�o que dava brados furiosos, gritando contra algum
+> buraco capaz de engolir uma jamanta, num canto qualquer da cidade.
+> Passando melado num peda�o de p�o franc�s, lembrei-me de meus sonhos de crian�a.
+> Queria ser um grande ca�ador.
+> Um 'Grande Ca�ador Branco', como aquele 'Karamojo Bell', que matou mais de mil elefantes, com um fuzil
+> Mauser calibre 7x57.
+> Ou como o maior ca�ador brasileiro, um m�dico carioca, o Dr. Alberto Machado.
+> Uma vez, l� pelos anos 70, li, numa revista 'Trof�u', uma reportagem sobre esse homem.
+> Tinha fotos de suas armas, de seus trof�us, as narrativas de ca�adas a on�as devoradoras de c�es, de um tigre
+> antrop�fago, tanta coisa emocionante!
+> Quando estive no Rio de Janeiro, at� tentei descobrir o telefone de tal pessoa. N�o consegu�.
+> A revista 'Trof�u' n�o fala mais de ca�a, assunto proibido no pa�s.
+> De vez em, a revista 'Magnum' traz alguma reportagem do assunto, prova de determina��o e coragem � coisa rara
+> nestes dias.
+> Mas n�o importava n�o ter encontrado o 'Grande Ca�ador Branco'.
+> Nada importava, na verdade.
+> Seria ca�ador, isso era o que importava, e eu o decidira na pr�-adolesc�ncia.
+> Enfrentaria as feras mais temidas do Planeta!
+> Algu�m deve ter me ouvido... Acabei enfrentando feras perigosas, terr�veis, que moravam dentro de mim.
+> Libertei os malditos Dem�nios, 'Choronzon', 'Legi�o', e n�o soube como control�-los.
+> Quase fui derrotado. Destru�do.
+> Mas esse Frank estava aqui para me salvar!
+> E eu n�o me deixaria derrotar, dessa vez.
+> Sairia vencedor, ou morreria tentando.
+> Como disse Paulo Coelho no seu �timo 'Di�rio de Um Mago', repetindo as palavras de um Ap�stolo, 'O que
+
+#### Extracted Source Story
+
+> O Quarto Segredo - J.R.R. Abrah�o
+
+> P�gina 24 de 84
+
+> num dia desses, conseguirei levar meus pais l�. Talvez antes do que eu imagine...
+> Deixe-me tentar lembrar daquele dia... O que foi que eu beb�? Acho que algum refrigerante... N�o consigo me
+> lembrar.
+> �, algumas coisas se apagam de nossa mem�ria.
+> Olhei para o meu rel�gio e vi que n�o se passaram nem cinco minutos desde que comecei a divagar...
+> A Magia do tempo, essa �gua que corre por baixo da ponte, sem jamais voltar...
+> Como pude reviver algumas horas maravilhosas em t�o poucos minutos?
+> Qu�o misteriosa � nossa mente!
+> Quem dera pud�ssemos us�-la s� para o bem, a satisfa��o, a alegria, a constru��o.
+> Quem sabe, num dia distante, n'outros tempo e lugar, possa meu Esp�rito imortal, habitante de um novo ve�culo
+> terrestre, viver nessa realidade, hoje utopia.
+> Utopia... John Lennon criou a vers�o norte-americana da Sociedade Alternativa de Raul Seixas e Paulo Coelho, a
+> 'New Utopia'.
+> Ser� que tem mais gente que, neste momento, pensa como eu?
+> Espero que sim.
+> Me deu saudades. Assim, sem mais nem menos.
+> Do J.R., do Raul Seixas, do Marcelo Nova.
+> Saudades das 'lulinhas fritas'.
+> Saudades da pessoa que um dia eu fui.
+> Saudades da pessoa que eu gostaria de ter sido.
+> Mas, quem sabe, o tempo deu, n�o uma parada, pois ele n�o para, mas uma freiadinha, para que eu possa recuperar
+> o rumo.
+> Bem, deixa eu me vestir, que o tempo passa e o frio est� me cutucando as costelas.
+> Peguei a roupa toda, sem me esquecer do agasalho.
+> 'Achei' no arm�rio um casaco de couro, preto, dos tempos de faculdade.
+> Ele ainda serviria? S� experimentando para ver...
+> Puxa, serve como uma luva!
+> Vou com ele, disse para mim mesmo.
+> Pela primeira vez em muito tempo, eu estava me importando com o que vestir... Bom sinal, pensei.
+> Vestido, pronto, resolv� passar um perfume esquecido no meu criado-mudo.
+> Bom perfume, esse Drakar Noir.
+> Tinha cheiro de sucesso, o mesmo cheiro de sucesso que tem aquele restaurante chique, do qual esquec� o nome.
+> O cheiro do sucesso que eu sempre desejara.
+> Mas, agora, estava decidido: n�o desejaria mais o sucesso, apenas. Iria persegu�-lo, com afinco e disposi��o.
+> -- "Bom dia, papai! Bom dia, mam�e" disse eu ao entrar na sala, aonde ambos assistiam a um telejornal matutino
+> qualquer.
+> -- "Bom dia, filho!" disse meu pai.
+> -- "Bom dia, Betinho!" falou minha m�e.
+> Eu sorr�.
+> Era a primeira vez que eu era chamado de 'Betinho'.
+> Era a primeira vez que eu desejava voltar a ser crian�a, voltar a aprender tudo de novo.
+> Voltar a estudar, voltar a crescer.
+> Voltar a me apaixonar pelas meninas.
+> Voltar a desejar segurar nas m�os de algu�m que me atra�a n�o sei bem qual o motivo.
+> Voltar a querer assistir a filmes puros e inocentes, como aquele da 'Leoa Elza' ou a s�rie 'Daktari'.
+> Voltar a sonhar com o seriado 'Al�m da Imagina��o'.
+> Sei que esses tempos n�o voltam mais.
+> Mas � bom sonhar, mesmo com o imposs�vel.
+> Sentei-me � mesa, em sil�ncio, para n�o perturbar a televis�o que dava brados furiosos, gritando contra algum
+> buraco capaz de engolir uma jamanta, num canto qualquer da cidade.
+> Passando melado num peda�o de p�o franc�s, lembrei-me de meus sonhos de crian�a.
+> Queria ser um grande ca�ador.
+> Um 'Grande Ca�ador Branco', como aquele 'Karamojo Bell', que matou mais de mil elefantes, com um fuzil
+> Mauser calibre 7x57.
+> Ou como o maior ca�ador brasileiro, um m�dico carioca, o Dr. Alberto Machado.
+> Uma vez, l� pelos anos 70, li, numa revista 'Trof�u', uma reportagem sobre esse homem.
+> Tinha fotos de suas armas, de seus trof�us, as narrativas de ca�adas a on�as devoradoras de c�es, de um tigre
+> antrop�fago, tanta coisa emocionante!
+> Quando estive no Rio de Janeiro, at� tentei descobrir o telefone de tal pessoa. N�o consegu�.
+> A revista 'Trof�u' n�o fala mais de ca�a, assunto proibido no pa�s.
+> De vez em, a revista 'Magnum' traz alguma reportagem do assunto, prova de determina��o e coragem � coisa rara
+> nestes dias.
+> Mas n�o importava n�o ter encontrado o 'Grande Ca�ador Branco'.
+> Nada importava, na verdade.
+> Seria ca�ador, isso era o que importava, e eu o decidira na pr�-adolesc�ncia.
+> Enfrentaria as feras mais temidas do Planeta!
+> Algu�m deve ter me ouvido... Acabei enfrentando feras perigosas, terr�veis, que moravam dentro de mim.
+> Libertei os malditos Dem�nios, 'Choronzon', 'Legi�o', e n�o soube como control�-los.
+> Quase fui derrotado. Destru�do.
+> Mas esse Frank estava aqui para me salvar!
+> E eu n�o me deixaria derrotar, dessa vez.
+> Sairia vencedor, ou morreria tentando.
+> Como disse Paulo Coelho no seu �timo 'Di�rio de Um Mago', repetindo as palavras de um Ap�stolo, 'O que
+
+> ebook:4segredo.html
+
+> 22/2/2005
+
+> O Quarto Segredo - J.R.R. Abrah�o
 
 ---
 
@@ -153,17 +331,17 @@
 
 ---
 
-### Source Story for Matches 6, 7, 8
+### Source Story for Matches 6, 7, 8, 9, 10
 - **Seed Score:** 0.540
 - **Story-Length Passage:** `yes`
 - **Story Size:** 4 source paragraphs, 7 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 4
-- **Matches Export References:** `matches_pt.md` #6, #7, #8
+- **Matches Export References:** `matches_pt.md` #6, #7, #8, #9, #10
 - **Keywords:** `radici`
 - **Nearest Semantic Reference (Not a Summary):** 'I remember my childhood vividly — the sounds, the smells, the rhythm of daily life in the neighborhood where I was raised.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.cifraclub.com.br/matanza/quanto-mais-feio/](http://www.cifraclub.com.br/matanza/quanto-mais-feio/)
-- **Capture Count:** 3
+- **Capture Count:** 5
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368711406217/wet/CC-MAIN-20130516133646-00060-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -357,17 +535,17 @@
 
 ---
 
-### Source Story for Match 12
+### Source Story for Matches 12, 13, 14
 - **Seed Score:** 0.535
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 47 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_pt.md` #12
+- **Matches Export References:** `matches_pt.md` #12, #13, #14
 - **Keywords:** `terra natal`
 - **Nearest Semantic Reference (Not a Summary):** 'When I finally came back to the place where I grew up after so many years away, tears streamed down my face.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://ruigo.net/sf/ddc/cronica027.htm](http://ruigo.net/sf/ddc/cronica027.htm)
-- **Capture Count:** 1
+- **Capture Count:** 3
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368705352205/wet/CC-MAIN-20130516115552-00036-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -663,6 +841,86 @@
 
 ---
 
+### Source Story for Match 17
+- **Seed Score:** 0.530
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 8 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #17
+- **Keywords:** `radici`
+- **Nearest Semantic Reference (Not a Summary):** 'After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://pensador.uol.com.br/eu_sou_simplesmente_assim/](http://pensador.uol.com.br/eu_sou_simplesmente_assim/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021342244/wet/CC-MAIN-20140305120902-00075-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Eu sou Simplesmente assim - Pensador Pensador
+> pensador > Eu sou Simplesmente assim
+> autores |
+> biografias |
+> populares |
+> recentes |
+> temas |
+> frasesEu sou Simplesmente assim
+> Cerca de 77 frases e pensamentos: Eu sou Simplesmente assimE se a gente simplesmente reconhecesse que nosso relacionamento é ruim, e mesmo assim ficasse junto? Se admitisse que a gente enlouquece um ao outro, que está sempre brigando e quase nunca transa, mas não consegue viver um sem o outro, por isso agüenta tudo? Daí a gente poderia passar a vida inteira junto... infelizes,... mas felizes por não estarmos separados.Comer Rezar e AmarAdicionar à minha coleçãoNa coleção de 10Mais InformaçãoE agora Deus?? aquilo que pensei que era pra sempre acabou, simplesmente passou assim como as nuvens no céu sopradas pelo vento,E agora Deus? achei que os meus planos também eram os seus.Ana paulinoAdicionar à minha coleçãoInserida por AnaPaulinoMais Informaçãoeu sou assim como todos veem brinco converso choro sou muito apegada a minha família sou meiga com todas as pessoas seja homens ou mulher jovens crianças ou idosas mais não admito que me desrespeite não me importo com a tua religião com tua cor com a tua opção sexual com a tua nacionalidade eu prendi que os nos os serem humanos sempre somos mais do que os olhos carnais enxergam e eu respeito mais o fato de eu lhe respeitar não significa que eu vou aceita segue os teus ideais que eu sigo o meu sou simples assimMaria A AlcântaraAdicionar à minha coleçãoInserida por meryemMais Informação
+
+#### Extracted Source Story
+
+> Eu sou Simplesmente assim - Pensador Pensador
+> pensador > Eu sou Simplesmente assim
+> autores |
+> biografias |
+> populares |
+> recentes |
+> temas |
+> frasesEu sou Simplesmente assim
+> Cerca de 77 frases e pensamentos: Eu sou Simplesmente assimE se a gente simplesmente reconhecesse que nosso relacionamento é ruim, e mesmo assim ficasse junto? Se admitisse que a gente enlouquece um ao outro, que está sempre brigando e quase nunca transa, mas não consegue viver um sem o outro, por isso agüenta tudo? Daí a gente poderia passar a vida inteira junto... infelizes,... mas felizes por não estarmos separados.Comer Rezar e AmarAdicionar à minha coleçãoNa coleção de 10Mais InformaçãoE agora Deus?? aquilo que pensei que era pra sempre acabou, simplesmente passou assim como as nuvens no céu sopradas pelo vento,E agora Deus? achei que os meus planos também eram os seus.Ana paulinoAdicionar à minha coleçãoInserida por AnaPaulinoMais Informaçãoeu sou assim como todos veem brinco converso choro sou muito apegada a minha família sou meiga com todas as pessoas seja homens ou mulher jovens crianças ou idosas mais não admito que me desrespeite não me importo com a tua religião com tua cor com a tua opção sexual com a tua nacionalidade eu prendi que os nos os serem humanos sempre somos mais do que os olhos carnais enxergam e eu respeito mais o fato de eu lhe respeitar não significa que eu vou aceita segue os teus ideais que eu sigo o meu sou simples assimMaria A AlcântaraAdicionar à minha coleçãoInserida por meryemMais Informação
+
+---
+
+### Source Story for Match 18
+- **Seed Score:** 0.530
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 8 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #18
+- **Keywords:** `radici`
+- **Nearest Semantic Reference (Not a Summary):** 'After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://pensador.uol.com.br/eu_sou_simplesmente_assim/](http://pensador.uol.com.br/eu_sou_simplesmente_assim/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609533308.11/wet/CC-MAIN-20140416005213-00583-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Eu sou Simplesmente assim - Pensador Pensador
+> pensador > Eu sou Simplesmente assim
+> autores
+> biografias
+> populares
+> recentes
+> temas
+> frasesEu sou Simplesmente assim
+> Cerca de 77 frases e pensamentos: Eu sou Simplesmente assimE se a gente simplesmente reconhecesse que nosso relacionamento é ruim, e mesmo assim ficasse junto? Se admitisse que a gente enlouquece um ao outro, que está sempre brigando e quase nunca transa, mas não consegue viver um sem o outro, por isso agüenta tudo? Daí a gente poderia passar a vida inteira junto... infelizes,... mas felizes por não estarmos separados.Comer Rezar e AmarAdicionar à minha coleçãoNa coleção de 11Mais InformaçãoE agora Deus?? aquilo que pensei que era pra sempre acabou, simplesmente passou assim como as nuvens no céu sopradas pelo vento,E agora Deus? achei que os meus planos também eram os seus.Ana paulinoAdicionar à minha coleçãoInserida por AnaPaulinoMais Informaçãoeu sou assim como todos veem brinco converso choro sou muito apegada a minha família sou meiga com todas as pessoas seja homens ou mulher jovens crianças ou idosas mais não admito que me desrespeite não me importo com a tua religião com tua cor com a tua opção sexual com a tua nacionalidade eu prendi que os nos os serem humanos sempre somos mais do que os olhos carnais enxergam e eu respeito mais o fato de eu lhe respeitar não significa que eu vou aceita segue os teus ideais que eu sigo o meu sou simples assimMaria A AlcântaraAdicionar à minha coleçãoInserida por meryem
+
+#### Extracted Source Story
+
+> Eu sou Simplesmente assim - Pensador Pensador
+> pensador > Eu sou Simplesmente assim
+> autores
+> biografias
+> populares
+> recentes
+> temas
+> frasesEu sou Simplesmente assim
+> Cerca de 77 frases e pensamentos: Eu sou Simplesmente assimE se a gente simplesmente reconhecesse que nosso relacionamento é ruim, e mesmo assim ficasse junto? Se admitisse que a gente enlouquece um ao outro, que está sempre brigando e quase nunca transa, mas não consegue viver um sem o outro, por isso agüenta tudo? Daí a gente poderia passar a vida inteira junto... infelizes,... mas felizes por não estarmos separados.Comer Rezar e AmarAdicionar à minha coleçãoNa coleção de 11Mais InformaçãoE agora Deus?? aquilo que pensei que era pra sempre acabou, simplesmente passou assim como as nuvens no céu sopradas pelo vento,E agora Deus? achei que os meus planos também eram os seus.Ana paulinoAdicionar à minha coleçãoInserida por AnaPaulinoMais Informaçãoeu sou assim como todos veem brinco converso choro sou muito apegada a minha família sou meiga com todas as pessoas seja homens ou mulher jovens crianças ou idosas mais não admito que me desrespeite não me importo com a tua religião com tua cor com a tua opção sexual com a tua nacionalidade eu prendi que os nos os serem humanos sempre somos mais do que os olhos carnais enxergam e eu respeito mais o fato de eu lhe respeitar não significa que eu vou aceita segue os teus ideais que eu sigo o meu sou simples assimMaria A AlcântaraAdicionar à minha coleçãoInserida por meryem
+
+---
+
 ### Source Story for Match 19
 - **Seed Score:** 0.520
 - **Story-Length Passage:** `yes`
@@ -777,17 +1035,17 @@
 
 ---
 
-### Source Story for Matches 20, 21
+### Source Story for Matches 20, 21, 22, 23
 - **Seed Score:** 0.517
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 69 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_pt.md` #20, #21
+- **Matches Export References:** `matches_pt.md` #20, #21, #22, #23
 - **Keywords:** `infância, voltar para casa`
 - **Nearest Semantic Reference (Not a Summary):** 'When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.comamor.com.br/deixaramar.asp](http://www.comamor.com.br/deixaramar.asp)
-- **Capture Count:** 2
+- **Capture Count:** 4
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368705020058/wet/CC-MAIN-20130516115020-00062-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -1193,6 +1451,110 @@
 
 ---
 
+### Source Story for Match 29
+- **Seed Score:** 0.500
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 43 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #29
+- **Keywords:** `saudade`
+- **Nearest Semantic Reference (Not a Summary):** 'My family was forced to leave our homeland, and starting over in a new country was the hardest thing I have ever done.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.archive.org/stream/revistabrazilei08unkngoog/revistabrazilei08unkngoog_djvu.txt](http://www.archive.org/stream/revistabrazilei08unkngoog/revistabrazilei08unkngoog_djvu.txt)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609523429.20/wet/CC-MAIN-20140416005203-00449-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> de repente, e, com pequeno, intervallo, o innfto qne me restava. Minha
+> mfti flcou só comigo na terra. Parentes e amigos o génio de meus pais os
+> arredara. Fui obrigado a deixar os estudos e assumir a direcção da fa-
+> zenda. Era numa quadra difficilima. Decretara-se do chofre a abolição do
+> captiveiro, desorganizando todos os serviços agrícolas. Meu pai, con-
+> fiando que a negra instituição se perpetuaria nada apparelhara para atte-
+> nuar o golpe, e, sacando ousado sobre o futuro, contraíra onerosas di-
+> vidas. Vi-me de um dia para outro a braços com enormes reponsabilidades,
+> inexperiente, desprovido de, vocação e de gosto para a profissão de lavra-
+> dor. Nao imagina quanto lutei, o que padeci, contrariando a minha
+> índole, torcendo ou suffocando as minhas ambições ! Segreguei-me do
+> mundo, absorvido por trabalho que me repugnava. Que extraordinário
+> esforço para nao arriar a carga, desanimado ! Quanta revolta heroica-
+> mente supplantada em silencio, quanto sacrifício obscuro e terrível !
+> Afinal, a pouco e pouco, as coisas melhoraram. A gente com o
+> tempo afaz-se ao que mais lhe custava em principio. Ha annos, vivo
+> aqui sem amigos, sem relações, a labutar. Materializei -me, matei á
+> mingoa os meus sonhos. De quando em quando, entretanto, recaindo
+> nas antigas velleidades, percorro algum livro de sciencia e de arte. Ven-
+> cendo reluctancias de minha mai, consegui introduzir emigrantes na fa-
+> zenda, inaugurei novos methodos de trabalho. Depois das primeiras
+> levas, veio você. Eu suppunha que os emigrantes fossem, sem excepção
+> brutos, sujos, ignorantes. Você causou-mo verdadeira surpreza; foi-me
+> agradável revelação de um universo desconhecido. A lidar com você,
+> experimentei sensações incógnitas de doçura e bem estar intimo. Pare-
+> ceu-me que encontrava emfim uma alma efinada pela minha, susceptível
+> de me entender. Mas -pouco durou essa felicidade. Quando, pe'a primeira
+> vez, me atrevi a declarar a você o que sentia, você offendeu-se e reti-
+> rou-se. Soffri immensas saudades. . . immensas saudades . . . Animava-me,
+> porém,opresentimento de que você voltaria. Voltou de facto, como um enviado
+> da Providencia em amargurosa crise. Por novos títulos, aprofundou a minha
+> gratidão e o meu affecto. Tornou-se insubstituível na fazenda. E agora,
+> de repente, quer retirar-se outra vez desamparando-me de novo, a mim,
+> orphao como você, a mim, mais desgraçado talvez, porque nao me avigora
+> a sua calma, a sua conformidade com a sorte, a sua doce coragem. Fique,
+> Giovannina. Reflicta : nao é razoável, nao é justo o que tenciona praticar.
+> Tenha dó de mim. A existência sempre se me antolhou dura ou insípida.
+> Nunca amei e nunca fui amado. Conheço apenas do amor ligações ephe-
+> meras com criaturas subalternas que me levaram a duvidar desse senti-
+> mento, attribuíndo-o a mera ficção poética. Ignoro, confesso (e veja
+> quanto sou leal) si o que você me inspira é amor. Mas lhe asseguro, com
+
+#### Extracted Source Story
+
+> de repente, e, com pequeno, intervallo, o innfto qne me restava. Minha
+> mfti flcou só comigo na terra. Parentes e amigos o génio de meus pais os
+> arredara. Fui obrigado a deixar os estudos e assumir a direcção da fa-
+> zenda. Era numa quadra difficilima. Decretara-se do chofre a abolição do
+> captiveiro, desorganizando todos os serviços agrícolas. Meu pai, con-
+> fiando que a negra instituição se perpetuaria nada apparelhara para atte-
+> nuar o golpe, e, sacando ousado sobre o futuro, contraíra onerosas di-
+> vidas. Vi-me de um dia para outro a braços com enormes reponsabilidades,
+> inexperiente, desprovido de, vocação e de gosto para a profissão de lavra-
+> dor. Nao imagina quanto lutei, o que padeci, contrariando a minha
+> índole, torcendo ou suffocando as minhas ambições ! Segreguei-me do
+> mundo, absorvido por trabalho que me repugnava. Que extraordinário
+> esforço para nao arriar a carga, desanimado ! Quanta revolta heroica-
+> mente supplantada em silencio, quanto sacrifício obscuro e terrível !
+> Afinal, a pouco e pouco, as coisas melhoraram. A gente com o
+> tempo afaz-se ao que mais lhe custava em principio. Ha annos, vivo
+> aqui sem amigos, sem relações, a labutar. Materializei -me, matei á
+> mingoa os meus sonhos. De quando em quando, entretanto, recaindo
+> nas antigas velleidades, percorro algum livro de sciencia e de arte. Ven-
+> cendo reluctancias de minha mai, consegui introduzir emigrantes na fa-
+> zenda, inaugurei novos methodos de trabalho. Depois das primeiras
+> levas, veio você. Eu suppunha que os emigrantes fossem, sem excepção
+> brutos, sujos, ignorantes. Você causou-mo verdadeira surpreza; foi-me
+> agradável revelação de um universo desconhecido. A lidar com você,
+> experimentei sensações incógnitas de doçura e bem estar intimo. Pare-
+> ceu-me que encontrava emfim uma alma efinada pela minha, susceptível
+> de me entender. Mas -pouco durou essa felicidade. Quando, pe'a primeira
+> vez, me atrevi a declarar a você o que sentia, você offendeu-se e reti-
+> rou-se. Soffri immensas saudades. . . immensas saudades . . . Animava-me,
+> porém,opresentimento de que você voltaria. Voltou de facto, como um enviado
+> da Providencia em amargurosa crise. Por novos títulos, aprofundou a minha
+> gratidão e o meu affecto. Tornou-se insubstituível na fazenda. E agora,
+> de repente, quer retirar-se outra vez desamparando-me de novo, a mim,
+> orphao como você, a mim, mais desgraçado talvez, porque nao me avigora
+> a sua calma, a sua conformidade com a sorte, a sua doce coragem. Fique,
+> Giovannina. Reflicta : nao é razoável, nao é justo o que tenciona praticar.
+> Tenha dó de mim. A existência sempre se me antolhou dura ou insípida.
+> Nunca amei e nunca fui amado. Conheço apenas do amor ligações ephe-
+> meras com criaturas subalternas que me levaram a duvidar desse senti-
+> mento, attribuíndo-o a mera ficção poética. Ignoro, confesso (e veja
+> quanto sou leal) si o que você me inspira é amor. Mas lhe asseguro, com
+
+---
+
 ### Source Story for Match 30
 - **Seed Score:** 0.499
 - **Story-Length Passage:** `yes`
@@ -1234,6 +1596,146 @@
 > 77 notes
 > “
 > É que eu to morrendo de saudade de você e essa saudade está me corroendo por dentro. Eu morro de vontade de sair pelas ruas sem destino só com a esperança de poder te encontrar sentado em um bar com seu jeans surrados e baraba pra fazer. Então que a verdade seja dita, eu morro de amores por você desde o primeiro dia que coloquei meus olhos em você. Eu pensei que tivesse me controlado essa minha compulsão por você, mas eu estava errada. O amor voltou com o dobro de força. Agora eu me pergunto como eu me deixei levar por você assim tão fácil? Como eu pude acreditar nas suas palavras bonitas dita de boca pra fora? Essas dúvidas permanecem na minha cabeça todas as noites enquanto sua imagem ronda minha mente. Eu tinha prometido a mim mesma que nunca mais escreveria sobre amor, mas cara, acho que você é a minha única exceção. Porra, de novo eu me apaixonei por você, eu posso dizer isso porque não tem nenhuma música que eu escute que não me lembre você, não tem nenhum lugar que eu visite que a sua imagem não vem à minha cabeça. Todas as noites antes de dormir eu me lembro de como nos conhecemos.
+
+---
+
+### Source Story for Match 31
+- **Seed Score:** 0.499
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 15 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #31
+- **Keywords:** `saudade`
+- **Nearest Semantic Reference (Not a Summary):** 'After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://heeymary.tumblr.com/](http://heeymary.tumblr.com/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609533121.28/wet/CC-MAIN-20140416005213-00255-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> I feel like a hero and you are my heroine
+> I feel like a hero and you are my heroine	“
+> ”
+> “
+> Eu costumava conversar com o tempo sobre o instante em que te conheci, contei de ti e que sentia sua falta em silêncio. Então o tempo me respondeu, e disse que não fazia o correto, que ao pensar em você, te desejava, e te desejar me fazia sofrer, mas aprendi a ser forte e a querer suas lembranças, pois foi tudo o que me restou quando você me deixou. Compreendi que jamais existiu um “nós”, apenas eu tentando viver por nós dois, viver pelo seu sorriso. Comecei a ser realista e pouco a pouco de meus sonhos te apaguei, superei suas lembranças e arranquei da minha alma o sentimento, esse que me leva a te querer bem. Hoje eu reflito sobre os momentos que passamos juntos e o único sentimento que invade a minha alma e coração é o desejo, desejo de voltar no tempo e reviver toda essa aventura, que apesar do final triste e melancólico, foi o mais feliz da minha vida.
+> ”
+> Escritor. (via escritor-poeta)
+> Reblogged 2 months ago from escritor-poeta (Originally from escritor-poeta)
+> 105 notes
+> “
+> É que eu to morrendo de saudade de você e essa saudade está me corroendo por dentro. Eu morro de vontade de sair pelas ruas sem destino só com a esperança de poder te encontrar sentado em um bar com seu jeans surrados e baraba pra fazer. Então que a verdade seja dita, eu morro de amores por você desde o primeiro dia que coloquei meus olhos em você. Eu pensei que tivesse me controlado essa minha compulsão por você, mas eu estava errada. O amor voltou com o dobro de força. Agora eu me pergunto como eu me deixei levar por você assim tão fácil? Como eu pude acreditar nas suas palavras bonitas dita de boca pra fora? Essas dúvidas permanecem na minha cabeça todas as noites enquanto sua imagem ronda minha mente. Eu tinha prometido a mim mesma que nunca mais escreveria sobre amor, mas cara, acho que você é a minha única exceção. Porra, de novo eu me apaixonei por você, eu posso dizer isso porque não tem nenhuma música que eu escute que não me lembre você,
+
+#### Extracted Source Story
+
+> I feel like a hero and you are my heroine
+> I feel like a hero and you are my heroine	“
+> ”
+> “
+> Eu costumava conversar com o tempo sobre o instante em que te conheci, contei de ti e que sentia sua falta em silêncio. Então o tempo me respondeu, e disse que não fazia o correto, que ao pensar em você, te desejava, e te desejar me fazia sofrer, mas aprendi a ser forte e a querer suas lembranças, pois foi tudo o que me restou quando você me deixou. Compreendi que jamais existiu um “nós”, apenas eu tentando viver por nós dois, viver pelo seu sorriso. Comecei a ser realista e pouco a pouco de meus sonhos te apaguei, superei suas lembranças e arranquei da minha alma o sentimento, esse que me leva a te querer bem. Hoje eu reflito sobre os momentos que passamos juntos e o único sentimento que invade a minha alma e coração é o desejo, desejo de voltar no tempo e reviver toda essa aventura, que apesar do final triste e melancólico, foi o mais feliz da minha vida.
+> ”
+> Escritor. (via escritor-poeta)
+> Reblogged 2 months ago from escritor-poeta (Originally from escritor-poeta)
+> 105 notes
+> “
+> É que eu to morrendo de saudade de você e essa saudade está me corroendo por dentro. Eu morro de vontade de sair pelas ruas sem destino só com a esperança de poder te encontrar sentado em um bar com seu jeans surrados e baraba pra fazer. Então que a verdade seja dita, eu morro de amores por você desde o primeiro dia que coloquei meus olhos em você. Eu pensei que tivesse me controlado essa minha compulsão por você, mas eu estava errada. O amor voltou com o dobro de força. Agora eu me pergunto como eu me deixei levar por você assim tão fácil? Como eu pude acreditar nas suas palavras bonitas dita de boca pra fora? Essas dúvidas permanecem na minha cabeça todas as noites enquanto sua imagem ronda minha mente. Eu tinha prometido a mim mesma que nunca mais escreveria sobre amor, mas cara, acho que você é a minha única exceção. Porra, de novo eu me apaixonei por você, eu posso dizer isso porque não tem nenhuma música que eu escute que não me lembre você,
+
+---
+
+### Source Story for Match 32
+- **Seed Score:** 0.498
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 38 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #32
+- **Keywords:** `radici`
+- **Nearest Semantic Reference (Not a Summary):** 'I have moved many times in my life, but the meaning of home — that deep yearning for a place to call my own — never fades.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://pensador.uol.com.br/vontade_de_viver/](http://pensador.uol.com.br/vontade_de_viver/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609539230.18/wet/CC-MAIN-20140416005219-00304-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Vontade de Viver - Pensador Pensador
+> pensador > Vontade de Viver
+> autores
+> biografias
+> populares
+> recentes
+> temas
+> frasesVontade de Viver
+> Cerca de 163 frases e pensamentos: Vontade de ViverQue eu continue com vontade de viver,
+> mesmo sabendo que a vida é,em muitos momentos,
+> uma lição difícil de ser aprendida.
+> Que eu permaneçacom vontade de ter grandes amigos,
+> mesmo sabendo que,com as voltas do mundo,
+> eles vão indo embora de nossas vidas.
+> Que eu realimente sempre a vontade de ajudar as pessoas,
+> mesmo sabendo que muitas delas são incapazes dever,
+> sentir,entender ou utilizar essa ajuda.
+> Que eu mantenha meu equilíbrio,
+> mesmo sabendo que muitas coisas que vejo no mundo
+> escurecem meus olhos.
+> Que eu realimente a minha garra,
+> mesmo sabendo que a derrota e a perdasão ingredientes
+> tão fortes quantoo sucesso e a alegria.
+> Que eu atenda sempre mais à minha intuição,
+> que sinaliza o que de mais autêntico eu possuo. Que eu pratique mais o sentimento de justiça,
+> mesmo em meio à turbulência dos interesses.
+> Que eu manifeste amor por minha família,
+> mesmo sabendo que ela muitas vezes me exige muito para manter sua harmonia.
+> E,acima de tudo...
+> Que eu lembre sempre que todos nós fazemos parte dessa maravilhosa teia chamada vida,
+> criada por alguém bem superior a todos nós!
+> E que as grandes mudanças não ocorrem por grandes feitos
+> de alguns e,sim,nas pequenas parcelas cotidianas
+> de todos nós!Chico XavierAdicionar à minha coleçãoNa coleção de 541Mais Informação"A pior vontade de viver "
+> "Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros.Todos são tão compreensivos, aceitam tão bem suas escolhas, torcem por tudo o que você faz, não é mesmo? Desde que você faça o que está no script. Que siga o que foi determinado no roteiro, aquele que foi escrito sabe-se lá por quem e homologado no instante mesmo em que você nasceu. Mas e quem não quiser seguir este script?
+> Clarice Lispector, que entendia de subversões emocionais, morreu há 30 anos e recebeu uma justa homenagem na última terça-feira, no Teatro Renascença, numa performance dirigida pelo incansável Luciano Alabarse e para o qual fui convidada, mas não pude participar. Em função deste evento, estive pensando muito em Clarice e lembrei de como ela descreveu, certa vez, o sentimento de um personagem: "Seu coração enchera-se com a pior vontade de viver". Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros. No entanto, esta que foi chamada de a "pior" vontade pode ser também uma vontade genuína e inocente. É a vontade da criança que ainda levamos dentro, entranhada. É o desejo de açúcar, de traquinagem, de fazer algo escondido, de quebrar algumas regras, de imitar os adultos. A "pior" vontade é curiosa, quer observar pelo buraco da fechadura e depois, mais ousadamente, abrir a porta e entrar no quarto proibido. A "pior" vontade é a de não se enraizar, não assinar contrato de exclusividade, não firmar compromisso, não render-se às vontades fixas, apenas às vontades momentâneas, porque as fixas correm o risco de deixar de serem vontade para se transformarem em vaidade - como se sabe, há sempre aqueles que se envaidecem da própria persistência. A "pior" vontade não quer ganhar medalha de honra ao mérito, não quer posar para fotografias, não quer completar bodas de ouro nem ser jubilada. A "pior" vontade não faz a menor questão de ser percebida, ela quer ser realizada. É quando você sabe que não deveria, mas vai. Sabe que não será fácil, mas enfrenta. Sabe que tomarão como agressão, mas arrisca. Anote: apenas sentem-se agredidos aqueles que te invejam. A vontade oficial, a vontade santinha, a que não causa incômodo é a outra, a aprovada pela sociedade, a que não leva em conta o que vai no seu íntimo, e sim a opinião pública. É a vontade que todos nós, de certa forma, temos de mostrar para os outros que somos felizes, sem saber que para conseguir isso é preciso, antes, ter a "pior" vontade, aquela que faz você descobrir que ser feliz é ter consciência do efêmero, é saber-se capaz de agarrar o instante, é lidar bem com o que não é definitivo - ou seja, tudo. É com esta "pior" vontade de viver que você atrai os outros, que seu magnetismo cresce, que seu rosto rejuvenesce e que você fica mais interessante.
+> É uma pena que nem todos tenham a sorte de deixar vir à tona esta que Clarice Lispector chamou de a pior vontade de viver, que, secretamente, é a melhor."Martha Medeiros
+
+#### Extracted Source Story
+
+> Vontade de Viver - Pensador Pensador
+> pensador > Vontade de Viver
+> autores
+> biografias
+> populares
+> recentes
+> temas
+> frasesVontade de Viver
+> Cerca de 163 frases e pensamentos: Vontade de ViverQue eu continue com vontade de viver,
+> mesmo sabendo que a vida é,em muitos momentos,
+> uma lição difícil de ser aprendida.
+> Que eu permaneçacom vontade de ter grandes amigos,
+> mesmo sabendo que,com as voltas do mundo,
+> eles vão indo embora de nossas vidas.
+> Que eu realimente sempre a vontade de ajudar as pessoas,
+> mesmo sabendo que muitas delas são incapazes dever,
+> sentir,entender ou utilizar essa ajuda.
+> Que eu mantenha meu equilíbrio,
+> mesmo sabendo que muitas coisas que vejo no mundo
+> escurecem meus olhos.
+> Que eu realimente a minha garra,
+> mesmo sabendo que a derrota e a perdasão ingredientes
+> tão fortes quantoo sucesso e a alegria.
+> Que eu atenda sempre mais à minha intuição,
+> que sinaliza o que de mais autêntico eu possuo. Que eu pratique mais o sentimento de justiça,
+> mesmo em meio à turbulência dos interesses.
+> Que eu manifeste amor por minha família,
+> mesmo sabendo que ela muitas vezes me exige muito para manter sua harmonia.
+> E,acima de tudo...
+> Que eu lembre sempre que todos nós fazemos parte dessa maravilhosa teia chamada vida,
+> criada por alguém bem superior a todos nós!
+> E que as grandes mudanças não ocorrem por grandes feitos
+> de alguns e,sim,nas pequenas parcelas cotidianas
+> de todos nós!Chico XavierAdicionar à minha coleçãoNa coleção de 541Mais Informação"A pior vontade de viver "
+> "Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros.Todos são tão compreensivos, aceitam tão bem suas escolhas, torcem por tudo o que você faz, não é mesmo? Desde que você faça o que está no script. Que siga o que foi determinado no roteiro, aquele que foi escrito sabe-se lá por quem e homologado no instante mesmo em que você nasceu. Mas e quem não quiser seguir este script?
+> Clarice Lispector, que entendia de subversões emocionais, morreu há 30 anos e recebeu uma justa homenagem na última terça-feira, no Teatro Renascença, numa performance dirigida pelo incansável Luciano Alabarse e para o qual fui convidada, mas não pude participar. Em função deste evento, estive pensando muito em Clarice e lembrei de como ela descreveu, certa vez, o sentimento de um personagem: "Seu coração enchera-se com a pior vontade de viver". Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros. No entanto, esta que foi chamada de a "pior" vontade pode ser também uma vontade genuína e inocente. É a vontade da criança que ainda levamos dentro, entranhada. É o desejo de açúcar, de traquinagem, de fazer algo escondido, de quebrar algumas regras, de imitar os adultos. A "pior" vontade é curiosa, quer observar pelo buraco da fechadura e depois, mais ousadamente, abrir a porta e entrar no quarto proibido. A "pior" vontade é a de não se enraizar, não assinar contrato de exclusividade, não firmar compromisso, não render-se às vontades fixas, apenas às vontades momentâneas, porque as fixas correm o risco de deixar de serem vontade para se transformarem em vaidade - como se sabe, há sempre aqueles que se envaidecem da própria persistência. A "pior" vontade não quer ganhar medalha de honra ao mérito, não quer posar para fotografias, não quer completar bodas de ouro nem ser jubilada. A "pior" vontade não faz a menor questão de ser percebida, ela quer ser realizada. É quando você sabe que não deveria, mas vai. Sabe que não será fácil, mas enfrenta. Sabe que tomarão como agressão, mas arrisca. Anote: apenas sentem-se agredidos aqueles que te invejam. A vontade oficial, a vontade santinha, a que não causa incômodo é a outra, a aprovada pela sociedade, a que não leva em conta o que vai no seu íntimo, e sim a opinião pública. É a vontade que todos nós, de certa forma, temos de mostrar para os outros que somos felizes, sem saber que para conseguir isso é preciso, antes, ter a "pior" vontade, aquela que faz você descobrir que ser feliz é ter consciência do efêmero, é saber-se capaz de agarrar o instante, é lidar bem com o que não é definitivo - ou seja, tudo. É com esta "pior" vontade de viver que você atrai os outros, que seu magnetismo cresce, que seu rosto rejuvenesce e que você fica mais interessante.
+> É uma pena que nem todos tenham a sorte de deixar vir à tona esta que Clarice Lispector chamou de a pior vontade de viver, que, secretamente, é a melhor."Martha Medeiros
 
 ---
 
@@ -1296,6 +1798,278 @@
 > Arquivo
 > Celular
 > © 2012–2013 Desenvolvido por Tumblr
+
+---
+
+### Source Story for Match 34
+- **Seed Score:** 0.494
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 27 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #34
+- **Keywords:** `infância`
+- **Nearest Semantic Reference (Not a Summary):** 'When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://macedo-jardim-artesanato.blogspot.com/2012/05/monjolo.html](http://macedo-jardim-artesanato.blogspot.com/2012/05/monjolo.html)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394011372778/wet/CC-MAIN-20140305092252-00036-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Artesanato em família: Monjolo
+> Artesanato em família
+> Sempre me interessei por artesanato. Aliás, parece que é um mal de família. Minha mãe era exímia bordadeira (vocês poderão constatar isso quando eu postar aqui alguns de seus trabalhos). Aprendi a bordar ponto cruz quando era ainda menina e faço isso até hoje (há mais de 50 anos), além de bordar “needle point” e fazer alguns outros trabalhos manuais. Um dos meus irmãos, engenheiro, gosta de trabalhos com madeira, entalhes e faz isso muito bem. Meu marido, professor de educação física aposentado, sempre gostou de trabalhar com madeira – nos últimos anos tem feito belas peças com palitos de bambu (de churrasco) e trabalhos em marchetaria. A família foi aumentando e vieram outros artesãos ... bem isso vocês poderão ver à medida em que eu for postando aqui.
+> Decidi mostrar neste blog uma família de artesãos, que não vive de artesanato, mas sempre está envolvida com esse trabalho.
+> Entrem e se divirtam conosco.
+> Podem deixar seus comentários, que serão sempre bem vindos.
+> terça-feira, 8 de maio de 2012
+> Monjolo
+> Relembrando sua infância em pequena cidade do interior de Goiás, Erasmo contruiu um monjolo, utilizando madeira e palitos de churrasco (de bambu) e pedaços de bambu.
+> Colocou um pequeno tanque no interior da caixa e usa um motorzinho (desses que são usados para movimentar a água em aquários) e o faz funcionar, utilizando a água que cai na caixa (também adaptada no interior).
+> A caixa é feita com palitos de churrasco e a canaleta que leva a água, bem como o suporte da escadinha são feitos com bambu. O detalhe mostra a peça principal e o pilão, esculpidos com canivete em cedro. As peças são unidas com cavilhas de madeira e coladas. Ele não usa pregos.
+> Nesta foto, é possível ver o monjolo em funcionamento sobre a bancada de trabalho do autor. Para enfeitar a abertura, ele colocou umas pedras brancas na caixa de água.
+> Bem, uma coisa precisa ser explicada. Nós moramos em apartamento e depois do casamento de minha filha, ele transformou um dos quartos em oficina. Já podem imaginar como é, não acham?
+> Postado por
+> Irene Jardim
+> às
+> 08:10
+> Enviar por e-mailBlogThis!Compartilhar no TwitterCompartilhar no FacebookCompartilhar no OrkutCompartilhar com o Pinterest
+> Marcadores:
+> Bambu,
+> Madeira,
+> Palitos de churrasco
+> Nenhum comentário:
+> Postar um comentário
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> Assinar:
+> Postar comentários (Atom)
+> Quem sou eu
+> Irene Jardim
+> Visualizar meu perfil completo
+> Visitantes
+> Arquivo do blog
+> ► 2013
+> (9)
+> ► Agosto
+> (3)
+> ► Abril
+> (1)
+> ► Fevereiro
+> (3)
+> ► Janeiro
+> (2)
+> ▼ 2012
+> (27)
+> ► Outubro
+> (3)
+> ► Setembro
+> (1)
+> ► Agosto
+> (1)
+> ► Junho
+> (1)
+> ▼ Maio
+> (4)
+> Belo contraste entre o tijolo e a peça
+> Este quadro eu bordei, há mais de 20 anos, para mi...
+> Estes dois quadros, em scrap, foram feitos pela Ad...
+> Monjolo
+> ► Abril
+> (4)
+> ► Março
+> (3)
+> ► Fevereiro
+> (2)
+> ► Janeiro
+> (8)
+> ► 2011
+> (16)
+> ► Dezembro
+> (7)
+> ► Novembro
+> (6)
+> ► Outubro
+> (3)
+> Marcadores
+> Aplicações
+> (2)
+> Aquarelas
+> (1)
+> Bambu
+> (1)
+> Biscuit
+> (1)
+> Bordado
+> (1)
+> Casinhas em papelão e caixas
+> (5)
+> Crochê
+> (5)
+> Customização de roupas e sandálias
+> (2)
+> Enfeite maternidade
+> (3)
+> Feltro
+> (3)
+> Frivolité
+> (2)
+> Lembrancinhas
+> (1)
+> Madeira
+> (7)
+> Marchetaria
+> (4)
+> Miniaturas
+> (1)
+> Needle Point
+> (4)
+> Palitos de churrasco
+> (4)
+> Pintura
+> (2)
+> Pintura em Faiança
+> (6)
+> Poesia
+> (1)
+> Ponto Cruz
+> (2)
+> Restauração de fotos
+> (4)
+> Scrap
+> (3)
+> Obrigada por me acompanharem
+> Modelo Picture Window. Tecnologia do Blogger.
+
+#### Extracted Source Story
+
+> Artesanato em família: Monjolo
+> Artesanato em família
+> Sempre me interessei por artesanato. Aliás, parece que é um mal de família. Minha mãe era exímia bordadeira (vocês poderão constatar isso quando eu postar aqui alguns de seus trabalhos). Aprendi a bordar ponto cruz quando era ainda menina e faço isso até hoje (há mais de 50 anos), além de bordar “needle point” e fazer alguns outros trabalhos manuais. Um dos meus irmãos, engenheiro, gosta de trabalhos com madeira, entalhes e faz isso muito bem. Meu marido, professor de educação física aposentado, sempre gostou de trabalhar com madeira – nos últimos anos tem feito belas peças com palitos de bambu (de churrasco) e trabalhos em marchetaria. A família foi aumentando e vieram outros artesãos ... bem isso vocês poderão ver à medida em que eu for postando aqui.
+> Decidi mostrar neste blog uma família de artesãos, que não vive de artesanato, mas sempre está envolvida com esse trabalho.
+> Entrem e se divirtam conosco.
+> Podem deixar seus comentários, que serão sempre bem vindos.
+> terça-feira, 8 de maio de 2012
+> Monjolo
+> Relembrando sua infância em pequena cidade do interior de Goiás, Erasmo contruiu um monjolo, utilizando madeira e palitos de churrasco (de bambu) e pedaços de bambu.
+> Colocou um pequeno tanque no interior da caixa e usa um motorzinho (desses que são usados para movimentar a água em aquários) e o faz funcionar, utilizando a água que cai na caixa (também adaptada no interior).
+> A caixa é feita com palitos de churrasco e a canaleta que leva a água, bem como o suporte da escadinha são feitos com bambu. O detalhe mostra a peça principal e o pilão, esculpidos com canivete em cedro. As peças são unidas com cavilhas de madeira e coladas. Ele não usa pregos.
+> Nesta foto, é possível ver o monjolo em funcionamento sobre a bancada de trabalho do autor. Para enfeitar a abertura, ele colocou umas pedras brancas na caixa de água.
+> Bem, uma coisa precisa ser explicada. Nós moramos em apartamento e depois do casamento de minha filha, ele transformou um dos quartos em oficina. Já podem imaginar como é, não acham?
+> Postado por
+> Irene Jardim
+> às
+> 08:10
+> Enviar por e-mailBlogThis!Compartilhar no TwitterCompartilhar no FacebookCompartilhar no OrkutCompartilhar com o Pinterest
+> Marcadores:
+> Bambu,
+> Madeira,
+> Palitos de churrasco
+> Nenhum comentário:
+> Postar um comentário
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> Assinar:
+> Postar comentários (Atom)
+> Quem sou eu
+> Irene Jardim
+> Visualizar meu perfil completo
+> Visitantes
+> Arquivo do blog
+> ► 2013
+> (9)
+> ► Agosto
+> (3)
+> ► Abril
+> (1)
+> ► Fevereiro
+> (3)
+> ► Janeiro
+> (2)
+> ▼ 2012
+> (27)
+> ► Outubro
+> (3)
+> ► Setembro
+> (1)
+> ► Agosto
+> (1)
+> ► Junho
+> (1)
+> ▼ Maio
+> (4)
+> Belo contraste entre o tijolo e a peça
+> Este quadro eu bordei, há mais de 20 anos, para mi...
+> Estes dois quadros, em scrap, foram feitos pela Ad...
+> Monjolo
+> ► Abril
+> (4)
+> ► Março
+> (3)
+> ► Fevereiro
+> (2)
+> ► Janeiro
+> (8)
+> ► 2011
+> (16)
+> ► Dezembro
+> (7)
+> ► Novembro
+> (6)
+> ► Outubro
+> (3)
+> Marcadores
+> Aplicações
+> (2)
+> Aquarelas
+> (1)
+> Bambu
+> (1)
+> Biscuit
+> (1)
+> Bordado
+> (1)
+> Casinhas em papelão e caixas
+> (5)
+> Crochê
+> (5)
+> Customização de roupas e sandálias
+> (2)
+> Enfeite maternidade
+> (3)
+> Feltro
+> (3)
+> Frivolité
+> (2)
+> Lembrancinhas
+> (1)
+> Madeira
+> (7)
+> Marchetaria
+> (4)
+> Miniaturas
+> (1)
+> Needle Point
+> (4)
+> Palitos de churrasco
+> (4)
+> Pintura
+> (2)
+> Pintura em Faiança
+> (6)
+> Poesia
+> (1)
+> Ponto Cruz
+> (2)
+> Restauração de fotos
+> (4)
+> Scrap
+> (3)
+> Obrigada por me acompanharem
+> Modelo Picture Window. Tecnologia do Blogger.
 
 ---
 
@@ -1461,6 +2235,134 @@
 
 ---
 
+### Source Story for Matches 38, 39
+- **Seed Score:** 0.490
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 49 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #38, #39
+- **Keywords:** `radici`
+- **Nearest Semantic Reference (Not a Summary):** 'When I finally came back to the place where I grew up after so many years away, tears streamed down my face.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://kellymichellymaia.blogspot.com/2010/10/inacreditavel.html](http://kellymichellymaia.blogspot.com/2010/10/inacreditavel.html)
+- **Capture Count:** 2
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021512937/wet/CC-MAIN-20140305121152-00079-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> HISTÓRIAS REAIS...: INACREDITÁVEL!!!
+> HISTÓRIAS REAIS...
+> terça-feira, 19 de outubro de 2010
+> INACREDITÁVEL!!!
+> Começou com a minha mãe gritando na porta do meu quarto, ela estava desesperada... Eu levei um susto, acordei em um pulo... Abri a porta ela estava quase chorando... DESESPERADA MESMO!!Ela só dizia que achava que meu pai e minha irmã tinham sido sequestrados, eu tentei manter a calma, mas era muito difícil, minha mãe já estava passando mal...Eu liguei pro celular do meu pai e ouvia a voz da minha irmã chorando e gritando pedindo pra ele desligar o celular, aí EU TIVE CERTEZA, ELES TINHAM SIDO SEQUESTRADOS... Foi horrível, eu liguei pra polícia e contei o que estava acontecendo... A mulher do outro lado tentava me acalmar, mas era difícil... Ela perguntava onde eles estavam... COMO É QUE EU IA SABER?Eu só pensava que eles estavam correndo risco de vida e a mulher queria saber onde eles estavam... Como é que eu ia saber? Ela pedia pra ligar pro trabalho da minha irmã e saber se ela havia chegado lá... Aí eu comecei a gritar... Moça eu acabei de ouvir a minha irmã chorando no telefone, ela não está no trabalho... Pelo amor de Deus me ajude... E ela insistia, liga pro trabalho dela...A minha mãe estava pálida... E eu estava me preparando pra ir atrás deles, não sabia onde nem como, mas eu ia... Então decidi seguir a mulher da polícia e ligar pro trabalho da minha irmã, pelo menos ia pedir ajuda...LIGUEI!!!!! E QUEM ATENDEU????? A MINHA IRMÃ!!!!Eu comecei a chorar, agradeci tanto à Deus!!! Nunca fiquei tão feliz em ouvir a voz dela!!!Ela não entendeu nada... Eu contei o que estava acontecendo e ela começou a rir...Liguei de novo pro meu pai, e ele também atendeu... Ficou eu e minha mãe com cara de idiotas... Sem entender o que estava acontecendo... Será que tivemos uma alucinação juntas?INCRÍVEL... Liguei de novo pra polícia, disse que os dois estavam bem, agradeci e pedi desculpas...Inacreditável... Mas aconteceu...
+> Postado por
+> KELLY MICHELLY MAIA
+> às
+> 2:05 AM
+> Um comentário:
+> fadavivi22 de novembro de 2010 21:41Isso já em aconteceu Kelly, só que foi a minha mãe me ligando as 3 da manhã, DESESPERADA,achando que eu havia sido sequestrada por algum deliquente que ligou,provavelmente, de alguma cadeia por aí a fora....ResponderExcluirAdicionar comentárioCarregar mais...
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> Assinar:
+> Postar comentários (Atom)
+> Seguidores
+> Quem sou eu
+> KELLY MICHELLY MAIA
+> Rio de Janeiro, Rio de Janeiro, Brazil
+> Eu adoro ficar com meus amigos e conhecer pessoas novas. Amo dançar e detesto traição. E criei esse blog pra dividir com meus amigos histórias da minha vida e de outras pessoas!
+> Visualizar meu perfil completo
+> Escolha uma história!
+> ► 2011
+> (6)
+> ► Dezembro
+> (1)
+> ► Novembro
+> (1)
+> ► Setembro
+> (1)
+> ► Janeiro
+> (3)
+> ▼ 2010
+> (41)
+> ► Dezembro
+> (4)
+> ► Novembro
+> (1)
+> ▼ Outubro
+> (1)
+> INACREDITÁVEL!!!
+> ► Setembro
+> (5)
+> ► Agosto
+> (1)
+> ► Julho
+> (6)
+> ► Junho
+> (3)
+> ► Maio
+> (20)
+> Modelo Awesome Inc.. Imagens de modelo por loops7. Tecnologia do Blogger.
+
+#### Extracted Source Story
+
+> HISTÓRIAS REAIS...: INACREDITÁVEL!!!
+> HISTÓRIAS REAIS...
+> terça-feira, 19 de outubro de 2010
+> INACREDITÁVEL!!!
+> Começou com a minha mãe gritando na porta do meu quarto, ela estava desesperada... Eu levei um susto, acordei em um pulo... Abri a porta ela estava quase chorando... DESESPERADA MESMO!!Ela só dizia que achava que meu pai e minha irmã tinham sido sequestrados, eu tentei manter a calma, mas era muito difícil, minha mãe já estava passando mal...Eu liguei pro celular do meu pai e ouvia a voz da minha irmã chorando e gritando pedindo pra ele desligar o celular, aí EU TIVE CERTEZA, ELES TINHAM SIDO SEQUESTRADOS... Foi horrível, eu liguei pra polícia e contei o que estava acontecendo... A mulher do outro lado tentava me acalmar, mas era difícil... Ela perguntava onde eles estavam... COMO É QUE EU IA SABER?Eu só pensava que eles estavam correndo risco de vida e a mulher queria saber onde eles estavam... Como é que eu ia saber? Ela pedia pra ligar pro trabalho da minha irmã e saber se ela havia chegado lá... Aí eu comecei a gritar... Moça eu acabei de ouvir a minha irmã chorando no telefone, ela não está no trabalho... Pelo amor de Deus me ajude... E ela insistia, liga pro trabalho dela...A minha mãe estava pálida... E eu estava me preparando pra ir atrás deles, não sabia onde nem como, mas eu ia... Então decidi seguir a mulher da polícia e ligar pro trabalho da minha irmã, pelo menos ia pedir ajuda...LIGUEI!!!!! E QUEM ATENDEU????? A MINHA IRMÃ!!!!Eu comecei a chorar, agradeci tanto à Deus!!! Nunca fiquei tão feliz em ouvir a voz dela!!!Ela não entendeu nada... Eu contei o que estava acontecendo e ela começou a rir...Liguei de novo pro meu pai, e ele também atendeu... Ficou eu e minha mãe com cara de idiotas... Sem entender o que estava acontecendo... Será que tivemos uma alucinação juntas?INCRÍVEL... Liguei de novo pra polícia, disse que os dois estavam bem, agradeci e pedi desculpas...Inacreditável... Mas aconteceu...
+> Postado por
+> KELLY MICHELLY MAIA
+> às
+> 2:05 AM
+> Um comentário:
+> fadavivi22 de novembro de 2010 21:41Isso já em aconteceu Kelly, só que foi a minha mãe me ligando as 3 da manhã, DESESPERADA,achando que eu havia sido sequestrada por algum deliquente que ligou,provavelmente, de alguma cadeia por aí a fora....ResponderExcluirAdicionar comentárioCarregar mais...
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> Assinar:
+> Postar comentários (Atom)
+> Seguidores
+> Quem sou eu
+> KELLY MICHELLY MAIA
+> Rio de Janeiro, Rio de Janeiro, Brazil
+> Eu adoro ficar com meus amigos e conhecer pessoas novas. Amo dançar e detesto traição. E criei esse blog pra dividir com meus amigos histórias da minha vida e de outras pessoas!
+> Visualizar meu perfil completo
+> Escolha uma história!
+> ► 2011
+> (6)
+> ► Dezembro
+> (1)
+> ► Novembro
+> (1)
+> ► Setembro
+> (1)
+> ► Janeiro
+> (3)
+> ▼ 2010
+> (41)
+> ► Dezembro
+> (4)
+> ► Novembro
+> (1)
+> ▼ Outubro
+> (1)
+> INACREDITÁVEL!!!
+> ► Setembro
+> (5)
+> ► Agosto
+> (1)
+> ► Julho
+> (6)
+> ► Junho
+> (3)
+> ► Maio
+> (20)
+> Modelo Awesome Inc.. Imagens de modelo por loops7. Tecnologia do Blogger.
+
+---
+
 ### Source Story for Match 40
 - **Seed Score:** 0.490
 - **Story-Length Passage:** `yes`
@@ -1514,6 +2416,102 @@
 > conquista Crônica	4 Comments
 > Post navigation
 > Search
+
+---
+
+### Source Story for Match 41
+- **Seed Score:** 0.484
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 38 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #41
+- **Keywords:** `radici`
+- **Nearest Semantic Reference (Not a Summary):** 'I have moved many times in my life, but the meaning of home — that deep yearning for a place to call my own — never fades.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://pensador.uol.com.br/vontade_de_viver/](http://pensador.uol.com.br/vontade_de_viver/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394011335666/wet/CC-MAIN-20140305092215-00020-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Vontade de Viver - Pensador Pensador
+> pensador > Vontade de Viver
+> autores |
+> biografias |
+> populares |
+> recentes |
+> temas |
+> frasesVontade de Viver
+> Cerca de 158 frases e pensamentos: Vontade de ViverQue eu continue com vontade de viver,
+> mesmo sabendo que a vida é,em muitos momentos,
+> uma lição difícil de ser aprendida.
+> Que eu permaneçacom vontade de ter grandes amigos,
+> mesmo sabendo que,com as voltas do mundo,
+> eles vão indo embora de nossas vidas.
+> Que eu realimente sempre a vontade de ajudar as pessoas,
+> mesmo sabendo que muitas delas são incapazes dever,
+> sentir,entender ou utilizar essa ajuda.
+> Que eu mantenha meu equilíbrio,
+> mesmo sabendo que muitas coisas que vejo no mundo
+> escurecem meus olhos.
+> Que eu realimente a minha garra,
+> mesmo sabendo que a derrota e a perdasão ingredientes
+> tão fortes quantoo sucesso e a alegria.
+> Que eu atenda sempre mais à minha intuição,
+> que sinaliza o que de mais autêntico eu possuo. Que eu pratique mais o sentimento de justiça,
+> mesmo em meio à turbulência dos interesses.
+> Que eu manifeste amor por minha família,
+> mesmo sabendo que ela muitas vezes me exige muito para manter sua harmonia.
+> E,acima de tudo...
+> Que eu lembre sempre que todos nós fazemos parte dessa maravilhosa teia chamada vida,
+> criada por alguém bem superior a todos nós!
+> E que as grandes mudanças não ocorrem por grandes feitos
+> de alguns e,sim,nas pequenas parcelas cotidianas
+> de todos nós!Chico XavierAdicionar à minha coleçãoNa coleção de 538Mais Informação"A pior vontade de viver "
+> "Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros.Todos são tão compreensivos, aceitam tão bem suas escolhas, torcem por tudo o que você faz, não é mesmo? Desde que você faça o que está no script. Que siga o que foi determinado no roteiro, aquele que foi escrito sabe-se lá por quem e homologado no instante mesmo em que você nasceu. Mas e quem não quiser seguir este script?
+> Clarice Lispector, que entendia de subversões emocionais, morreu há 30 anos e recebeu uma justa homenagem na última terça-feira, no Teatro Renascença, numa performance dirigida pelo incansável Luciano Alabarse e para o qual fui convidada, mas não pude participar. Em função deste evento, estive pensando muito em Clarice e lembrei de como ela descreveu, certa vez, o sentimento de um personagem: "Seu coração enchera-se com a pior vontade de viver". Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros. No entanto, esta que foi chamada de a "pior" vontade pode ser também uma vontade genuína e inocente. É a vontade da criança que ainda levamos dentro, entranhada. É o desejo de açúcar, de traquinagem, de fazer algo escondido, de quebrar algumas regras, de imitar os adultos. A "pior" vontade é curiosa, quer observar pelo buraco da fechadura e depois, mais ousadamente, abrir a porta e entrar no quarto proibido. A "pior" vontade é a de não se enraizar, não assinar contrato de exclusividade, não firmar compromisso, não render-se às vontades fixas, apenas às vontades momentâneas, porque as fixas correm o risco de deixar de serem vontade para se transformarem em vaidade - como se sabe, há sempre aqueles que se envaidecem da própria persistência. A "pior" vontade não quer ganhar medalha de honra ao mérito, não quer posar para fotografias, não quer completar bodas de ouro nem ser jubilada. A "pior" vontade não faz a menor questão de ser percebida, ela quer ser realizada. É quando você sabe que não deveria, mas vai. Sabe que não será fácil, mas enfrenta. Sabe que tomarão como agressão, mas arrisca. Anote: apenas sentem-se agredidos aqueles que te invejam. A vontade oficial, a vontade santinha, a que não causa incômodo é a outra, a aprovada pela sociedade, a que não leva em conta o que vai no seu íntimo, e sim a opinião pública. É a vontade que todos nós, de certa forma, temos de mostrar para os outros que somos felizes, sem saber que para conseguir isso é preciso, antes, ter a "pior" vontade, aquela que faz você descobrir que ser feliz é ter consciência do efêmero, é saber-se capaz de agarrar o instante, é lidar bem com o que não é definitivo - ou seja, tudo. É com esta "pior" vontade de viver que você atrai os outros, que seu magnetismo cresce, que seu rosto rejuvenesce e que você fica mais interessante.
+> É uma pena que nem todos tenham a sorte de deixar vir à tona esta que Clarice Lispector chamou de a pior vontade de viver, que, secretamente, é a melhor."Martha Medeiros
+
+#### Extracted Source Story
+
+> Vontade de Viver - Pensador Pensador
+> pensador > Vontade de Viver
+> autores |
+> biografias |
+> populares |
+> recentes |
+> temas |
+> frasesVontade de Viver
+> Cerca de 158 frases e pensamentos: Vontade de ViverQue eu continue com vontade de viver,
+> mesmo sabendo que a vida é,em muitos momentos,
+> uma lição difícil de ser aprendida.
+> Que eu permaneçacom vontade de ter grandes amigos,
+> mesmo sabendo que,com as voltas do mundo,
+> eles vão indo embora de nossas vidas.
+> Que eu realimente sempre a vontade de ajudar as pessoas,
+> mesmo sabendo que muitas delas são incapazes dever,
+> sentir,entender ou utilizar essa ajuda.
+> Que eu mantenha meu equilíbrio,
+> mesmo sabendo que muitas coisas que vejo no mundo
+> escurecem meus olhos.
+> Que eu realimente a minha garra,
+> mesmo sabendo que a derrota e a perdasão ingredientes
+> tão fortes quantoo sucesso e a alegria.
+> Que eu atenda sempre mais à minha intuição,
+> que sinaliza o que de mais autêntico eu possuo. Que eu pratique mais o sentimento de justiça,
+> mesmo em meio à turbulência dos interesses.
+> Que eu manifeste amor por minha família,
+> mesmo sabendo que ela muitas vezes me exige muito para manter sua harmonia.
+> E,acima de tudo...
+> Que eu lembre sempre que todos nós fazemos parte dessa maravilhosa teia chamada vida,
+> criada por alguém bem superior a todos nós!
+> E que as grandes mudanças não ocorrem por grandes feitos
+> de alguns e,sim,nas pequenas parcelas cotidianas
+> de todos nós!Chico XavierAdicionar à minha coleçãoNa coleção de 538Mais Informação"A pior vontade de viver "
+> "Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros.Todos são tão compreensivos, aceitam tão bem suas escolhas, torcem por tudo o que você faz, não é mesmo? Desde que você faça o que está no script. Que siga o que foi determinado no roteiro, aquele que foi escrito sabe-se lá por quem e homologado no instante mesmo em que você nasceu. Mas e quem não quiser seguir este script?
+> Clarice Lispector, que entendia de subversões emocionais, morreu há 30 anos e recebeu uma justa homenagem na última terça-feira, no Teatro Renascença, numa performance dirigida pelo incansável Luciano Alabarse e para o qual fui convidada, mas não pude participar. Em função deste evento, estive pensando muito em Clarice e lembrei de como ela descreveu, certa vez, o sentimento de um personagem: "Seu coração enchera-se com a pior vontade de viver". Ela é complexa, angustiante, subjetiva e intensa. Ela, a pior vontade de viver. A que não está disposta a negociar com a vontade dos outros. No entanto, esta que foi chamada de a "pior" vontade pode ser também uma vontade genuína e inocente. É a vontade da criança que ainda levamos dentro, entranhada. É o desejo de açúcar, de traquinagem, de fazer algo escondido, de quebrar algumas regras, de imitar os adultos. A "pior" vontade é curiosa, quer observar pelo buraco da fechadura e depois, mais ousadamente, abrir a porta e entrar no quarto proibido. A "pior" vontade é a de não se enraizar, não assinar contrato de exclusividade, não firmar compromisso, não render-se às vontades fixas, apenas às vontades momentâneas, porque as fixas correm o risco de deixar de serem vontade para se transformarem em vaidade - como se sabe, há sempre aqueles que se envaidecem da própria persistência. A "pior" vontade não quer ganhar medalha de honra ao mérito, não quer posar para fotografias, não quer completar bodas de ouro nem ser jubilada. A "pior" vontade não faz a menor questão de ser percebida, ela quer ser realizada. É quando você sabe que não deveria, mas vai. Sabe que não será fácil, mas enfrenta. Sabe que tomarão como agressão, mas arrisca. Anote: apenas sentem-se agredidos aqueles que te invejam. A vontade oficial, a vontade santinha, a que não causa incômodo é a outra, a aprovada pela sociedade, a que não leva em conta o que vai no seu íntimo, e sim a opinião pública. É a vontade que todos nós, de certa forma, temos de mostrar para os outros que somos felizes, sem saber que para conseguir isso é preciso, antes, ter a "pior" vontade, aquela que faz você descobrir que ser feliz é ter consciência do efêmero, é saber-se capaz de agarrar o instante, é lidar bem com o que não é definitivo - ou seja, tudo. É com esta "pior" vontade de viver que você atrai os outros, que seu magnetismo cresce, que seu rosto rejuvenesce e que você fica mais interessante.
+> É uma pena que nem todos tenham a sorte de deixar vir à tona esta que Clarice Lispector chamou de a pior vontade de viver, que, secretamente, é a melhor."Martha Medeiros
 
 ---
 
@@ -1716,6 +2714,112 @@
 > Viagem (16)
 > Parceiros Parceiros Lysbela - Content (RSS)
 > Unstandard
+
+---
+
+### Source Story for Matches 44, 45
+- **Seed Score:** 0.481
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 14 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #44, #45
+- **Keywords:** `saudade`
+- **Nearest Semantic Reference (Not a Summary):** 'When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.bethynha.com.br/meu-pai1.htm](http://www.bethynha.com.br/meu-pai1.htm)
+- **Capture Count:** 2
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021251996/wet/CC-MAIN-20140305120731-00081-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> *.*.*.Meu Pai*.*.*.
+> Pai...
+> Hoje senti uma falta de voc�...
+> Do seu jeito de ser
+> Do seu modo de se preocupar
+> Dos seus telefonemas
+> Do seu sorriso
+> Do seu olhar
+> Do seu sil�ncio
+> Do seu movimento
+> Da maneira como gesticulava
+> E se empolgava quando algo contava
+> Pai...
+> Me perdoa pela saudade imensa
+> Pela falta que voc� me faz
+> Mesmo sem falar nada
+> Eu entendia o que queria
+> O que pensava, o que emitia
+> E seguia, como se nada o preocupasse
+> Pai...
+> Muitas saudades sinto de voc�
+> Mas n�o posso reclamar
+> Tenho que me conter
+> Foram s� momentos de lembran�a
+> Que hoje eu tive de voc�
+> Talvez por me sentir mais crian�a
+> Por querer me apoiar em uma esperan�a
+> Ouvir palavras que s� voc� sabia me dizer
+> Pai...
+> Sei que continua ao meu lado
+> S� n�o posso olhar o seu rosto
+> Mas vejo no seu retrato
+> Uma luz forte, iluminando o meu quarto
+> E sorrio de novo, quando olho para o seu rosto
+> Porque escuto voc� me dizendo
+> Que enquanto aqui, estou sofrendo
+> Pela sua aus�ncia e seu carinho
+> Voc� constr�i nosso novo cantinho
+> Para de novo, um dia...
+> Estar juntinho de novo, com voc�
+> by: Regina O.
+> Webmaster: Bethynha Clique na rosa acima para voltar... Os efeitos desse Site são melhores visualizados com o MS Internet Explorer 4 ou vers�es superiores em 800 X 600 High Color
+
+#### Extracted Source Story
+
+> *.*.*.Meu Pai*.*.*.
+> Pai...
+> Hoje senti uma falta de voc�...
+> Do seu jeito de ser
+> Do seu modo de se preocupar
+> Dos seus telefonemas
+> Do seu sorriso
+> Do seu olhar
+> Do seu sil�ncio
+> Do seu movimento
+> Da maneira como gesticulava
+> E se empolgava quando algo contava
+> Pai...
+> Me perdoa pela saudade imensa
+> Pela falta que voc� me faz
+> Mesmo sem falar nada
+> Eu entendia o que queria
+> O que pensava, o que emitia
+> E seguia, como se nada o preocupasse
+> Pai...
+> Muitas saudades sinto de voc�
+> Mas n�o posso reclamar
+> Tenho que me conter
+> Foram s� momentos de lembran�a
+> Que hoje eu tive de voc�
+> Talvez por me sentir mais crian�a
+> Por querer me apoiar em uma esperan�a
+> Ouvir palavras que s� voc� sabia me dizer
+> Pai...
+> Sei que continua ao meu lado
+> S� n�o posso olhar o seu rosto
+> Mas vejo no seu retrato
+> Uma luz forte, iluminando o meu quarto
+> E sorrio de novo, quando olho para o seu rosto
+> Porque escuto voc� me dizendo
+> Que enquanto aqui, estou sofrendo
+> Pela sua aus�ncia e seu carinho
+> Voc� constr�i nosso novo cantinho
+> Para de novo, um dia...
+> Estar juntinho de novo, com voc�
+> by: Regina O.
+> Webmaster: Bethynha Clique na rosa acima para voltar... Os efeitos desse Site são melhores visualizados com o MS Internet Explorer 4 ou vers�es superiores em 800 X 600 High Color
 
 ---
 
@@ -2183,6 +3287,59 @@
 
 ---
 
+### Source Story for Match 53
+- **Seed Score:** 0.473
+- **Story-Length Passage:** `yes`
+- **Story Size:** 6 source paragraphs, 9 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 3 of 6
+- **Matches Export References:** `matches_pt.md` #53
+- **Keywords:** `pátria`
+- **Nearest Semantic Reference (Not a Summary):** 'I miss my hometown terribly — the familiar faces, the food, the sound of my mother tongue spoken on every corner.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.archive.org/stream/revistabrazilei00olivgoog/revistabrazilei00olivgoog_djvu.txt](http://www.archive.org/stream/revistabrazilei00olivgoog/revistabrazilei00olivgoog_djvu.txt)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609537754.12/wet/CC-MAIN-20140416005217-00093-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> mil léguas distante de meu paiz, de minha família , de meus
+> amigos ; por vossa amizade o attenções nos fizestes esquecer
+> que o grande Oceano nos separa de nossa pátria !
+
+#### Extracted Source Story
+
+> 27
+
+> 396 REVISTA BRAZILEIRA.
+
+> mil léguas distante de meu paiz, de minha família , de meus
+> amigos ; por vossa amizade o attenções nos fizestes esquecer
+> que o grande Oceano nos separa de nossa pátria !
+
+> < Senhores ! Em quanto a munificência de nosso monarcha
+> nos chama a fazer a viagem em roda do mundo , psura fins
+> scientificos, vós não seguis um rumo menos invejável, ex-
+> plorando algumas províncias de vossa vasta pátria. E' a vós,
+> Senhores membros da Commissão scientifica , que coube des-
+> cobrir segunda vez para a meneia as terras do Brazil ainda
+> completamente desconhecidas: é a vós. Senhores, que com-
+> pete tomar-vos bemfeitores de vossa pátria, patenteando os
+> thesouros dispersos no solo abençoado do Brazil , abrindo
+> essas terras com suas riquezas innumeraveis á sciencia, ao
+> trabalho, ao commercio !
+
+> t Nós só aspiramos a s(^r coUaboradores em vossos tra-
+> balhos , a trocar cá nossa volta os resultados de nossas pes-
+> quizas, do nossas investigações e exploraçõe>s , e continuar
+> a entreter sempre as mais amigav.ois relações comvosco e
+> com vosso bello paiz, por cuja prosperidade e bem-estar
+> fazemos os mais sinceros votos ! »
+
+> Levanla-se a sessão ás duas horas da tarde.
+
+---
+
 ### Source Story for Match 54
 - **Seed Score:** 0.473
 - **Story-Length Passage:** `yes`
@@ -2336,6 +3493,358 @@
 > ▫ Html e css: Ariane Fernandes
 > ▫ Ask : biibis
 > Ask me
+
+---
+
+### Source Story for Matches 55, 56
+- **Seed Score:** 0.471
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 46 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #55, #56
+- **Keywords:** `saudade`
+- **Nearest Semantic Reference (Not a Summary):** 'After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://elinesmisssimpatia.blogspot.com/2011/05/eu-nunca-senti-isso-por-ninguem-antes.html](http://elinesmisssimpatia.blogspot.com/2011/05/eu-nunca-senti-isso-por-ninguem-antes.html)
+- **Capture Count:** 2
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394011198370/wet/CC-MAIN-20140305091958-00026-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Elines Miss ' Simpatia =]
+> Elines Miss ' Simpatia =]
+> sexta-feira, 13 de maio de 2011
+> Eu nunca senti isso por ninguem antes. Nunca imaginei que eu iria amar tanto alguem assim, capaz de fazer tudo pra ver essa pessoa feliz. Eu nunca poderia imaginar que um dia eu ia querer tanto alguem como eu quero você pra mim!E eu sei que tudo isso é AMOR, é um sentimento inexplicavel, foi capaz de suportar até o sofrimento e mesmo assim continuar tão intenso como antes, e até mais forte do que no começo! Eu preciso de você, assim como eu preciso do ar pra respirar. Eu estou aqui todo esse tempo por você, por você eu seria capaz de esperar, por você eu seria capaz de TUDO, e se for preciso eu enfrento o mundo só pra poder ficar com você!Eu não posso mais viver longe de você, eu sinto tanto a sua falta que até invejo o sol que pode te aquecer, as estrelas que podem te guiar, o vento que pode te tocar a qualquer momento e a lua que ilumina a tua noite! Eu não posso mais viver um minuto longe de você, eu te amo tanto que não dá pra explicar! Eu preciso tanto te ter, te ver, te abraçar, te beijar, preciso tanto ver o seu sorriso, e o brilho dos seus olhos, eu preciso tanto do seu amor!
+> Postado por
+> Elines.Correa
+> às
+> 18:16
+> Enviar por e-mailBlogThis!Compartilhar no TwitterCompartilhar no FacebookCompartilhar no OrkutCompartilhar com o Pinterest
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> ♥__♥
+> Total de visualizações de página
+> Quem sou eu
+> Elines.Correa
+> Suzano, SP, Brazil
+> Tudo aquilo que você nao espera que eu seja
+> Visualizar meu perfil completo
+> Arquivo do blog
+> ► 2014
+> (1)
+> ► Janeiro
+> (1)
+> ► 2013
+> (15)
+> ► Outubro
+> (2)
+> ► Setembro
+> (3)
+> ► Abril
+> (9)
+> ► Fevereiro
+> (1)
+> ► 2012
+> (5)
+> ► Outubro
+> (1)
+> ► Maio
+> (2)
+> ► Março
+> (1)
+> ► Janeiro
+> (1)
+> ▼ 2011
+> (155)
+> ► Outubro
+> (7)
+> ► Setembro
+> (6)
+> ► Agosto
+> (24)
+> ► Julho
+> (44)
+> ► Junho
+> (32)
+> ▼ Maio
+> (42)
+> O Sol nasce novamente
+> Ínicio
+> Aqueles que me conhecem, e que convivem com...
+> Escrevo textos e, as vezes eles me escrevem
+> Quem não tem passado, não tem História
+> Quem sou eu?
+> Ela
+> Brinque
+> Amor !A/C de CM
+> Líbido poeta
+> Te Amei
+> ME ENCANTE
+> Teu corpo quente
+> Vou me deitar, já é tarde.
+> “Não preciso me drogar mais para ser um gênio, nã...
+> ME LEVA
+> PS:Eu te amo
+> Dizer "Te amo" sem amar
+> Pessoas !
+> Há momentos
+> Tesão
+> Oiiiii =D
+> Eu nunca senti isso por ninguem antes. Nunca imag...
+> Minha Paixão! Presciso falar isso pra vc !!!
+> Minha trilha Sonora " Copo de Vinho
+> As coisas acontecem conosco porque permitimos...
+> Te abraçar e te beijar
+> Nua
+> Vida...
+> Paixão! Passion ! Passione.
+> É transcendental.
+> Amar em silêncioA partir de hoje vai ser assim......
+> Saudades !!!
+> "Nós garotas somos tão mágicas Pele macia, lábios...
+> I like kiss
+> SER MÃE
+> . jα mε εngαnεi sσbrε mυitαs ρεssσαs ε tαmbém mε ...
+> É preciso ter um tempo longe daqui
+> Tempo de ficar...
+> Há momentos na vida da gente!!!
+> Desta vez, este lugar,Desperdícios, errosMuito te...
+> Você e EuQue dia é hojeE de que mês?Esse relógio ...
+> Conselhos de um velho apaixonado
+> ► 2010
+> (5)
+> ► Março
+> (2)
+> ► Fevereiro
+> (3)
+> Seguidores
+> Postagens populares
+> I miss you-Miley Cyrus
+> I miss you , miss your smile , and even that is different now , you 're still here somehow . My heart will not...
+> Decepção na mata!! Ensina a Viver
+> Quem não passa por uma decepção, ou melhor, por várias decepções, na vida? A vida quase nunca é como gostaríamos que fosse, como esperamo...
+> Conselhos de um velho apaixonado
+> Conselho de um velho apaixonado Quando encontrar alguém e esse alguém fizer seu coração parar de funcionar por alguns segundos, preste ...
+> Modelo Awesome Inc.. Tecnologia do Blogger.
+
+#### Extracted Source Story
+
+> Elines Miss ' Simpatia =]
+> Elines Miss ' Simpatia =]
+> sexta-feira, 13 de maio de 2011
+> Eu nunca senti isso por ninguem antes. Nunca imaginei que eu iria amar tanto alguem assim, capaz de fazer tudo pra ver essa pessoa feliz. Eu nunca poderia imaginar que um dia eu ia querer tanto alguem como eu quero você pra mim!E eu sei que tudo isso é AMOR, é um sentimento inexplicavel, foi capaz de suportar até o sofrimento e mesmo assim continuar tão intenso como antes, e até mais forte do que no começo! Eu preciso de você, assim como eu preciso do ar pra respirar. Eu estou aqui todo esse tempo por você, por você eu seria capaz de esperar, por você eu seria capaz de TUDO, e se for preciso eu enfrento o mundo só pra poder ficar com você!Eu não posso mais viver longe de você, eu sinto tanto a sua falta que até invejo o sol que pode te aquecer, as estrelas que podem te guiar, o vento que pode te tocar a qualquer momento e a lua que ilumina a tua noite! Eu não posso mais viver um minuto longe de você, eu te amo tanto que não dá pra explicar! Eu preciso tanto te ter, te ver, te abraçar, te beijar, preciso tanto ver o seu sorriso, e o brilho dos seus olhos, eu preciso tanto do seu amor!
+> Postado por
+> Elines.Correa
+> às
+> 18:16
+> Enviar por e-mailBlogThis!Compartilhar no TwitterCompartilhar no FacebookCompartilhar no OrkutCompartilhar com o Pinterest
+> Postagem mais recente
+> Postagem mais antiga
+> Início
+> ♥__♥
+> Total de visualizações de página
+> Quem sou eu
+> Elines.Correa
+> Suzano, SP, Brazil
+> Tudo aquilo que você nao espera que eu seja
+> Visualizar meu perfil completo
+> Arquivo do blog
+> ► 2014
+> (1)
+> ► Janeiro
+> (1)
+> ► 2013
+> (15)
+> ► Outubro
+> (2)
+> ► Setembro
+> (3)
+> ► Abril
+> (9)
+> ► Fevereiro
+> (1)
+> ► 2012
+> (5)
+> ► Outubro
+> (1)
+> ► Maio
+> (2)
+> ► Março
+> (1)
+> ► Janeiro
+> (1)
+> ▼ 2011
+> (155)
+> ► Outubro
+> (7)
+> ► Setembro
+> (6)
+> ► Agosto
+> (24)
+> ► Julho
+> (44)
+> ► Junho
+> (32)
+> ▼ Maio
+> (42)
+> O Sol nasce novamente
+> Ínicio
+> Aqueles que me conhecem, e que convivem com...
+> Escrevo textos e, as vezes eles me escrevem
+> Quem não tem passado, não tem História
+> Quem sou eu?
+> Ela
+> Brinque
+> Amor !A/C de CM
+> Líbido poeta
+> Te Amei
+> ME ENCANTE
+> Teu corpo quente
+> Vou me deitar, já é tarde.
+> “Não preciso me drogar mais para ser um gênio, nã...
+> ME LEVA
+> PS:Eu te amo
+> Dizer "Te amo" sem amar
+> Pessoas !
+> Há momentos
+> Tesão
+> Oiiiii =D
+> Eu nunca senti isso por ninguem antes. Nunca imag...
+> Minha Paixão! Presciso falar isso pra vc !!!
+> Minha trilha Sonora " Copo de Vinho
+> As coisas acontecem conosco porque permitimos...
+> Te abraçar e te beijar
+> Nua
+> Vida...
+> Paixão! Passion ! Passione.
+> É transcendental.
+> Amar em silêncioA partir de hoje vai ser assim......
+> Saudades !!!
+> "Nós garotas somos tão mágicas Pele macia, lábios...
+> I like kiss
+> SER MÃE
+> . jα mε εngαnεi sσbrε mυitαs ρεssσαs ε tαmbém mε ...
+> É preciso ter um tempo longe daqui
+> Tempo de ficar...
+> Há momentos na vida da gente!!!
+> Desta vez, este lugar,Desperdícios, errosMuito te...
+> Você e EuQue dia é hojeE de que mês?Esse relógio ...
+> Conselhos de um velho apaixonado
+> ► 2010
+> (5)
+> ► Março
+> (2)
+> ► Fevereiro
+> (3)
+> Seguidores
+> Postagens populares
+> I miss you-Miley Cyrus
+> I miss you , miss your smile , and even that is different now , you 're still here somehow . My heart will not...
+> Decepção na mata!! Ensina a Viver
+> Quem não passa por uma decepção, ou melhor, por várias decepções, na vida? A vida quase nunca é como gostaríamos que fosse, como esperamo...
+> Conselhos de um velho apaixonado
+> Conselho de um velho apaixonado Quando encontrar alguém e esse alguém fizer seu coração parar de funcionar por alguns segundos, preste ...
+> Modelo Awesome Inc.. Tecnologia do Blogger.
+
+---
+
+### Source Story for Match 57
+- **Seed Score:** 0.471
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 13 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_pt.md` #57
+- **Keywords:** `infância`
+- **Nearest Semantic Reference (Not a Summary):** 'When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.esoterikha.com/dia-dos-namorados/bela-mensagem-para-amigo-de-infancia-amigo-de-escola.php](http://www.esoterikha.com/dia-dos-namorados/bela-mensagem-para-amigo-de-infancia-amigo-de-escola.php)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021643070/wet/CC-MAIN-20140305121403-00063-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Mensagem para Amigo de infância | Amigo de Escola
+> Home
+> Dia do Amigo
+> Dia das Mães
+> Páscoa
+> Dia da Mulher
+> Dia dos Pais
+> Mensagens de Natal
+> Motivação
+> Bela mensagem para Amigo de Infância, amigos de escola
+> Muitos dos grandes amigos e amigas que fazemos em nossa vida fizeram parte de nossa infância, época em que a amizade surgia naturalmente, sem interesses, sem preconceitos. A vida as vezes nos leva para outros lugares, mas a memória permanece e nela os bons amigos e amigas de infância.
+> Meus amigos e amigas de infância
+> A vida pode nos tirar muitas coisas, menos as histórias e lembranças que permanecem vivas em nossa memória.
+> Às vezes a gente conhece uma pessoa na 5ª série e não dá muita importância até mesmo porque ainda não se tem a noção de amizade. Depois reencontra o colega numa nova fase da vida pré-universitária onde nós começamos a nos formar como mente pensante e admitir novos conceitos na nossa mente e podemos de certa forma, começar a distinguir as amizades, mas mesmo assim a gente ainda erra.
+> Para reconhecer um verdadeiro amigo é uma prova de fogo.
+> Momentos legais, curtição, sacanagem, nós encontramos muitos companheiros, mas nos momentos decisivos, de perdas, de consolo, de tristeza e de necessidade a gente encontra um verdadeiro amigo.
+> Por isso digo que você é meu verdadeiro amigo. Continue assim.
+> É isso ai, fico feliz de saber o tamanho do coração que ele guarda dentro do peito, lembro-me do momento de dor de minha família que você esteve ao nosso lado, deixando de lado sua vida social e praticando uma das mais belas coisas da vida a solidariedade aos amigos.
+> Quero deixar registrado meu carinho e minha gratidão para todos meus amigos e amigas de infância.
+> (autor desconhecido)
+> Veja também: Mensagens para Amigas
+> Especial Dia do Amigo 2013
+> Mensagens Dia do Amigo - PPS
+> Frases Dia do Amigo - Frases de Amizade
+> Oração da Amizade - Oração Dia do Amigo
+> Textos de Amizade - Textos dia do amigo
+> Videos e Amizade
+> Mensagens de amor para Namorados - HOME
+> Frases Dia dos Namorados - Amor e carinho
+> Mensagens de Amor
+> O que é AMOR, conceito e teorias
+> Como conquistar e seduzir uma pessoa
+> Presentes de acordo com os Signos
+> Esoterikha.com - Página Principal
+> Dia Internacional da Mulher 8 de março
+> Fale conosco - SAC
+> Política de Privacidade
+> ©2003-2014 - Khaueh Produções Artísticas | Esoterikha.com - Todos os direitos reservados Fale Conosco - SAC | Política de Privacidade
+
+#### Extracted Source Story
+
+> Mensagem para Amigo de infância | Amigo de Escola
+> Home
+> Dia do Amigo
+> Dia das Mães
+> Páscoa
+> Dia da Mulher
+> Dia dos Pais
+> Mensagens de Natal
+> Motivação
+> Bela mensagem para Amigo de Infância, amigos de escola
+> Muitos dos grandes amigos e amigas que fazemos em nossa vida fizeram parte de nossa infância, época em que a amizade surgia naturalmente, sem interesses, sem preconceitos. A vida as vezes nos leva para outros lugares, mas a memória permanece e nela os bons amigos e amigas de infância.
+> Meus amigos e amigas de infância
+> A vida pode nos tirar muitas coisas, menos as histórias e lembranças que permanecem vivas em nossa memória.
+> Às vezes a gente conhece uma pessoa na 5ª série e não dá muita importância até mesmo porque ainda não se tem a noção de amizade. Depois reencontra o colega numa nova fase da vida pré-universitária onde nós começamos a nos formar como mente pensante e admitir novos conceitos na nossa mente e podemos de certa forma, começar a distinguir as amizades, mas mesmo assim a gente ainda erra.
+> Para reconhecer um verdadeiro amigo é uma prova de fogo.
+> Momentos legais, curtição, sacanagem, nós encontramos muitos companheiros, mas nos momentos decisivos, de perdas, de consolo, de tristeza e de necessidade a gente encontra um verdadeiro amigo.
+> Por isso digo que você é meu verdadeiro amigo. Continue assim.
+> É isso ai, fico feliz de saber o tamanho do coração que ele guarda dentro do peito, lembro-me do momento de dor de minha família que você esteve ao nosso lado, deixando de lado sua vida social e praticando uma das mais belas coisas da vida a solidariedade aos amigos.
+> Quero deixar registrado meu carinho e minha gratidão para todos meus amigos e amigas de infância.
+> (autor desconhecido)
+> Veja também: Mensagens para Amigas
+> Especial Dia do Amigo 2013
+> Mensagens Dia do Amigo - PPS
+> Frases Dia do Amigo - Frases de Amizade
+> Oração da Amizade - Oração Dia do Amigo
+> Textos de Amizade - Textos dia do amigo
+> Videos e Amizade
+> Mensagens de amor para Namorados - HOME
+> Frases Dia dos Namorados - Amor e carinho
+> Mensagens de Amor
+> O que é AMOR, conceito e teorias
+> Como conquistar e seduzir uma pessoa
+> Presentes de acordo com os Signos
+> Esoterikha.com - Página Principal
+> Dia Internacional da Mulher 8 de março
+> Fale conosco - SAC
+> Política de Privacidade
+> ©2003-2014 - Khaueh Produções Artísticas | Esoterikha.com - Todos os direitos reservados Fale Conosco - SAC | Política de Privacidade
 
 ---
 
@@ -2601,17 +4110,17 @@
 
 ---
 
-### Source Story for Matches 61, 62
+### Source Story for Matches 61, 62, 63
 - **Seed Score:** 0.469
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 24 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_pt.md` #61, #62
+- **Matches Export References:** `matches_pt.md` #61, #62, #63
 - **Keywords:** `saudade`
 - **Nearest Semantic Reference (Not a Summary):** 'I miss my hometown terribly — the familiar faces, the food, the sound of my mother tongue spoken on every corner.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://nuncatevisempreteamei.zip.net/](http://nuncatevisempreteamei.zip.net/)
-- **Capture Count:** 2
+- **Capture Count:** 3
 - **Crawl Dataset:** `CC-MAIN-2013-48`
 - **Source File:** `crawl-data/CC-MAIN-2013-48/segments/1386163056670/wet/CC-MAIN-20131204131736-00092-ip-10-33-133-15.ec2.internal.warc.wet.gz`
 

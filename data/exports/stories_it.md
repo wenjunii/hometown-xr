@@ -1,21 +1,21 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `it`
-**Unique Stories:** 12
+**Unique Stories:** 17
 
 ---
 
-### Source Story for Match 1
+### Source Story for Matches 1, 2
 - **Seed Score:** 0.642
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 19 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_it.md` #1
+- **Matches Export References:** `matches_it.md` #1, #2
 - **Keywords:** `antenati, origini`
 - **Nearest Semantic Reference (Not a Summary):** 'When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.famigliaiacopini.it/](http://www.famigliaiacopini.it/)
-- **Capture Count:** 1
+- **Capture Count:** 2
 - **Crawl Dataset:** `CC-MAIN-2014-10`
 - **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1393999668224/wet/CC-MAIN-20140305060748-00066-ip-10-183-142-35.ec2.internal.warc.wet.gz`
 
@@ -204,6 +204,104 @@
 > Email: *
 > Pubblicazioni precedenti
 > punizioni perdono Jan Hunt sonno Olivier Maurel abbandono Alice Miller disciplina allattamento madre educazione violenza attaccamento violenza educativa genitori infanzia John Holt Alice Miller psicoterapia bambini nascita botte more tags © 2008-2013 - Non Togliermi Il Sorriso Licenza Creative Commons
+
+---
+
+### Source Story for Match 7
+- **Seed Score:** 0.523
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 36 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_it.md` #7
+- **Keywords:** `infanzia`
+- **Nearest Semantic Reference (Not a Summary):** 'My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.nontogliermiilsorriso.org/drupal/storie-infanzia](http://www.nontogliermiilsorriso.org/drupal/storie-infanzia)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1398223202457.0/wet/CC-MAIN-20140423032002-00166-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> La mia infanzia | Non Togliermi Il Sorriso
+> Skip to Main Content Area
+> Home
+> Chi siamo
+> Forum
+> Contatti
+> Sostienici
+> Home
+> La mia infanzia
+> Madre e figlia: una storia difficile A volte, ripensando al passato, mi pare talmente strano da non essere capitato realmente a me. I ricordi sono frammentari, come fotografie viste e riviste mille volte, ma ci sono.
+> Per quanto adesso la mia vita sia normale e felice, mamma e moglie amata e fortunata, so che c’è anche un’altra me, piccolina, che fa parte del mio carattere. Una me che non si è evoluta ed è rimasta così com’era, ossia piccola e fragile, bisognosa di attenzioni, di amore e soprattutto di non essere dimenticata. Una parte che talvolta grida perché io le renda onore, io non la cancelli, ma la tenga stretta al cuore e le voglia bene. Mi voglia bene, dovrei dire, e mi dia empatia nei momenti difficili, perché quei ricordi così strani sono proprio miei, quelle foto mi appartengono, sono io quella là dentro, non posso e non devo fingere con me stessa. Leggi la testimonianza Una bella infanzia Una bella infanzia
+> 19.11.2008
+> Buongiorno sig.ra MILLER Alice,
+> sono molto felice di scriverle, in questo momento sto finendo di leggere il suo libro "Libres de savoir. Ouvrir les yeux sur notre propre histoire" ["Il risveglio di Eva. Come superare la cecità emotiva", 2002], sono stato consigliato dal mio vicino, che lo aveva letto e durante una delle nostre grandi discussioni sui bambini ha insistito perché leggessi il suo libro.
+> Leggi la testimonianza I Mostri Sono stata una bambina picchiata. Spesso e selvaggiamente da piccolissima. Man mano che crescevo le botte sono diventate meno frequenti, restavano una soluzione per le grandi occasioni. Per punizione venivo respinta, ignorata, messa in castigo, subivo privazioni. Era comunque violenza, comunque disamore. Non ho mai rimosso il ricordo della brutalità e dell'ingiustizia di mio padre, non ho mai pensato che avesse ragione.
+> E ho conservato la memoria dei miei dolorosi sentimenti. Sono insomma rimasta in stretta sintonia con la bambina che ero. E questo mi ha sempre aiutato a entrare in contatto con i bambini, a capirli nelle loro esigenze più semplici, a sentirmi una di loro.
+> Leggi la testimonianza Come ho capito che le botte sono inutili Di questa pietra miliare del mio percorso genitoriale e umano, il momento in cui ho capito che davvero le botte sono inutili, devo ringraziare i cavalli e un addestratore sudamericano. Vi racconto come è successo che un bel giorno alcune convinzioni che avevo considerato solidissime si sono sciolte come neve al sole, ed una prospettiva immensamente più interessante mi si è aperta davanti.
+> Ricordo che in famiglia (nella mia famiglia di provenienza) ci siamo sempre (tutti!) fatti delle gran risate quando c'erano notizie di giudici che condannavano i genitori per uno schiaffo dato al figlio, e trovavamo ridicolo che alcuni Stati lo proibissero esplicitamente per legge. Che esagerazione, si diceva, e come si può fare senza?!
+> Leggi la testimonianza Un cuore che soffre e tace Quando il mio compagno racconta del padre e delle violenze subite quel che maggiormente mi commuove è il tono della sua voce, sommesso, da bambino impaurito, ed è quel suo cercare la mia mano, con gli occhi bassi, quasi a celare la paura e la vergogna, gli occhi velati di lacrime amare da troppo tempo trattenute.
+> Lui, immensamente più alto di me, diviene piccolo, indifeso e si rifugia tra le mie braccia. Lui che affronta la vita con coraggio, sempre, che ha partecipato a missioni di pace ed ha raccolto bambini dilaniati da mine antiuomo. Lui che riesce ad infondermi sicurezza in ogni occasione.
+> Lui appare e si mostra, agli occhi del cuore, come un bambino terrorizzato che si nasconde nell'angolo più buio e remoto di una stanza per non esser visto e sfuggire, per una volta almeno, alla violenza.
+> Leggi la testimonianza NTIS
+> Articoli
+> Alice Miller
+> Storie d'infanzia
+> Scritti da noi/voi
+> oltre NTIS
+> Letture
+> Navigando in rete
+> Documenti
+> Link
+> Pillole
+> Search this site: "Certi si burleranno senza dubbio di questa idea, e diranno che il terapeuta è ingenuo e non sa a che punto i bambini sono subdoli e cercano certamente di sfruttare la gentilezza dei genitori. Non bisogna stupirsi di tali reazioni, poiché la maggior parte dei genitori vedono nei loro figli i loro stessi genitori, e hanno paura di riconoscere una sbaglio quando un tempo venivano minacciati di gravi punizioni per ogni errore. Si aggrappano alla maschera della loro perfezione ed è altamente improbabile che siano capaci di correggersi." (A. Miller)
+> NTIS Newsletter
+> Per non perdere le novità!
+> Email: *
+> Pubblicazioni precedenti
+> madre violenza attaccamento violenza educativa nascita perdono educazione Jan Hunt Alice Miller Olivier Maurel infanzia Alice Miller sonno disciplina convenzione sui diritti dell'infanzia allattamento bambini abbandono punizioni scuola genitori botte more tags © 2008-2014 - Non Togliermi Il Sorriso Licenza Creative Commons
+
+#### Extracted Source Story
+
+> La mia infanzia | Non Togliermi Il Sorriso
+> Skip to Main Content Area
+> Home
+> Chi siamo
+> Forum
+> Contatti
+> Sostienici
+> Home
+> La mia infanzia
+> Madre e figlia: una storia difficile A volte, ripensando al passato, mi pare talmente strano da non essere capitato realmente a me. I ricordi sono frammentari, come fotografie viste e riviste mille volte, ma ci sono.
+> Per quanto adesso la mia vita sia normale e felice, mamma e moglie amata e fortunata, so che c’è anche un’altra me, piccolina, che fa parte del mio carattere. Una me che non si è evoluta ed è rimasta così com’era, ossia piccola e fragile, bisognosa di attenzioni, di amore e soprattutto di non essere dimenticata. Una parte che talvolta grida perché io le renda onore, io non la cancelli, ma la tenga stretta al cuore e le voglia bene. Mi voglia bene, dovrei dire, e mi dia empatia nei momenti difficili, perché quei ricordi così strani sono proprio miei, quelle foto mi appartengono, sono io quella là dentro, non posso e non devo fingere con me stessa. Leggi la testimonianza Una bella infanzia Una bella infanzia
+> 19.11.2008
+> Buongiorno sig.ra MILLER Alice,
+> sono molto felice di scriverle, in questo momento sto finendo di leggere il suo libro "Libres de savoir. Ouvrir les yeux sur notre propre histoire" ["Il risveglio di Eva. Come superare la cecità emotiva", 2002], sono stato consigliato dal mio vicino, che lo aveva letto e durante una delle nostre grandi discussioni sui bambini ha insistito perché leggessi il suo libro.
+> Leggi la testimonianza I Mostri Sono stata una bambina picchiata. Spesso e selvaggiamente da piccolissima. Man mano che crescevo le botte sono diventate meno frequenti, restavano una soluzione per le grandi occasioni. Per punizione venivo respinta, ignorata, messa in castigo, subivo privazioni. Era comunque violenza, comunque disamore. Non ho mai rimosso il ricordo della brutalità e dell'ingiustizia di mio padre, non ho mai pensato che avesse ragione.
+> E ho conservato la memoria dei miei dolorosi sentimenti. Sono insomma rimasta in stretta sintonia con la bambina che ero. E questo mi ha sempre aiutato a entrare in contatto con i bambini, a capirli nelle loro esigenze più semplici, a sentirmi una di loro.
+> Leggi la testimonianza Come ho capito che le botte sono inutili Di questa pietra miliare del mio percorso genitoriale e umano, il momento in cui ho capito che davvero le botte sono inutili, devo ringraziare i cavalli e un addestratore sudamericano. Vi racconto come è successo che un bel giorno alcune convinzioni che avevo considerato solidissime si sono sciolte come neve al sole, ed una prospettiva immensamente più interessante mi si è aperta davanti.
+> Ricordo che in famiglia (nella mia famiglia di provenienza) ci siamo sempre (tutti!) fatti delle gran risate quando c'erano notizie di giudici che condannavano i genitori per uno schiaffo dato al figlio, e trovavamo ridicolo che alcuni Stati lo proibissero esplicitamente per legge. Che esagerazione, si diceva, e come si può fare senza?!
+> Leggi la testimonianza Un cuore che soffre e tace Quando il mio compagno racconta del padre e delle violenze subite quel che maggiormente mi commuove è il tono della sua voce, sommesso, da bambino impaurito, ed è quel suo cercare la mia mano, con gli occhi bassi, quasi a celare la paura e la vergogna, gli occhi velati di lacrime amare da troppo tempo trattenute.
+> Lui, immensamente più alto di me, diviene piccolo, indifeso e si rifugia tra le mie braccia. Lui che affronta la vita con coraggio, sempre, che ha partecipato a missioni di pace ed ha raccolto bambini dilaniati da mine antiuomo. Lui che riesce ad infondermi sicurezza in ogni occasione.
+> Lui appare e si mostra, agli occhi del cuore, come un bambino terrorizzato che si nasconde nell'angolo più buio e remoto di una stanza per non esser visto e sfuggire, per una volta almeno, alla violenza.
+> Leggi la testimonianza NTIS
+> Articoli
+> Alice Miller
+> Storie d'infanzia
+> Scritti da noi/voi
+> oltre NTIS
+> Letture
+> Navigando in rete
+> Documenti
+> Link
+> Pillole
+> Search this site: "Certi si burleranno senza dubbio di questa idea, e diranno che il terapeuta è ingenuo e non sa a che punto i bambini sono subdoli e cercano certamente di sfruttare la gentilezza dei genitori. Non bisogna stupirsi di tali reazioni, poiché la maggior parte dei genitori vedono nei loro figli i loro stessi genitori, e hanno paura di riconoscere una sbaglio quando un tempo venivano minacciati di gravi punizioni per ogni errore. Si aggrappano alla maschera della loro perfezione ed è altamente improbabile che siano capaci di correggersi." (A. Miller)
+> NTIS Newsletter
+> Per non perdere le novità!
+> Email: *
+> Pubblicazioni precedenti
+> madre violenza attaccamento violenza educativa nascita perdono educazione Jan Hunt Alice Miller Olivier Maurel infanzia Alice Miller sonno disciplina convenzione sui diritti dell'infanzia allattamento bambini abbandono punizioni scuola genitori botte more tags © 2008-2014 - Non Togliermi Il Sorriso Licenza Creative Commons
 
 ---
 
@@ -615,6 +713,111 @@
 
 ---
 
+### Source Story for Match 9
+- **Seed Score:** 0.498
+- **Story-Length Passage:** `yes`
+- **Story Size:** 4 source paragraphs, 15 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 2 of 4
+- **Matches Export References:** `matches_it.md` #9
+- **Keywords:** `patria`
+- **Nearest Semantic Reference (Not a Summary):** 'As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.archive.org/stream/museoscientifico1848toriuoft/museoscientifico1848toriuoft_djvu.txt](http://www.archive.org/stream/museoscientifico1848toriuoft/museoscientifico1848toriuoft_djvu.txt)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-23`
+- **Source File:** `crawl-data/CC-MAIN-2014-23/segments/1404776400583.60/wet/CC-MAIN-20140707234000-00087-ip-10-180-212-248.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> ....Non è l'amore della patria che mi accieca. Vi
+> è sangue italiano nelle mie vene; la lingua d'Italia
+> fu la mia lingua materna; le mie abitudini, le mie
+> credenze, la mia poesia, il mio sorriso e le mie la-
+> crime, tulio è italiano in me; ma io non sono nalo
+> in Italia. Senio che la vita lontana da lei è lugubre,
+> fredda e grave-, partendomi da lei ho seppellite le
+> mie gioie e le mie speranze-, sento il mio cuore
+> stringersi e il mio pensiero annebbiarsi dacché non
+> posso esprimerlo in quella lingua a cui ho fidati tulli
+> i secreti della mia anima. Ma non sono nalo in
+> Italia. Io aveva quindici anni allorché la vidi per
+> la prima volta e la giudicai siccome straniero: ho
+> comincialo a non troppo disprezzare, a non troppo
+> gustare; si è a poco a poco che la sua bellezza fece
+> impressione sulla mia anima, come avviene di tulle
+> le bellezze candide e profonde. Non è nelle sale do-
+> rale, non fra i ricchi e i lellerati, e neppure sopra
+> i suoi monumenti che io imparai a conoscere l'Italia,
+> ma nelle campagne, ma nei costumi e nel linguaggio
+> del suo popolo, ma nel cuore delle sue ammirabili
+> donne. Non so veramente ciò che sia originalità, nò
+> come sia definita dai retori; ma se è qualcosa di
+> spontaneo, di natio, di contrario all'anellazione e
+> alla pretensione, é in Italia, più che altrove, che
+> la si può trovare. Quivi si ignora l'arte di atteg-
+> giarsi, di panneggiarsi, ma si sente. Vi sono debo-
+> lezze, anche di vergognose, come per tulio ; ma al-
+> meno non si pone studio a coprirle di bei nomi,
+> a erigerli in sistema; e quegli uomini vi sembrano
+> più corrotti, perchè più sinceri. Ma serbano nondi-
+> meno alcune scintille di un fuoco da lunghi secoli
+> estinto; se non sono cento volte meno stimabili an-
+> cora di ciò che appaiono ai nostri occhi, non è
+> prova d'una rettitudine ammirabile di spirilo, d'una
+> grande potenza di carattere e d'amore! Oh! non
+> aeravate di rimproveri una creatura che soffre,
+
+#### Extracted Source Story
+
+> Parole di N. Tommaseo, esule in Francia
+> l'anno 183L
+
+> ....Non è l'amore della patria che mi accieca. Vi
+> è sangue italiano nelle mie vene; la lingua d'Italia
+> fu la mia lingua materna; le mie abitudini, le mie
+> credenze, la mia poesia, il mio sorriso e le mie la-
+> crime, tulio è italiano in me; ma io non sono nalo
+> in Italia. Senio che la vita lontana da lei è lugubre,
+> fredda e grave-, partendomi da lei ho seppellite le
+> mie gioie e le mie speranze-, sento il mio cuore
+> stringersi e il mio pensiero annebbiarsi dacché non
+> posso esprimerlo in quella lingua a cui ho fidati tulli
+> i secreti della mia anima. Ma non sono nalo in
+> Italia. Io aveva quindici anni allorché la vidi per
+> la prima volta e la giudicai siccome straniero: ho
+> comincialo a non troppo disprezzare, a non troppo
+> gustare; si è a poco a poco che la sua bellezza fece
+> impressione sulla mia anima, come avviene di tulle
+> le bellezze candide e profonde. Non è nelle sale do-
+> rale, non fra i ricchi e i lellerati, e neppure sopra
+> i suoi monumenti che io imparai a conoscere l'Italia,
+> ma nelle campagne, ma nei costumi e nel linguaggio
+> del suo popolo, ma nel cuore delle sue ammirabili
+> donne. Non so veramente ciò che sia originalità, nò
+> come sia definita dai retori; ma se è qualcosa di
+> spontaneo, di natio, di contrario all'anellazione e
+> alla pretensione, é in Italia, più che altrove, che
+> la si può trovare. Quivi si ignora l'arte di atteg-
+> giarsi, di panneggiarsi, ma si sente. Vi sono debo-
+> lezze, anche di vergognose, come per tulio ; ma al-
+> meno non si pone studio a coprirle di bei nomi,
+> a erigerli in sistema; e quegli uomini vi sembrano
+> più corrotti, perchè più sinceri. Ma serbano nondi-
+> meno alcune scintille di un fuoco da lunghi secoli
+> estinto; se non sono cento volte meno stimabili an-
+> cora di ciò che appaiono ai nostri occhi, non è
+> prova d'una rettitudine ammirabile di spirilo, d'una
+> grande potenza di carattere e d'amore! Oh! non
+> aeravate di rimproveri una creatura che soffre,
+
+> Co *
+
+> non scagliale pietre sulla debole incatenala, fosse
+> anche rea di lutti i delitti della terra: ciò apporta
+> sventura. C.
+
+---
+
 ### Source Story for Match 10
 - **Seed Score:** 0.497
 - **Story-Length Passage:** `yes`
@@ -651,17 +854,17 @@
 
 ---
 
-### Source Story for Matches 11, 12
+### Source Story for Matches 11, 12, 13, 14
 - **Seed Score:** 0.492
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 35 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_it.md` #11, #12
+- **Matches Export References:** `matches_it.md` #11, #12, #13, #14
 - **Keywords:** `infanzia, casa mia`
 - **Nearest Semantic Reference (Not a Summary):** 'When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.vatican.va/news_services/or/or_quo/interviste/2008/067q04b1.html](http://www.vatican.va/news_services/or/or_quo/interviste/2008/067q04b1.html)
-- **Capture Count:** 2
+- **Capture Count:** 4
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368704075359/wet/CC-MAIN-20130516113435-00092-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -695,17 +898,252 @@
 
 ---
 
-### Source Story for Matches 17, 18, 19
+### Source Story for Match 15
+- **Seed Score:** 0.485
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 26 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_it.md` #15
+- **Keywords:** `nostalgia, nostalgi, casa mia`
+- **Nearest Semantic Reference (Not a Summary):** 'My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.b-and-b-barberi.it/](http://www.b-and-b-barberi.it/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-15`
+- **Source File:** `crawl-data/CC-MAIN-2014-15/segments/1397609539776.45/wet/CC-MAIN-20140416005219-00399-ip-10-147-4-33.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> bed breakfast Valle Aosta
+> BED AND BRAKFAST BARBERI VALLE D'AOSTA ...................................
+> Con una nota di nostalgia vi comunico che ho cessato l'attivit� del mio b&b.
+> 13 anni fa, quando ho iniziato, sognavo un luogo d'incontro, il mondo
+> che entrava in casa mia quando non avevo la possibilit� di viaggiare ...
+> spero di essere riuscita nell'intento e di aver accolto i miei ospiti in
+> modo semplice, ma corretto e rispettoso.
+> Grazie
+> a chi ha scelto la nostra struttura per le proprie vacanze, a chi l'ha
+> consigliato ad altri, ai figli che, dopo la loro vacanza, ci hanno
+> mandato i genitori e ai genitori che hanno regalato ai figli i soggiorni
+> presso di noi ...
+> grazie
+> a chi ci ha mandato la foto della casa appena acquistata ...
+> a chi ci ha inviato la foto del proprio beb� appena nato ...
+> a chi ha scelto la Valle d'Aosta come argomento della propria tesi
+> di laurea...
+> a chi ci ha regalato una poesia, al momento di lasciarci ...
+> a chi ha dedicato il proprio tempo per le recensire il nostro bb ...
+> a chi ci abbracciato prima di ripartire ...
+> a chi, grazie a noi, si � innamorato di questa Terra ...
+> a chi ha condiviso il nostro rispetto per l'ambiente ...
+> a tutti dedico la poesia Agli Amici di Primo Levi
+> Margherita
+> Dear Guests,
+> I am sorry to announce the definitive closure of my B&B.
+> thank you for the amazing experience of these 13 years knowing
+> people and different life-styles.
+> I learned much more then I thought.
+> Thank you Margherita
+> Agli amici
+> Cari amici, qui dico amici
+> Nel senso vasto della parola:
+> Moglie, sorella, sodali, parenti,
+> Compagne e compagni di scuola,
+> Persone viste una volta sola
+> O praticate per tutta la vita:
+> Purch� fra noi, per almeno un momento,
+> Sia stato teso un segmento,
+> Una corda ben definita.
+> Dico per voi, compagni d�un cammino
+> Folto, non privo di fatica,
+> E per voi pure, che avete perduto
+> L�anima, l�animo, la voglia di vita.
+> O nessuno, o qualcuno, o forse un solo, o tu
+> Che mi leggi: ricorda il tempo
+> Prima che s�indurisse la cera,
+> Quando ognuno era come un sigillo.
+> Di noi ciascuno reca l�impronta
+> Dell�amico incontrato per via;
+> In ognuno la traccia di ognuno.
+> Per il bene od il male
+> In saggezza o in follia
+> Ognuno stampato da ognuno.
+> Ora che il tempo urge da presso,
+> Che le imprese sono finite,
+> A voi tutti l�augurio sommesso
+> Che l�autunno sia lungo e mite.
+> P. Levi
+> Fr Chateau Feuillet, 1 Saint Pierre 11010 Aosta
+> tel. 347-0102352
+> fax (+39)-0165-903312
+> e-mail margherita.barberi@libero.it
+> Ultimo aggiornamento29/03/2014
+
+#### Extracted Source Story
+
+> bed breakfast Valle Aosta
+> BED AND BRAKFAST BARBERI VALLE D'AOSTA ...................................
+> Con una nota di nostalgia vi comunico che ho cessato l'attivit� del mio b&b.
+> 13 anni fa, quando ho iniziato, sognavo un luogo d'incontro, il mondo
+> che entrava in casa mia quando non avevo la possibilit� di viaggiare ...
+> spero di essere riuscita nell'intento e di aver accolto i miei ospiti in
+> modo semplice, ma corretto e rispettoso.
+> Grazie
+> a chi ha scelto la nostra struttura per le proprie vacanze, a chi l'ha
+> consigliato ad altri, ai figli che, dopo la loro vacanza, ci hanno
+> mandato i genitori e ai genitori che hanno regalato ai figli i soggiorni
+> presso di noi ...
+> grazie
+> a chi ci ha mandato la foto della casa appena acquistata ...
+> a chi ci ha inviato la foto del proprio beb� appena nato ...
+> a chi ha scelto la Valle d'Aosta come argomento della propria tesi
+> di laurea...
+> a chi ci ha regalato una poesia, al momento di lasciarci ...
+> a chi ha dedicato il proprio tempo per le recensire il nostro bb ...
+> a chi ci abbracciato prima di ripartire ...
+> a chi, grazie a noi, si � innamorato di questa Terra ...
+> a chi ha condiviso il nostro rispetto per l'ambiente ...
+> a tutti dedico la poesia Agli Amici di Primo Levi
+> Margherita
+> Dear Guests,
+> I am sorry to announce the definitive closure of my B&B.
+> thank you for the amazing experience of these 13 years knowing
+> people and different life-styles.
+> I learned much more then I thought.
+> Thank you Margherita
+> Agli amici
+> Cari amici, qui dico amici
+> Nel senso vasto della parola:
+> Moglie, sorella, sodali, parenti,
+> Compagne e compagni di scuola,
+> Persone viste una volta sola
+> O praticate per tutta la vita:
+> Purch� fra noi, per almeno un momento,
+> Sia stato teso un segmento,
+> Una corda ben definita.
+> Dico per voi, compagni d�un cammino
+> Folto, non privo di fatica,
+> E per voi pure, che avete perduto
+> L�anima, l�animo, la voglia di vita.
+> O nessuno, o qualcuno, o forse un solo, o tu
+> Che mi leggi: ricorda il tempo
+> Prima che s�indurisse la cera,
+> Quando ognuno era come un sigillo.
+> Di noi ciascuno reca l�impronta
+> Dell�amico incontrato per via;
+> In ognuno la traccia di ognuno.
+> Per il bene od il male
+> In saggezza o in follia
+> Ognuno stampato da ognuno.
+> Ora che il tempo urge da presso,
+> Che le imprese sono finite,
+> A voi tutti l�augurio sommesso
+> Che l�autunno sia lungo e mite.
+> P. Levi
+> Fr Chateau Feuillet, 1 Saint Pierre 11010 Aosta
+> tel. 347-0102352
+> fax (+39)-0165-903312
+> e-mail margherita.barberi@libero.it
+> Ultimo aggiornamento29/03/2014
+
+---
+
+### Source Story for Match 16
+- **Seed Score:** 0.485
+- **Story-Length Passage:** `yes`
+- **Story Size:** 6 source paragraphs, 32 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 3 of 6
+- **Matches Export References:** `matches_it.md` #16
+- **Keywords:** `miras`
+- **Nearest Semantic Reference (Not a Summary):** 'My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.archive.org/stream/lomnibuspittores00napouoft/lomnibuspittores00napouoft_djvu.txt](http://www.archive.org/stream/lomnibuspittores00napouoft/lomnibuspittores00napouoft_djvu.txt)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-23`
+- **Source File:** `crawl-data/CC-MAIN-2014-23/segments/1404776434088.75/wet/CC-MAIN-20140707234034-00075-ip-10-180-212-248.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> — Eccomi adunque ad appagai ti. Tu già sai ih' io so- lì rita. Senza dilungarmi più oltre in partcoiari, ti basti
+> no del secondo letto, e che mio padre del primo aveva avii- n il sapere (he giunsi a firmi amare da lei, e (he po-
+> to mia sorella Eugenia, maritala al mio cugino Alfonso due H co dopo, conoscendo il caiallere altiero del padre mio
+> anni prima che ambedue noi fos>imo liscili di collegio, e dal fi e lenendo per fermo iberni avrebbe negalo il suo con-
+> qual tempo non ci siamo pili rivfdiili In per lo spazio dei p senso a queste nozze per la disfiarità de* gradi , ((mirassi
+> nove anni che passai in ( ollegio , di rado andava a casa Sk un matrimonio secreto con lei col consentimento della
+> mia . e , per quella t midezza die ho sempre avuta , o jj madre sua. l'er tre anni furono un mistero per lutti le mie
+> perchè forse ne stavo il pù lonl.ano, quasi mi sembrava " nozz-, per tre anni godetti d'una felicità cognita a me $o-
+> esser slrau'ero fra' miei , e temeva di scontrare gli sgiiar- H la. p rchè Margherita era dolala di tutte le virtù che pos-
+> di del genitore , per natur.il- severo. Alia sorella m era ìt sono far felice un uomo. Ero altresì divenuto padre e
+> indiUerenie o piultosto l'odiava, perrhé essa mal poteva ve- n questa seconda felicità mi rendeva beato. Mi angu>tiava
+> dere mia madre , nella quale solamente io trovava confor- sf P''r altro il dover occultare questo nodo agli orrhi di tutti
+> to e speranza. Uscito di collegio e ritiratomi a casa . pei ff e di dover slare assai tempo lontano dalla mia ( ara con-
+> quallro anni che visse mia madre, fui se non in tutto fé- E ''"'"'<'• Ma ben presto la sciagura venne a destarmi da que-
+> lire in parte , perchè le tenere cure di lei sopperivano al ìi sto deliziosissimo sonno !
+
+#### Extracted Source Story
+
+> — nifcardo , co.-ninriò egli tutto intenerito , non pos- M ritrasse in casa Io ne provai pena , e sperando eh ella di
+> so esprimerli quale immensa gioia, tu mi fai oggi provare, y nuovo si facejse vedere al balcone, r masi co'à immobile
+> Io non lo posso, ma il Cielo senza dubbio compenserà il 9 per lunga pezza senza badare a ciò < he potessero pensar-
+> tuo magnanimo operare. Il ne le convicine genti, le (piali della mia condotta do\evano
+
+> — Armando mi fjrai andar in collera se roitlnui su H al certo meravigliare. Alfne ritornato in nie dal mioesal-
+> qiiesto tuono. Ti prego di non farmi p ù mollo di co. ma fi lamento , vergognando al vedermi guardar da molli , mi
+> scio soddisfa la mia impazienza di conoscere per qual ca- ^ mossi da qtiel luo^o e ripresi la via della ma abitazione
+> gione sei venuto in cos'i meschino slato. h tulio pensieroso e pieno dell' ima;^ine della mia IMar-he-
+
+> — Eccomi adunque ad appagai ti. Tu già sai ih' io so- lì rita. Senza dilungarmi più oltre in partcoiari, ti basti
+> no del secondo letto, e che mio padre del primo aveva avii- n il sapere (he giunsi a firmi amare da lei, e (he po-
+> to mia sorella Eugenia, maritala al mio cugino Alfonso due H co dopo, conoscendo il caiallere altiero del padre mio
+> anni prima che ambedue noi fos>imo liscili di collegio, e dal fi e lenendo per fermo iberni avrebbe negalo il suo con-
+> qual tempo non ci siamo pili rivfdiili In per lo spazio dei p senso a queste nozze per la disfiarità de* gradi , ((mirassi
+> nove anni che passai in ( ollegio , di rado andava a casa Sk un matrimonio secreto con lei col consentimento della
+> mia . e , per quella t midezza die ho sempre avuta , o jj madre sua. l'er tre anni furono un mistero per lutti le mie
+> perchè forse ne stavo il pù lonl.ano, quasi mi sembrava " nozz-, per tre anni godetti d'una felicità cognita a me $o-
+> esser slrau'ero fra' miei , e temeva di scontrare gli sgiiar- H la. p rchè Margherita era dolala di tutte le virtù che pos-
+> di del genitore , per natur.il- severo. Alia sorella m era ìt sono far felice un uomo. Ero altresì divenuto padre e
+> indiUerenie o piultosto l'odiava, perrhé essa mal poteva ve- n questa seconda felicità mi rendeva beato. Mi angu>tiava
+> dere mia madre , nella quale solamente io trovava confor- sf P''r altro il dover occultare questo nodo agli orrhi di tutti
+> to e speranza. Uscito di collegio e ritiratomi a casa . pei ff e di dover slare assai tempo lontano dalla mia ( ara con-
+> quallro anni che visse mia madre, fui se non in tutto fé- E ''"'"'<'• Ma ben presto la sciagura venne a destarmi da que-
+> lire in parte , perchè le tenere cure di lei sopperivano al ìi sto deliziosissimo sonno !
+
+> difetto di quelle del padre, che sembrava tulle rivolgerle 8 Un , giorno mio padre mi fece chiamare nella sua ca-
+> alla mia più fortunata sorella. Ma, morta appena mia ma- |f mera , e , burb'ro come T ordinario nell' aspetto , mi dis-
+> dre una vita di pene e di sofferenze cominciò per me; mio g se , dopo un lungo preambolo del dovermi costituire uno
+> padre, quasi per nulla si curava di me ; mia sorella e mio a stato, ch'egli a tal uopo s'era impegnato per me colla fi-
+> cognato mi dispn zzavano : ed i servi giungevan fino a S gliuola d' un duca. Pensa qual colpo di fulmine fu questa
+> sogghignarmi in viso. Mia madre, non aveva pollato che |j proposta per me!
+
+> un nome illustre, poiché mio padre, ad onta della sua smo- M — lovero Armando, ben me P imagino quanto dovet-
+> dala avarizia, l'aveva tolta, quantunque ne fosse amante, U te esser crudele , interruppi io compassionandolo
+> per isnienlire certi nobili suoi pari i quali 1' accusavano di s — Io, continuò egli, rimasi mutolo ed avvilito Mi
+> sudicio e taccagno , non prendendola in moglie, conierliè 0* sembrava che la terra si fosse spalancata sotto a' miei
+> senza dote. ì. aonde passati i suoi primi momenti di eb- & piedi e che m'avesse inghiottito, pure l'amor di marito
+> brezza, e signoreggiandogli 1' animo di nuovo la sola pas- H e di padre dandomi quel coraggio di cui naturalmente
+> sione (he ave-se al mondo, prese a disprezzarla, ed il suo Jj mancava , osai dirgli , avvegnai he alquanto renitente , che
+> esempio venne seguito dagli altri. Sensibile com' ella era ?1 non voleva saperne di nozze. Sdegnato per la mia oppo-
+> ne provava un'angoscia mortale che la precipitò immatura ^ sizione mi disse die la sua parola era sarra e di.? io do-
+> ancora nel sepolcro S op i io adunque al d sprezzo di lui- ti veva ciecamente ubbidire: io cercai esimermene fingendo
+> ti fui compreso da tale una cupa melanconia che mi prò- J! di nuovo essere avverso al legame coniugale, ma inutllmen-
+> sfrò tiifle le forze dell'animo; io sofl'iiva e piangeva in si- ;* te che egli, ancor più sdegnato, colle minacce cercava in-
+> leniiol! Senza un frofello , senza un compagno cui confi g durrai a fare il suo desiderio , s'i che io f.ii costretto pale-
+
+> 27
+
+---
+
+### Source Story for Matches 17, 18, 19, 20
 - **Seed Score:** 0.480
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 31 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_it.md` #17, #18, #19
+- **Matches Export References:** `matches_it.md` #17, #18, #19, #20
 - **Keywords:** `radici`
 - **Nearest Semantic Reference (Not a Summary):** 'I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.ilmondodimauroelisi.it/Unesco.htm](http://www.ilmondodimauroelisi.it/Unesco.htm)
-- **Capture Count:** 3
+- **Capture Count:** 4
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368705884968/wet/CC-MAIN-20130516120444-00067-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -757,17 +1195,129 @@
 
 ---
 
-### Source Story for Match 22
+### Source Story for Match 21
+- **Seed Score:** 0.464
+- **Story-Length Passage:** `yes`
+- **Story Size:** 6 source paragraphs, 27 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 3 of 6
+- **Matches Export References:** `matches_it.md` #21
+- **Keywords:** `patria, esilio`
+- **Nearest Semantic Reference (Not a Summary):** 'I miss my hometown terribly — the familiar faces, the food, the sound of my mother tongue spoken on every corner.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.archive.org/stream/operediniccolma00ziragoog/operediniccolma00ziragoog_djvu.txt](http://www.archive.org/stream/operediniccolma00ziragoog/operediniccolma00ziragoog_djvu.txt)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021097827/wet/CC-MAIN-20140305120457-00085-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> vìDare. L^ amore della mia patria mi fece accostare a messerSalvastro de* Me-
+> dici, e dipoi da measer Giorgio Scali discostare. Quello medesimo mi faceva i
+> costumi di questi che ora governano odiare; i quali come eglino non avevano
+> chi gli gasti^BSse, non hanno ancora vohiCochi gli riprenda. Ed io sono contento
+> con il mio esilio liberargli da quel timore che loro «vevano, non di me sola-
+> mente, ma di qualunque sanno che conosca i tirannici e scellerati modi loro;
+> perciò hanno con le battiture mie minacciati gli altri. Di me non m' incresco,
+> perchè quelli onori, che la patria libera mi ha dati, la serva non mi può torre;
+> e sempre mi darà maggior piacere la memoria della passata vita mia, che non
+> mi darà dispiacere qaella infelicità che si tirerà dietro il mio esìlio. Duolmi
+> bene che la mia patria rimanga in preda di pochi, ed alla loro superbia ed ava-
+> rizia sottoposta. Duolmi di voi , perchò io dubiU» che quelli mali che finiscono
+> oggi in me, e cominciano in voi, con maggiori danni che non hanno persegui-
+> tato me non vi perseguitino. Confortovi adunque a fermare V animo contro ad
+> ogni infortunio, e portarvi in modo che se alcuna cosa avversa vi avviene, che
+> ve ne avverranno molte , ciascuno cognosca , innocentemente e senza colpa
+> vostra esservi avvenute. » Dipoi per non dare di sé minore opinione di bontà
+> fuora, che si avesse data in Firenze, se ne andò al sepolcro di Cristo, dal quale
+> tornando mori a Rodi. V ossa del quale furono condotte in Firenze, e da coloro
+> con grandissimo onore sepolte, che vive con ogni calunnia ed ingiuria le ave-
+> vano perseguitate.
+
+#### Extracted Source Story
+
+> V^Wcaosa intra i Signori esaminata, rparte di loro per odio, parte per
+> tem« icawiaio, giudicarono messer Filippo a quella dignità inabile ; e fu
+> tratto in suo luogo Bardo Mancini, uomo al tutto alla fazione plebea contrario,
+> ed a meBicr Benedetto inimicissimo. Tantoché preso il magistrato creò una be-
+> ta, la qaate nefripigfìare e riformare lo stato confinò messer Benedetto Alberti,
+> ed il restante della famiglia ammoni, eccettechè messer Antonio. Chiamò mes-
+> aer Benedetto avanti al suo partire tutti i suoi consorti, e veggendogli mesti e
+> pieni di l^me, disse loro : «Voi vedete, padri e maggiori miei, come la tor-
+> toDa ha rovinato me, e minacciato voi; di che né io mi maraviglio, né voi vi
+> dovete maravigHare, perché sempre cosi avviene a coloro, che Ila molti cattivi
+> vpgiiflBO esaer buoni, e che vogliono soatenere quello che i più cercano di ro-
+
+> 88 ISTORIE FIORENTINE. [1393]
+
+> vìDare. L^ amore della mia patria mi fece accostare a messerSalvastro de* Me-
+> dici, e dipoi da measer Giorgio Scali discostare. Quello medesimo mi faceva i
+> costumi di questi che ora governano odiare; i quali come eglino non avevano
+> chi gli gasti^BSse, non hanno ancora vohiCochi gli riprenda. Ed io sono contento
+> con il mio esilio liberargli da quel timore che loro «vevano, non di me sola-
+> mente, ma di qualunque sanno che conosca i tirannici e scellerati modi loro;
+> perciò hanno con le battiture mie minacciati gli altri. Di me non m' incresco,
+> perchè quelli onori, che la patria libera mi ha dati, la serva non mi può torre;
+> e sempre mi darà maggior piacere la memoria della passata vita mia, che non
+> mi darà dispiacere qaella infelicità che si tirerà dietro il mio esìlio. Duolmi
+> bene che la mia patria rimanga in preda di pochi, ed alla loro superbia ed ava-
+> rizia sottoposta. Duolmi di voi , perchò io dubiU» che quelli mali che finiscono
+> oggi in me, e cominciano in voi, con maggiori danni che non hanno persegui-
+> tato me non vi perseguitino. Confortovi adunque a fermare V animo contro ad
+> ogni infortunio, e portarvi in modo che se alcuna cosa avversa vi avviene, che
+> ve ne avverranno molte , ciascuno cognosca , innocentemente e senza colpa
+> vostra esservi avvenute. » Dipoi per non dare di sé minore opinione di bontà
+> fuora, che si avesse data in Firenze, se ne andò al sepolcro di Cristo, dal quale
+> tornando mori a Rodi. V ossa del quale furono condotte in Firenze, e da coloro
+> con grandissimo onore sepolte, che vive con ogni calunnia ed ingiuria le ave-
+> vano perseguitate.
+
+> Non fu in questi travagii della città solamente la famigUa degli Alberti offe-
+> sa, ma con quella molli cittadini anunonili e confinati furono, intra i quali fo
+> Piero Benini, Matteo Alderotti, Giovanni e Francesco del Bene, Giovanni Bend,
+> Andrea Adimari, e con questi gran numero de* minori artefici. Tra ^' amma-
+> niti furono i Covoni, i Benini, i Rinucci, i Formiconi, ì Gorbizzi, i ManDcUi e
+> gli Alderotti. Era consuetudine creare la Balìa per un tempo, ma queUi citta-
+> dini latto che eglino avevano quello per che eglino erano stati diputati, per
+> onestà, ancoraché il tempo non fusse venuto, renunziavano. Parendo pertanto
+> a quelli uomini avere soddisfatto allo stato, volevano secondo il costume riooD-
+> ziare. Il che intendendo molti corsero al Palagio armati, chiedendo che avanti
+> alla rinunzia molti altri confinassero ed ammonissero. Il che dispiacque assai
+> ai Signori , e con le buone promesse tanto gì* intrattennero, che si fecero forti;
+> e dipoi operarono che la paura facesse loro posare quelle armi, che la rabbia
+> aveva fatto pigliare. Nondimeno per soddisfare in parte a si rabbioso umore,e
+> per torre agli artefici plebei più autorità, provvidero che dove gli avevano la
+> terza parte degli onori, ne avessero la quarta ; ed acciocché sempre fossero de
+> Signori duo de' più confidenti allo statò, dettero autorità al Gonfaloniere (n
+> giustizia ed a quattro altri cittadini di fare una borsa di scelti, de' quali io ogni
+> Signoria se ne traesse due.
+
+> Fermato così lo stato, dopo sei anni, che fu nel mggclxxxi ordinato, visse tt
+> città dentro insino al xeni assai quieta. Nel qual tempo Gio. Galeazzo Y^^l^r
+> chiamato Conte di Virtù, prese messer Bernabò suo zio, e perciò diventò di
+> tutta Lombardia principe. Costui credette poter diventare re d' Italia coj» »
+> forza, come egli era diventato duca di Milano con V inganno. E mosse nelx«
+> una guerra gagliardissima ai Fiorentini, e in modo variò quella nel mao^'
+> giarsi, che molte volte fu il duca più presso a pericolo di perdere, cheiFioren;
+> tini, i quaii, se non moriva, avevano perduto. Nondimeio le difese furono ani-
+> mosa e mirabìfì'a una repubblica, ed il fine fu assai meno malvagio, cbefl^
+> era atata la guerra sj^ventevole. Perchè quando il àuca aveva pfeso Bol^»
+> Pisa, Piwugia e Siena, e che egli avevi preparata la corona per coronari i"»
+
+> [ISfflj LIBHO TBftZO. 89
+
+---
+
+### Source Story for Matches 22, 23
 - **Seed Score:** 0.456
 - **Story-Length Passage:** `yes`
 - **Story Size:** 6 source paragraphs, 13 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 3 of 6
-- **Matches Export References:** `matches_it.md` #22
+- **Matches Export References:** `matches_it.md` #22, #23
 - **Keywords:** `patria`
 - **Nearest Semantic Reference (Not a Summary):** 'As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.archive.org/stream/historiadellamia00casa/historiadellamia00casa_djvu.txt](http://www.archive.org/stream/historiadellamia00casa/historiadellamia00casa_djvu.txt)
-- **Capture Count:** 1
+- **Capture Count:** 2
 - **Crawl Dataset:** `CC-MAIN-2013-48`
 - **Source File:** `crawl-data/CC-MAIN-2013-48/segments/1386164038825/wet/CC-MAIN-20131204133358-00047-ip-10-33-133-15.ec2.internal.warc.wet.gz`
 

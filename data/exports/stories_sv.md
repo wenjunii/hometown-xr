@@ -1,7 +1,7 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `sv`
-**Unique Stories:** 5
+**Unique Stories:** 6
 
 ---
 
@@ -462,6 +462,362 @@
 
 > - Tiiiiiiisdag
 > Detta har verkligen inte varit en lätt dag. Morgonen däremot, var helt underbar. Jag åkte ganska sent hemifrån, typ vid halv elva-tiden, och då hade det redan ljusnat ute. SOLEN sken! Jag satt där i min egna lilla drömvärld på centralen och solade mitt vinterljusa ansikte i den lite halvt värmande "vår"-solen. Det var så himla underbart, det kändes verkligen som att sommaren var på väg. Men, som så mycket annat här i världen tvärvände även det glada humöret efter att skolan slutat. Min nya friis company-väska brakade samman; ena remmen gick av. Jag blev arg. den var ju faktiskt NY!Ett tips till dom som ska köpa en väska; ÖVERVÄG inte ens att köpa en friis-väska! Det är SKITKVALITET på dom, håller fan knappt tre veckor!!!Innan skolan slutade gjorde jag ett antal tappra försök att få Sophie att inte röka, misslyckades på sätt & vis genom att hon mutade mig med godis... men så gav hon ett löfte också och det var väl därför jag "gav med mig". Så nu kommer hon alltså inte att röka mer, nånsin! :D jag kan briljera med min lycka ;)När jag skulle åka med Sophie o köpa hennes kent-tröja i stan, och det visade sig att hon skulle hem direkt efter, var det som att nånting lossnade i mig. (det brukar bli så). Allting bara släppte och jag visste varken ut eller in eller vart jag skulle ta vägen. Allt, precis ALLT som hade med mig själv att göra kändes så meninsglöst! Hade en sån himla tur att jag hade Sophie där hos mig då, annars vet jag inte hur det skulle slutat. =/ Sen åkte vi ialla fall och köpte den där tröjan, och sen gick vi mot sergels torg och Sophie bjöd mig på fika på "Robbans" haha..(robert's coffee). Där satt vi ganska länge och bara myste på det omysiga kaféet, jagade blomflugor och brände oss på té-muggar. Men det VAR mysigt! JagälskardigSophieochkommeralltidattgöradet!Det känns så fruktansvärt att vara nere och deppad, när det enda man egentligen vill, är att sprida glädje omkring sig. Det känns typ som att det är mitt livs mening, att glädja mina älskade nära o kära. Visa dom hur mycket dom betyder för mig. Och när jag misslyckas med det, känner jag mig så otroligt värdelös.Sen ÄR det konstaterat att jag inte klarar mig utan Micke i mer än en vecka. Sen dör jag!Vill gå och sova nu, är så död det bara går. TACK MINA VÄNNER JAG ÄLSKAR ER SÅ MYCKET !Caroline Norman, jag saknar dig, måste träffa dig snart!Hanna jag älskar dig, du är min ögonsten föralltid.My jag saknar dig och älskar dig så mycket..Nabila kom hem nu fortfortfort jag dööö&oum
+
+---
+
+### Source Story for Match 6
+- **Seed Score:** 0.453
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 16 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_sv.md` #6
+- **Keywords:** `hem`
+- **Nearest Semantic Reference (Not a Summary):** 'Home for me is not just a building — it is the feeling of being among my own people, where I am understood and loved.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.annaleenashem.blogspot.com/2009/12/housedoctor.html](http://www.annaleenashem.blogspot.com/2009/12/housedoctor.html)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021767060/wet/CC-MAIN-20140305121607-00030-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> ANNALEENAS HEM // home decor and inspiration
+> skip to main |
+> skip to sidebar
+> ANNALEENAS HEM // home decor and inspiration
+> housedoctor.dk
+> Jag är en julnörd..och levande ljus nörd...gillar värmen och stämningen som levande ljus sprider sig. Men efter att jag har hört sista tiden hur många tragiska situationer att uppstått när levande ljus har varit obevakade, så är väldigt känslig att dubbelkolla innan jag går o lägger mig att ALLA ljusen är verkligen släckta..så nu har jag blivit en känslig levande-ljus-jul nörd! :)
+> Skicka med e-postBlogThis!Dela på TwitterDela på FacebookDela på Pinterest
+> Inga kommentarer:
+> Skicka en kommentar
+> Senaste inlägg
+> Äldre inlägg
+> Startsida
+> Prenumerera på:
+> Kommentarer till inlägget (Atom)
+> INTERIOR // SCULPTURAL
+> DIY ________ tube lamp
+> INTERIOR _____________ white retreat
+> GIVEAWAY! _____________
+> DIY // BLACK
+> [ ANETTESHUS.COM ]
+> BODIE and FOU★ Le Blog: Inspiring Interior Design blog by two French sisters
+> Husligheter – inredning och design som blogg.
+> decor8
+> Living by W
+> CAISA K.
+> Lotta Agaton
+> French By Design
+> me and Alice
+> CHERRY BLOSSOM
+> design attractor
+> jeg er jonathan
+> A Merry Mishap
+> Solid frog
+> EGET ROM
+> 20 KVADRAT
+> Fridas fina
+> BY FRYD
+> Design Shimmer
+> Musta tuntuu
+> Fen and Ned
+> Helt Enkelt
+> Krickelin
+> ungt blod
+> Trendenser
+> Emmas designblogg
+> Visa 5
+> Visa alla
+> STIL inspiration
+> Vintage House
+> studio karin
+> House number 15
+> Mitt vita hus
+> Elina Dahl
+> Purple Area
+> Pihkala
+> En mammas dag - Helena
+> Made in Persbo
+> ica carlsson » Min blogg om inredning, styling och vackra saker jag tycker om.
+> My Lovely Things!
+> Anna gillar
+> VARDAGSLYX HOS NILLA
+> Hunajaista
+> mackapär
+> Annaleenas HEM, pure home decor and inspiration!
+> Maria
+> blogg för Tant Johanna
+> Daniella Witte
+> ingen vanlig dag
+> peppar och vanilj
+> H E L E N A - S K A R P
+> Design & Inredningsbloggen
+> at home
+> Sussi's Värld
+> Två Små Rum
+> Wabi & Sabi
+> Blomsterverkstad
+> RUM FÖR TVÅ
+> Style Studio
+> Systrarna
+> The super ordinary
+> [room] by sofie
+> Qreate by Maliin Stoor - blogg, homestyling, inredning, skyltfönsterdesign, utbildning
+> Visa 5
+> Visa alla
+> iiiinspired
+> Hallingstad
+> April and May
+> FEEL INSPIRED
+> WO AND WÉ
+> Vosges Paris
+> time of the aquarius
+> Min morfars hus
+> M R S J O N E S
+> LÖYTÖ
+> Kotilo
+> hviit
+> my 2nd hand life
+> geisslein
+> FruFly★
+> worldlytreasury
+> alma
+> facing north with gracia
+> Fredbo
+> WEEKDAYCARNIVAL
+> Fjeldborg
+> Reelinki
+> La maison d'Anna G.
+> Forever Love
+> deco da
+> Ellens album
+> Domestic Stories
+> MESy design
+> ert&ris
+> Spagat
+> mi-rachel
+> Mustalla
+> Prydelig
+> Love Peace Pionies
+> NOE PÅ HJERTET
+> RoSaLiGa
+> moa og kaffekoppen
+> Quiero
+> Nenna
+> aniiri
+> Kahden suora
+> Visa 5
+> Visa alla
+> Hannasroom.com
+> L U N D A G Å R D | lantliv, inredning, byggnadsvård, retro, design, vintage, shabby chic
+> Mokkasin
+> Fräulein Klein - my daily life
+> Pinjacolada
+> Med en känsla ♥
+> WO AND WÉ COLLECTION
+> BO
+> ert&ris
+> millandante sign
+> Linda Vagnelind
+> live a lot
+> kavka
+> Mustalla
+> Hannas Virrvarr
+> K R I S T I I N A
+> holmberg everyday living
+> twajs
+> POMPOON
+> Items by designbird
+> My Old Blue Suitcase
+> BRIGGS LEKEHUS
+> Purpur
+> A Beautiful Living
+> jar of cherry jam
+> Adventurous Design Quest
+> Loellas Hus
+> ToRa
+> Visa 5
+> Visa alla
+> Maria Van Nguyen
+> The Sartorialist
+> Style by Kling
+> JAK & JIL
+> LOVE AESTHETICS | by Ivania Carpio
+> WeHaveNoStyle by Iris & Daniel
+> HANNELI MUSTAPARTA
+> O D Y S S E Y
+> Visa 5
+> Visa alla
+
+#### Extracted Source Story
+
+> ANNALEENAS HEM // home decor and inspiration
+> skip to main |
+> skip to sidebar
+> ANNALEENAS HEM // home decor and inspiration
+> housedoctor.dk
+> Jag är en julnörd..och levande ljus nörd...gillar värmen och stämningen som levande ljus sprider sig. Men efter att jag har hört sista tiden hur många tragiska situationer att uppstått när levande ljus har varit obevakade, så är väldigt känslig att dubbelkolla innan jag går o lägger mig att ALLA ljusen är verkligen släckta..så nu har jag blivit en känslig levande-ljus-jul nörd! :)
+> Skicka med e-postBlogThis!Dela på TwitterDela på FacebookDela på Pinterest
+> Inga kommentarer:
+> Skicka en kommentar
+> Senaste inlägg
+> Äldre inlägg
+> Startsida
+> Prenumerera på:
+> Kommentarer till inlägget (Atom)
+> INTERIOR // SCULPTURAL
+> DIY ________ tube lamp
+> INTERIOR _____________ white retreat
+> GIVEAWAY! _____________
+> DIY // BLACK
+> [ ANETTESHUS.COM ]
+> BODIE and FOU★ Le Blog: Inspiring Interior Design blog by two French sisters
+> Husligheter – inredning och design som blogg.
+> decor8
+> Living by W
+> CAISA K.
+> Lotta Agaton
+> French By Design
+> me and Alice
+> CHERRY BLOSSOM
+> design attractor
+> jeg er jonathan
+> A Merry Mishap
+> Solid frog
+> EGET ROM
+> 20 KVADRAT
+> Fridas fina
+> BY FRYD
+> Design Shimmer
+> Musta tuntuu
+> Fen and Ned
+> Helt Enkelt
+> Krickelin
+> ungt blod
+> Trendenser
+> Emmas designblogg
+> Visa 5
+> Visa alla
+> STIL inspiration
+> Vintage House
+> studio karin
+> House number 15
+> Mitt vita hus
+> Elina Dahl
+> Purple Area
+> Pihkala
+> En mammas dag - Helena
+> Made in Persbo
+> ica carlsson » Min blogg om inredning, styling och vackra saker jag tycker om.
+> My Lovely Things!
+> Anna gillar
+> VARDAGSLYX HOS NILLA
+> Hunajaista
+> mackapär
+> Annaleenas HEM, pure home decor and inspiration!
+> Maria
+> blogg för Tant Johanna
+> Daniella Witte
+> ingen vanlig dag
+> peppar och vanilj
+> H E L E N A - S K A R P
+> Design & Inredningsbloggen
+> at home
+> Sussi's Värld
+> Två Små Rum
+> Wabi & Sabi
+> Blomsterverkstad
+> RUM FÖR TVÅ
+> Style Studio
+> Systrarna
+> The super ordinary
+> [room] by sofie
+> Qreate by Maliin Stoor - blogg, homestyling, inredning, skyltfönsterdesign, utbildning
+> Visa 5
+> Visa alla
+> iiiinspired
+> Hallingstad
+> April and May
+> FEEL INSPIRED
+> WO AND WÉ
+> Vosges Paris
+> time of the aquarius
+> Min morfars hus
+> M R S J O N E S
+> LÖYTÖ
+> Kotilo
+> hviit
+> my 2nd hand life
+> geisslein
+> FruFly★
+> worldlytreasury
+> alma
+> facing north with gracia
+> Fredbo
+> WEEKDAYCARNIVAL
+> Fjeldborg
+> Reelinki
+> La maison d'Anna G.
+> Forever Love
+> deco da
+> Ellens album
+> Domestic Stories
+> MESy design
+> ert&ris
+> Spagat
+> mi-rachel
+> Mustalla
+> Prydelig
+> Love Peace Pionies
+> NOE PÅ HJERTET
+> RoSaLiGa
+> moa og kaffekoppen
+> Quiero
+> Nenna
+> aniiri
+> Kahden suora
+> Visa 5
+> Visa alla
+> Hannasroom.com
+> L U N D A G Å R D | lantliv, inredning, byggnadsvård, retro, design, vintage, shabby chic
+> Mokkasin
+> Fräulein Klein - my daily life
+> Pinjacolada
+> Med en känsla ♥
+> WO AND WÉ COLLECTION
+> BO
+> ert&ris
+> millandante sign
+> Linda Vagnelind
+> live a lot
+> kavka
+> Mustalla
+> Hannas Virrvarr
+> K R I S T I I N A
+> holmberg everyday living
+> twajs
+> POMPOON
+> Items by designbird
+> My Old Blue Suitcase
+> BRIGGS LEKEHUS
+> Purpur
+> A Beautiful Living
+> jar of cherry jam
+> Adventurous Design Quest
+> Loellas Hus
+> ToRa
+> Visa 5
+> Visa alla
+> Maria Van Nguyen
+> The Sartorialist
+> Style by Kling
+> JAK & JIL
+> LOVE AESTHETICS | by Ivania Carpio
+> WeHaveNoStyle by Iris & Daniel
+> HANNELI MUSTAPARTA
+> O D Y S S E Y
+> Visa 5
+> Visa alla
 
 ---
 

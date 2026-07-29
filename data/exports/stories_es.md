@@ -1,7 +1,77 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `es`
-**Unique Stories:** 2
+**Unique Stories:** 3
+
+---
+
+### Source Story for Match 1
+- **Seed Score:** 0.548
+- **Story-Length Passage:** `yes`
+- **Story Size:** 3 source paragraphs, 43 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 3 of 3
+- **Matches Export References:** `matches_es.md` #1
+- **Keywords:** `where i belong, where i come from`
+- **Nearest Semantic Reference (Not a Summary):** 'Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://cifraclub.com/kreviazuk-chantal/feels-like-home/](http://cifraclub.com/kreviazuk-chantal/feels-like-home/)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394021900438/wet/CC-MAIN-20140305121820-00005-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> D                      A
+> It feels like home to me, feels like home to me,
+>                   G           D                 A
+> It feels like I'm all the way back where I come from.
+>               D                      A
+> It feels like home to me, feels like home to me,
+>                   G           D            A          D
+> It feels like I'm all the way back where I belong.
+>                   G           D            A          D
+> It feels like I'm all the way back where I belong.
+> Configuraciónes mover minimizarnormalgranfijar playercerrar clips video leccióne usted tocando » Esta canción no tiene lección en video Ingrese su correo eletrónico para recibir una notificación cuando la clase a cabo.	Pedir Siga nosotros @cifraclub en el twitter y acompañe las últimas video lecciónes publicadas Configuraciónes Autoplay conectado . Puedes activar o desactivar la ejecución automática Minimizado normal gran Costumbre . Seleccione una de las opciones para el tamaño ideal de su reproductor Compartimento automático . Marque esta opción para compartir toda la música se escucha en Letras.mus.br guardar las preferenciasno guarde ampliar la listaabrir player Sintonizador desplazamiento diccionario favoritar acorde agregar en mi acordes carta fotos videos imprimir corregir salvar txt Texto Columnas disminuir ampliar una dos Alterar tom ½ tono ½ tono sintonización acordes cejilla Ver acordes de: guitarra teclado cavaquiño - diestro zurdo más » Cifra 298
+> exhibiciónes	guitarra teclado cavaquiño Comentarios (0) 140 . Tienes que estar registrado para dejar un comentario. Aún no eres miembro? Regístrate correo electrónico contraseña Para publicar un comentario tienes que escribir los siguientes caracteres. OK eliminar responder 140 cancelar Tienes que estar registrado para dejar un comentario. Aún no eres miembro? Regístrate correo electrónico contraseña Para publicar un comentario tienes que escribir los siguientes caracteres. OK Contribución: Understido Correcciónes:
+> Luana
+> e mais 1 » Consigo tocar1 consigueAún no puedo reproducir
+> Top acordes semanamesgeneral Sweet Child O' Mine - Guns N' Roses mantiene 2.568 exhibiciones Wake Me Up - Avicii mantiene 2.010 exhibiciones Wonderwall - Oasis mantiene 1.871 exhibiciones Get Lucky - Daft Punk mantiene 1.561 exhibiciones Nothing Else Matters - Metallica mantiene 1.519 exhibiciones When I Was Your Man - Bruno Mars mantiene 1.465 exhibiciones Stairway To Heaven - Led Zeppelin mantiene 1.423 exhibiciones Hey Jude - The Beatles mantiene 1.405 exhibiciones I'm Yours - Jason Mraz mantiene 1.258 exhibiciones Story Of My Life - One Direction mantiene 1.185 exhibiciones « volver Top 1000 acordes RSSmás » Top artistas semanamesgeneral The Beatles- mantiene 21.127 exhibiciones Guns N' Roses- mantiene 7.171 exhibiciones Metallica- mantiene 7.039 exhibiciones One Direction- mantiene 5.238 exhibiciones Bruno Mars- mantiene 5.152 exhibiciones Red Hot Chili Peppers- mantiene 5.121 exhibiciones Nirvana- mantiene 5.011 exhibiciones Coldplay- mantiene 4.408 exhibiciones Oasis- mantiene 4.237 exhibiciones Green Day- mantiene 3.274 exhibiciones « volver Top 1000 artistas RSS más » trocar acorde movercerrar variar help cancelar Ok Exhibir acordes » Acordes y tabs Top 1000 acordes Top 1000 artistas Guitarra y Guitarra Electrica Contrabajo Batería Partituras Armónica Guitar Pro Novedades Solicitar un acorde Envíe sus acordes Aprenda Diccionario de acordes Sintonizador Studio Sol Aviso Legal Política de Privacidad Cadastre-se Contáctanos ver em português . ©1996 - 2014 Cifra Club · el primero, mayor y más accedido del Brasil · 327 mil músicas · 5.8 millones de personas registradas facebook youtube publicidad cerrar
+
+#### Extracted Source Story
+
+> D	A   D	  	  A
+> A win - dow breaks down a long dark street,
+>       G			 D	   A
+> And a siren wails in the night.
+>     D   A   D			     A
+> But I'm all right, 'cause I have you here with me.
+> 	  G			 	      D	         A
+> And I can almost see through the dark there's light.
+
+> F#m	G		 D     A  G
+> If you knew how much this moment means to me,
+> 	G	  D		  A
+> And how long I've waited for your touch.
+> 	   F#m	    G	   	  D    A    G
+> And if you knew how happy you are ma - king me,
+>      G	  		    D         A
+> I've never thought I'd love anyone so much.
+
+> D                      A
+> It feels like home to me, feels like home to me,
+>                   G           D                 A
+> It feels like I'm all the way back where I come from.
+>               D                      A
+> It feels like home to me, feels like home to me,
+>                   G           D            A          D
+> It feels like I'm all the way back where I belong.
+>                   G           D            A          D
+> It feels like I'm all the way back where I belong.
+> Configuraciónes mover minimizarnormalgranfijar playercerrar clips video leccióne usted tocando » Esta canción no tiene lección en video Ingrese su correo eletrónico para recibir una notificación cuando la clase a cabo.	Pedir Siga nosotros @cifraclub en el twitter y acompañe las últimas video lecciónes publicadas Configuraciónes Autoplay conectado . Puedes activar o desactivar la ejecución automática Minimizado normal gran Costumbre . Seleccione una de las opciones para el tamaño ideal de su reproductor Compartimento automático . Marque esta opción para compartir toda la música se escucha en Letras.mus.br guardar las preferenciasno guarde ampliar la listaabrir player Sintonizador desplazamiento diccionario favoritar acorde agregar en mi acordes carta fotos videos imprimir corregir salvar txt Texto Columnas disminuir ampliar una dos Alterar tom ½ tono ½ tono sintonización acordes cejilla Ver acordes de: guitarra teclado cavaquiño - diestro zurdo más » Cifra 298
+> exhibiciónes	guitarra teclado cavaquiño Comentarios (0) 140 . Tienes que estar registrado para dejar un comentario. Aún no eres miembro? Regístrate correo electrónico contraseña Para publicar un comentario tienes que escribir los siguientes caracteres. OK eliminar responder 140 cancelar Tienes que estar registrado para dejar un comentario. Aún no eres miembro? Regístrate correo electrónico contraseña Para publicar un comentario tienes que escribir los siguientes caracteres. OK Contribución: Understido Correcciónes:
+> Luana
+> e mais 1 » Consigo tocar1 consigueAún no puedo reproducir
+> Top acordes semanamesgeneral Sweet Child O' Mine - Guns N' Roses mantiene 2.568 exhibiciones Wake Me Up - Avicii mantiene 2.010 exhibiciones Wonderwall - Oasis mantiene 1.871 exhibiciones Get Lucky - Daft Punk mantiene 1.561 exhibiciones Nothing Else Matters - Metallica mantiene 1.519 exhibiciones When I Was Your Man - Bruno Mars mantiene 1.465 exhibiciones Stairway To Heaven - Led Zeppelin mantiene 1.423 exhibiciones Hey Jude - The Beatles mantiene 1.405 exhibiciones I'm Yours - Jason Mraz mantiene 1.258 exhibiciones Story Of My Life - One Direction mantiene 1.185 exhibiciones « volver Top 1000 acordes RSSmás » Top artistas semanamesgeneral The Beatles- mantiene 21.127 exhibiciones Guns N' Roses- mantiene 7.171 exhibiciones Metallica- mantiene 7.039 exhibiciones One Direction- mantiene 5.238 exhibiciones Bruno Mars- mantiene 5.152 exhibiciones Red Hot Chili Peppers- mantiene 5.121 exhibiciones Nirvana- mantiene 5.011 exhibiciones Coldplay- mantiene 4.408 exhibiciones Oasis- mantiene 4.237 exhibiciones Green Day- mantiene 3.274 exhibiciones « volver Top 1000 artistas RSS más » trocar acorde movercerrar variar help cancelar Ok Exhibir acordes » Acordes y tabs Top 1000 acordes Top 1000 artistas Guitarra y Guitarra Electrica Contrabajo Batería Partituras Armónica Guitar Pro Novedades Solicitar un acorde Envíe sus acordes Aprenda Diccionario de acordes Sintonizador Studio Sol Aviso Legal Política de Privacidad Cadastre-se Contáctanos ver em português . ©1996 - 2014 Cifra Club · el primero, mayor y más accedido del Brasil · 327 mil músicas · 5.8 millones de personas registradas facebook youtube publicidad cerrar
 
 ---
 

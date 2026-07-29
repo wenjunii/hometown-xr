@@ -1,7 +1,7 @@
 # Expanded Home and Belonging Stories
 
 **Language:** `fr`
-**Unique Stories:** 14
+**Unique Stories:** 16
 
 ---
 
@@ -589,17 +589,65 @@
 
 ---
 
-### Source Story for Match 4
+### Source Story for Match 3
+- **Seed Score:** 0.532
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 21 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_fr.md` #3
+- **Keywords:** `ville natale`
+- **Nearest Semantic Reference (Not a Summary):** 'When I finally came back to the place where I grew up after so many years away, tears streamed down my face.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://www.museevirtuel-virtualmuseum.ca/sgc-cms/expositions-exhibitions/orphelins-orphans/french/biographies/ehrlich/chapter5.html](http://www.museevirtuel-virtualmuseum.ca/sgc-cms/expositions-exhibitions/orphelins-orphans/french/biographies/ehrlich/chapter5.html)
+- **Capture Count:** 1
+- **Crawl Dataset:** `CC-MAIN-2013-20`
+- **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368705884968/wet/CC-MAIN-20130516120444-00057-ip-10-60-113-184.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> Biographies | David Erhlich
+> V. Prise de conscience des pertes
+> Dès que je l'ai pu, je suis retourné à Bitrita, ma ville natale, où j'ai retrouvé ma s�ur Rose et son mari. Je voulais revoir notre vieille maison familiale. Rose essaya de me convaincre de ne pas y aller mais je le fis et ce fut la première fois que je me suis effondré et que j'ai pleuré. Cela m'a fait énormément souffrir. Je me rappelle que je suis entré dans la cuisine, il y avait une femme hongroise qui vivait là. Tous nos meubles avaient disparu, chaque chose était à une autre place. Pour moi, le temps s'est arrêté, j'ai tout revu comme dans un éclair dans mon esprit. J'ai fini par m'effondrer et je me suis enfui en pleurant. Je n'avais rien à lui dire. Je me suis enfui et ne suis jamais revenu.
+> suivant... » English • Pour Nous Joindre • Crédits
+> Vancouver Holocaust Education Centre	© VHEC 2002. Tous Droits Réservés.
+> Carte de David
+> I. Gherla, Transylvanie
+> II. Déportation
+> III. Auschwitz
+> IV. La marche de la mort
+> V. Prise de conscience des pertes
+> VI. Arrivée au Canada
+> VII. Devenir canadien
+
+#### Extracted Source Story
+
+> Biographies | David Erhlich
+> V. Prise de conscience des pertes
+> Dès que je l'ai pu, je suis retourné à Bitrita, ma ville natale, où j'ai retrouvé ma s�ur Rose et son mari. Je voulais revoir notre vieille maison familiale. Rose essaya de me convaincre de ne pas y aller mais je le fis et ce fut la première fois que je me suis effondré et que j'ai pleuré. Cela m'a fait énormément souffrir. Je me rappelle que je suis entré dans la cuisine, il y avait une femme hongroise qui vivait là. Tous nos meubles avaient disparu, chaque chose était à une autre place. Pour moi, le temps s'est arrêté, j'ai tout revu comme dans un éclair dans mon esprit. J'ai fini par m'effondrer et je me suis enfui en pleurant. Je n'avais rien à lui dire. Je me suis enfui et ne suis jamais revenu.
+> suivant... » English • Pour Nous Joindre • Crédits
+> Vancouver Holocaust Education Centre	© VHEC 2002. Tous Droits Réservés.
+> Carte de David
+> I. Gherla, Transylvanie
+> II. Déportation
+> III. Auschwitz
+> IV. La marche de la mort
+> V. Prise de conscience des pertes
+> VI. Arrivée au Canada
+> VII. Devenir canadien
+
+---
+
+### Source Story for Matches 4, 5
 - **Seed Score:** 0.524
 - **Story-Length Passage:** `yes`
 - **Story Size:** 6 source paragraphs, 12 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 3 of 6
-- **Matches Export References:** `matches_fr.md` #4
+- **Matches Export References:** `matches_fr.md` #4, #5
 - **Keywords:** `chez moi`
 - **Nearest Semantic Reference (Not a Summary):** 'I have moved many times in my life, but the meaning of home — that deep yearning for a place to call my own — never fades.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://www.archive.org/stream/glossaryofcolloq027868mbp/glossaryofcolloq027868mbp_djvu.txt](http://www.archive.org/stream/glossaryofcolloq027868mbp/glossaryofcolloq027868mbp_djvu.txt)
-- **Capture Count:** 1
+- **Capture Count:** 2
 - **Crawl Dataset:** `CC-MAIN-2013-48`
 - **Source File:** `crawl-data/CC-MAIN-2013-48/segments/1386164937476/wet/CC-MAIN-20131204134857-00059-ip-10-33-133-15.ec2.internal.warc.wet.gz`
 
@@ -908,17 +956,17 @@
 
 ---
 
-### Source Story for Matches 8, 9, 10, 11
+### Source Story for Matches 8, 9, 10, 11, 12
 - **Seed Score:** 0.505
 - **Story-Length Passage:** `yes`
 - **Story Size:** 1 source paragraph, 28 sentences, 1 excerpt
 - **Filter-Matched Paragraph:** 1 of 1
-- **Matches Export References:** `matches_fr.md` #8, #9, #10, #11
+- **Matches Export References:** `matches_fr.md` #8, #9, #10, #11, #12
 - **Keywords:** `enfance`
 - **Nearest Semantic Reference (Not a Summary):** 'My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.'
 - **Extraction Method:** deterministic source-paragraph selection; no generated text
 - **Source URL:** [http://legrenierdebibiane.com/marieanna/grandpere/texte.html](http://legrenierdebibiane.com/marieanna/grandpere/texte.html)
-- **Capture Count:** 4
+- **Capture Count:** 5
 - **Crawl Dataset:** `CC-MAIN-2013-20`
 - **Source File:** `crawl-data/CC-MAIN-2013-20/segments/1368704933573/wet/CC-MAIN-20130516114853-00016-ip-10-60-113-184.ec2.internal.warc.wet.gz`
 
@@ -3385,6 +3433,332 @@
 > décembre
 > (7)
 > novembre
+> (10)
+> Liens amis
+> Com' un blog
+> côté sud
+> ParisDailyPhoto
+> Petites paroles inutiles de Coumarine
+> Quelques mots pour Juliette
+> reves et bulles
+> tippie
+> Traou
+> véro
+> wictoria
+> zoridae
+> Mon profil
+> claude
+> Venez, venez chez moi dans cette maison aux volets bleus où le vent souffle parfois de bien étranges confidences et les portes ouvrent sur des rêves à partager
+> Afficher mon profil complet
+> Modèle Awesome Inc.. Fourni par Blogger.
+
+---
+
+### Source Story for Matches 21, 22
+- **Seed Score:** 0.462
+- **Story-Length Passage:** `yes`
+- **Story Size:** 1 source paragraph, 19 sentences, 1 excerpt
+- **Filter-Matched Paragraph:** 1 of 1
+- **Matches Export References:** `matches_fr.md` #21, #22
+- **Keywords:** `chez moi, enfance`
+- **Nearest Semantic Reference (Not a Summary):** 'My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.'
+- **Extraction Method:** deterministic source-paragraph selection; no generated text
+- **Source URL:** [http://duventauxsemelles.blogspot.com/2009/04/les-marguerites.html](http://duventauxsemelles.blogspot.com/2009/04/les-marguerites.html)
+- **Capture Count:** 2
+- **Crawl Dataset:** `CC-MAIN-2014-10`
+- **Source File:** `crawl-data/CC-MAIN-2014-10/segments/1394011237821/wet/CC-MAIN-20140305092037-00064-ip-10-183-142-35.ec2.internal.warc.wet.gz`
+
+#### Accepted Filter Paragraph
+
+> DU VENT AUX SEMELLES: les marguerites
+> DU VENT AUX SEMELLES
+> Monde de couleurs et d'images, monde sans cesse le même mais toujours recommencé et que je vous convie à parcourir en ma compagnie avec le vent
+> pour compagnon à nos semelles
+> 20.4.09
+> les marguerites
+> J'ai connu le temps où coulent les enfances,Tout doucement, au début de la vie.Le temps de l'école, le temps de l'innocenceEt du chagrin, et du bonheur aussi.J'ai laissé passer le temps qui va trop vite.Si j'ai tout vu pendant quelques années,Je n'ai pas connu le temps des marguerites.Feuillues sont nées, feuillues se sont fanées.Puis est arrivé le temps de mes ivresses,De mes alcools aux mauvais souvenirsEt les yeux gonflés, le temps de la paresseOù l'on se tue à force de dormirEt je suis resté, en attendant la suite,Dans une vie de vide enrubannée.Je n'ai pas connu le temps des marguerites.Feuillues sont nées, feuillues se sont fanées.J'ai connu le temps de la désespéranceOù l'on s'enlise un peu plus chaque jour,Où, les yeux ouverts, on n'attend de la chancePlus que la mort si ne vient pas l'amour.Si, dans l'avenir, on vante mes mérites,Ne croyez pas ce que les gens diront.Je n'ai pas connu le temps des marguerites.Feuillues naîtront, feuillues se faneront.c'est comme ça qu'i cause le gars Miossecqu'est un sacré paroissienet qu'est un sacré mecc'est comme ça qu'i chante et ça me fait du bien
+> Publié par
+> claude
+> à
+> 9:39 PM
+> Aucun commentaire:
+> Enregistrer un commentaire
+> Article plus récent
+> Article plus ancien
+> Accueil
+> Inscription à :
+> Publier les commentaires (Atom)
+> Membres
+> Loading...
+> Ce/tte création est mis/e à disposition sous un contrat Creative Commons
+> Archives du blog
+> ► 2011
+> (2)
+> ► février
+> (2)
+> ► 2010
+> (4)
+> ► décembre
+> (1)
+> ► juillet
+> (1)
+> ► janvier
+> (2)
+> ▼ 2009
+> (12)
+> ► novembre
+> (1)
+> ► mai
+> (1)
+> ▼ avril
+> (3)
+> Aragon l'enchanteur
+> les marguerites
+> Où ça va nous mener...andertal?
+> ► mars
+> (2)
+> ► février
+> (2)
+> ► janvier
+> (3)
+> ► 2008
+> (66)
+> ► décembre
+> (5)
+> ► novembre
+> (3)
+> ► octobre
+> (4)
+> ► septembre
+> (5)
+> ► août
+> (2)
+> ► juillet
+> (3)
+> ► juin
+> (8)
+> ► mai
+> (4)
+> ► avril
+> (6)
+> ► mars
+> (8)
+> ► février
+> (9)
+> ► janvier
+> (9)
+> ► 2007
+> (146)
+> ► décembre
+> (5)
+> ► novembre
+> (12)
+> ► octobre
+> (11)
+> ► septembre
+> (12)
+> ► août
+> (9)
+> ► juillet
+> (15)
+> ► juin
+> (7)
+> ► mai
+> (13)
+> ► avril
+> (15)
+> ► mars
+> (23)
+> ► février
+> (11)
+> ► janvier
+> (13)
+> ► 2006
+> (238)
+> ► décembre
+> (13)
+> ► novembre
+> (13)
+> ► octobre
+> (12)
+> ► septembre
+> (17)
+> ► août
+> (18)
+> ► juillet
+> (17)
+> ► juin
+> (14)
+> ► mai
+> (24)
+> ► avril
+> (28)
+> ► mars
+> (26)
+> ► février
+> (34)
+> ► janvier
+> (22)
+> ► 2005
+> (17)
+> ► décembre
+> (7)
+> ► novembre
+> (10)
+> Liens amis
+> Com' un blog
+> côté sud
+> ParisDailyPhoto
+> Petites paroles inutiles de Coumarine
+> Quelques mots pour Juliette
+> reves et bulles
+> tippie
+> Traou
+> véro
+> wictoria
+> zoridae
+> Mon profil
+> claude
+> Venez, venez chez moi dans cette maison aux volets bleus où le vent souffle parfois de bien étranges confidences et les portes ouvrent sur des rêves à partager
+> Afficher mon profil complet
+> Modèle Awesome Inc.. Fourni par Blogger.
+
+#### Extracted Source Story
+
+> DU VENT AUX SEMELLES: les marguerites
+> DU VENT AUX SEMELLES
+> Monde de couleurs et d'images, monde sans cesse le même mais toujours recommencé et que je vous convie à parcourir en ma compagnie avec le vent
+> pour compagnon à nos semelles
+> 20.4.09
+> les marguerites
+> J'ai connu le temps où coulent les enfances,Tout doucement, au début de la vie.Le temps de l'école, le temps de l'innocenceEt du chagrin, et du bonheur aussi.J'ai laissé passer le temps qui va trop vite.Si j'ai tout vu pendant quelques années,Je n'ai pas connu le temps des marguerites.Feuillues sont nées, feuillues se sont fanées.Puis est arrivé le temps de mes ivresses,De mes alcools aux mauvais souvenirsEt les yeux gonflés, le temps de la paresseOù l'on se tue à force de dormirEt je suis resté, en attendant la suite,Dans une vie de vide enrubannée.Je n'ai pas connu le temps des marguerites.Feuillues sont nées, feuillues se sont fanées.J'ai connu le temps de la désespéranceOù l'on s'enlise un peu plus chaque jour,Où, les yeux ouverts, on n'attend de la chancePlus que la mort si ne vient pas l'amour.Si, dans l'avenir, on vante mes mérites,Ne croyez pas ce que les gens diront.Je n'ai pas connu le temps des marguerites.Feuillues naîtront, feuillues se faneront.c'est comme ça qu'i cause le gars Miossecqu'est un sacré paroissienet qu'est un sacré mecc'est comme ça qu'i chante et ça me fait du bien
+> Publié par
+> claude
+> à
+> 9:39 PM
+> Aucun commentaire:
+> Enregistrer un commentaire
+> Article plus récent
+> Article plus ancien
+> Accueil
+> Inscription à :
+> Publier les commentaires (Atom)
+> Membres
+> Loading...
+> Ce/tte création est mis/e à disposition sous un contrat Creative Commons
+> Archives du blog
+> ► 2011
+> (2)
+> ► février
+> (2)
+> ► 2010
+> (4)
+> ► décembre
+> (1)
+> ► juillet
+> (1)
+> ► janvier
+> (2)
+> ▼ 2009
+> (12)
+> ► novembre
+> (1)
+> ► mai
+> (1)
+> ▼ avril
+> (3)
+> Aragon l'enchanteur
+> les marguerites
+> Où ça va nous mener...andertal?
+> ► mars
+> (2)
+> ► février
+> (2)
+> ► janvier
+> (3)
+> ► 2008
+> (66)
+> ► décembre
+> (5)
+> ► novembre
+> (3)
+> ► octobre
+> (4)
+> ► septembre
+> (5)
+> ► août
+> (2)
+> ► juillet
+> (3)
+> ► juin
+> (8)
+> ► mai
+> (4)
+> ► avril
+> (6)
+> ► mars
+> (8)
+> ► février
+> (9)
+> ► janvier
+> (9)
+> ► 2007
+> (146)
+> ► décembre
+> (5)
+> ► novembre
+> (12)
+> ► octobre
+> (11)
+> ► septembre
+> (12)
+> ► août
+> (9)
+> ► juillet
+> (15)
+> ► juin
+> (7)
+> ► mai
+> (13)
+> ► avril
+> (15)
+> ► mars
+> (23)
+> ► février
+> (11)
+> ► janvier
+> (13)
+> ► 2006
+> (238)
+> ► décembre
+> (13)
+> ► novembre
+> (13)
+> ► octobre
+> (12)
+> ► septembre
+> (17)
+> ► août
+> (18)
+> ► juillet
+> (17)
+> ► juin
+> (14)
+> ► mai
+> (24)
+> ► avril
+> (28)
+> ► mars
+> (26)
+> ► février
+> (34)
+> ► janvier
+> (22)
+> ► 2005
+> (17)
+> ► décembre
+> (7)
+> ► novembre
 > (10)
 > Liens amis
 > Com' un blog
