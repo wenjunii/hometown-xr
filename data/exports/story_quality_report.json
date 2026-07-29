@@ -1,12 +1,12 @@
 {
   "coverage": {
-    "complete_sources": 1775,
-    "enriched_matches": 1843,
-    "match_coverage": 0.53952,
-    "missing_matches": 1573,
+    "complete_sources": 3273,
+    "enriched_matches": 3416,
+    "match_coverage": 1.0,
+    "missing_matches": 0,
     "orphan_story_records": 0,
-    "partial_or_missing_sources": 1498,
-    "source_coverage": 0.542316,
+    "partial_or_missing_sources": 0,
+    "source_coverage": 1.0,
     "stale_story_records": 0,
     "total_matches": 3416,
     "total_sources": 3273
@@ -20,75 +20,76 @@
     "sources": 0
   },
   "filter_signatures": {
-    "unknown": 1843
+    "unknown": 3416
   },
-  "gap_sources": 1498,
-  "generated_at": "2026-07-25T20:43:53.019489+00:00",
+  "gap_sources": 0,
+  "generated_at": "2026-07-29T05:34:30.441579+00:00",
   "generated_text": false,
   "languages": {
     "de": 1,
-    "en": 1741,
-    "es": 3,
-    "fr": 17,
-    "it": 15,
-    "nl": 1,
-    "no": 13,
-    "pt": 47,
-    "sv": 5
+    "en": 3262,
+    "es": 4,
+    "fr": 22,
+    "it": 25,
+    "nl": 2,
+    "no": 22,
+    "pt": 71,
+    "sk": 1,
+    "sv": 6
   },
-  "maximum_domain_share": 0.090071,
+  "maximum_domain_share": 0.098068,
   "schema_version": 1,
   "stories": {
-    "duplicate_captures": 678,
-    "short_valid_context": 30,
-    "source_captures": 1843,
-    "story_length_ready": 1135,
-    "unique_stories": 1165
+    "duplicate_captures": 1729,
+    "short_valid_context": 35,
+    "source_captures": 3416,
+    "story_length_ready": 1652,
+    "unique_stories": 1687
   },
   "top_domains": [
     {
-      "captures": 166,
-      "domain": "digitalmedia.fws.gov"
-    },
-    {
-      "captures": 154,
+      "captures": 335,
       "domain": "www.archive.org"
     },
     {
-      "captures": 61,
-      "domain": "www.shorpy.com"
+      "captures": 306,
+      "domain": "digitalmedia.fws.gov"
     },
     {
-      "captures": 61,
-      "domain": "infomotions.com"
-    },
-    {
-      "captures": 52,
+      "captures": 126,
       "domain": "digital.library.msstate.edu"
     },
     {
-      "captures": 48,
-      "domain": "www.nizkor.org"
+      "captures": 105,
+      "domain": "www.shorpy.com"
     },
     {
-      "captures": 44,
+      "captures": 103,
+      "domain": "infomotions.com"
+    },
+    {
+      "captures": 101,
       "domain": "www.poetrysoup.com"
     },
     {
-      "captures": 41,
+      "captures": 87,
       "domain": "archive.org"
     },
     {
-      "captures": 25,
-      "domain": "brandedinthe80s.com"
+      "captures": 70,
+      "domain": "www.nizkor.org"
     },
     {
-      "captures": 21,
-      "domain": "blog.picajet.com"
+      "captures": 68,
+      "domain": "www.well.com"
+    },
+    {
+      "captures": 51,
+      "domain": "brandedinthe80s.com"
     }
   ],
   "verbatim_integrity": {
-    "exact_seed_paragraph_differences": 1600,
+    "exact_seed_paragraph_differences": 2901,
     "fragment_error_examples": [],
     "invalid_fragments": 0,
     "valid": true,
