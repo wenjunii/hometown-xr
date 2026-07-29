@@ -60,6 +60,10 @@ try {
         if ($LASTEXITCODE -ne 0) {
             throw "Story export refresh failed with exit code $LASTEXITCODE."
         }
+        & $Python (Join-Path $Root "main.py") stories review-export
+        if ($LASTEXITCODE -ne 0) {
+            throw "Reviewed story export refresh failed with exit code $LASTEXITCODE."
+        }
     }
 
     $CheckpointArgs = @((Join-Path $Root "main.py"), "checkpoint")

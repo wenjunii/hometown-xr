@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from config import OUTPUT_DIR, OUTPUT_SCHEMA_VERSION, SUPPORTED_OUTPUT_SCHEMA_VERSIONS
+from deterministic_gzip import gzip_binary_writer
 from record_identity import content_fingerprint, stable_record_id
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ def _write_gzip_jsonl(path: Path, rows: list[dict]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     path.parent.mkdir(parents=True, exist_ok=True)
     with temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+        with gzip_binary_writer(raw) as compressed:
             with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")

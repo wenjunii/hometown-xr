@@ -69,9 +69,22 @@ def create_checkpoint(
         )
     story_catalog = None
     story_verification = None
+    story_packs = None
+    story_pack_verification = None
     if verify:
+        from story_packing import (
+            build_story_packs,
+            restore_story_packs,
+            story_pack_catalog_path,
+            verify_story_packs,
+        )
         from story_products import build_story_catalog, verify_story_integrity
 
+        if (
+            not any((story_root / "_records").glob("*.jsonl.gz"))
+            and story_pack_catalog_path(story_root).exists()
+        ):
+            restore_story_packs(story_root)
         story_catalog = build_story_catalog(story_root)
         if not story_catalog["valid"]:
             raise RuntimeError(
@@ -81,6 +94,12 @@ def create_checkpoint(
         if not story_verification["valid"]:
             raise RuntimeError(
                 "story integrity verification failed; handoff was stopped"
+            )
+        story_packs = build_story_packs(story_root)
+        story_pack_verification = verify_story_packs(story_root)
+        if not story_pack_verification["valid"]:
+            raise RuntimeError(
+                "story pack verification failed; handoff was stopped"
             )
 
     manifest_result = writer.compact_manifest_catalog() if compact_manifests else None
@@ -118,6 +137,8 @@ def create_checkpoint(
         "verification": verification_after or verification_before,
         "story_catalog": story_catalog,
         "story_verification": story_verification,
+        "story_packs": story_packs,
+        "story_pack_verification": story_pack_verification,
         "manifest_compaction": manifest_result,
         "database_compaction": database_result,
         "database_archive": archive_result,

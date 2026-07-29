@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from config import METRICS_DIR, METRICS_FLUSH_SECONDS, RUN_HISTORY_PATH
+from deterministic_gzip import gzip_binary_writer
 from failure_analysis import classify_failure
 
 
@@ -289,7 +290,7 @@ def compact_run_history(
         target.parent.mkdir(parents=True, exist_ok=True)
         temporary = target.with_suffix(target.suffix + ".tmp")
         with temporary.open("wb") as raw:
-            with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+            with gzip_binary_writer(raw) as compressed:
                 with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                     for row in ordered:
                         handle.write(json.dumps(row, sort_keys=True) + "\n")

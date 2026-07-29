@@ -9,7 +9,13 @@ from pathlib import Path
 
 from audit import build_audit_plan
 from checkpoint import verify_output_integrity
-from config import DB_ARCHIVE_PATH, PROJECT_ROOT, RUN_LOCK_PATH, get_hardware_profile
+from config import (
+    DB_ARCHIVE_PATH,
+    PROJECT_ROOT,
+    RUN_LOCK_PATH,
+    STORIES_DIR,
+    get_hardware_profile,
+)
 from database_checkpoint import database_sync_status
 from dependency_profiles import installed_dependency_status, validate_dependency_profiles
 from evaluation import evaluation_plan, evaluation_status
@@ -242,7 +248,41 @@ def build_health_checks(payload: dict, full: bool = False) -> list[dict]:
             f"{stories['integrity_errors']} integrity error(s)",
             "Rebuild and verify a stopped story checkpoint" if not stories["valid"] else None,
         )
+        story_packs = payload["story_packs"]
+        add(
+            "story_pack_integrity",
+            "pass" if story_packs["valid"] else "fail",
+            (
+                f"{story_packs.get('fragments', 0)} fragment(s) in "
+                f"{story_packs.get('packs', 0)} synchronized pack(s)"
+            ),
+            (
+                "Rebuild deterministic story packs from verified local fragments"
+                if not story_packs["valid"]
+                else None
+            ),
+        )
     return checks
+
+
+def collect_story_storage_health(stories_dir: str | Path = STORIES_DIR) -> tuple[dict, dict]:
+    """Verify local fragments, or accept verified packs as restorable storage."""
+    root = Path(stories_dir)
+    from story_packing import verify_story_packs
+    from story_products import verify_story_integrity
+
+    packs = verify_story_packs(root)
+    if any((root / "_records").glob("*.jsonl.gz")):
+        stories = verify_story_integrity(root)
+    elif packs["valid"]:
+        stories = {
+            "valid": True,
+            "integrity_errors": 0,
+            "restorable_from_packs": True,
+        }
+    else:
+        stories = verify_story_integrity(root)
+    return stories, packs
 
 
 def collect_project_health(profile_name: str = "auto", full: bool = False) -> dict:
@@ -276,9 +316,7 @@ def collect_project_health(profile_name: str = "auto", full: bool = False) -> di
     }
     if full:
         payload["output"] = verify_output_integrity()
-        from story_products import verify_story_integrity
-
-        payload["stories"] = verify_story_integrity()
+        payload["stories"], payload["story_packs"] = collect_story_storage_health()
     checks = build_health_checks(payload, full=full)
     payload["checks"] = checks
     payload["status"] = (

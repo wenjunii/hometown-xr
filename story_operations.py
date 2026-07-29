@@ -22,6 +22,7 @@ from config import (
     STORY_RETRY_BASE_SECONDS,
     STORY_RETRY_MAX_SECONDS,
 )
+from deterministic_gzip import gzip_binary_writer
 from run_lock import pid_is_running
 
 STORY_OPERATIONS_SCHEMA_VERSION = 1
@@ -61,7 +62,7 @@ def _write_gzip_rows(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     with temporary.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+        with gzip_binary_writer(raw) as compressed:
             with io.TextIOWrapper(compressed, encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(

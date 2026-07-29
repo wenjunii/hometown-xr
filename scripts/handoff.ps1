@@ -53,6 +53,20 @@ try {
                 )
             }
         }
+        $StoryPackCatalog = Join-Path $Root "data\stories\_packs\catalog.json.gz"
+        if (Test-Path -LiteralPath $StoryPackCatalog) {
+            $PackStatusText = & $Python (Join-Path $Root "main.py") stories pack-status
+            if ($LASTEXITCODE -ne 0) {
+                throw "Unable to compare local story fragments with their checkpoint."
+            }
+            $PackStatus = $PackStatusText | ConvertFrom-Json
+            if (-not $PackStatus.safe_to_pull) {
+                throw (
+                    "Local story fragments contain uncheckpointed work. " +
+                    "Push a checkpoint before pulling."
+                )
+            }
+        }
         git pull --ff-only
         if ($LASTEXITCODE -ne 0) {
             throw "Git pull failed with exit code $LASTEXITCODE."
@@ -60,6 +74,14 @@ try {
         git lfs pull
         if ($LASTEXITCODE -ne 0) {
             throw "Git LFS pull failed with exit code $LASTEXITCODE."
+        }
+
+        $StoryPackCatalog = Join-Path $Root "data\stories\_packs\catalog.json.gz"
+        if (Test-Path -LiteralPath $StoryPackCatalog) {
+            & $Python (Join-Path $Root "main.py") stories unpack --replace
+            if ($LASTEXITCODE -ne 0) {
+                throw "Story pack restore failed with exit code $LASTEXITCODE."
+            }
         }
 
         & $Python (Join-Path $Root "main.py") database restore
