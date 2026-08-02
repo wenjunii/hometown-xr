@@ -144,8 +144,7 @@ def assemble_maintenance_plan(
                     "Migrate the model stack only after every validation blocker is cleared."
                 ),
                 "command": (
-                    f".\\scripts\\model-validation.ps1 -Action capture "
-                    f"-Profile {profile_name}"
+                    ".\\scripts\\model-migration.ps1 -Action plan"
                 ),
             }
         )

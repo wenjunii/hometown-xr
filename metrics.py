@@ -82,10 +82,19 @@ class MetricsRecorder:
             "process_pool_recycles": 0,
             "source_cooldowns": 0,
             "source_cooldown_seconds": 0.0,
+            "pipeline_queue_depth_samples": 0,
+            "pipeline_queue_depth_total": 0,
+            "pipeline_queue_depth_peak": 0,
+            "active_sources_peak": 0,
+            "pending_candidates_peak": 0,
+            "gpu_input_idle_seconds": 0.0,
+            "gpu_input_ready_seconds": 0.0,
             "peak_worker_rss_bytes": 0,
             "peak_vram_mb": 0.0,
         }
         self.failure_categories: dict[str, int] = {}
+        self._pipeline_observed_at: float | None = None
+        self._pipeline_previous: dict | None = None
 
     def add_target_files(self, count: int) -> None:
         self.target_files += max(0, count)
@@ -164,6 +173,52 @@ class MetricsRecorder:
         self.counters["source_cooldown_seconds"] += max(0.0, seconds)
         self.flush(force=True)
 
+    def record_pipeline_state(
+        self,
+        *,
+        queue_depth: int,
+        active_sources: int,
+        parser_limit: int,
+        pending_candidates: int,
+        cooldown_seconds: float = 0.0,
+    ) -> None:
+        """Sample producer/consumer pressure without touching GPU libraries."""
+        now = time.monotonic()
+        if self._pipeline_observed_at is not None and self._pipeline_previous is not None:
+            elapsed = max(0.0, now - self._pipeline_observed_at)
+            previous = self._pipeline_previous
+            if int(previous["active_sources"]) > 0:
+                if (
+                    int(previous["queue_depth"]) <= 0
+                    and int(previous["pending_candidates"]) <= 0
+                ):
+                    self.counters["gpu_input_idle_seconds"] += elapsed
+                else:
+                    self.counters["gpu_input_ready_seconds"] += elapsed
+        depth = max(0, int(queue_depth))
+        active = max(0, int(active_sources))
+        pending = max(0, int(pending_candidates))
+        self.counters["pipeline_queue_depth_samples"] += 1
+        self.counters["pipeline_queue_depth_total"] += depth
+        self.counters["pipeline_queue_depth_peak"] = max(
+            self.counters["pipeline_queue_depth_peak"], depth
+        )
+        self.counters["active_sources_peak"] = max(
+            self.counters["active_sources_peak"], active
+        )
+        self.counters["pending_candidates_peak"] = max(
+            self.counters["pending_candidates_peak"], pending
+        )
+        self._pipeline_previous = {
+            "queue_depth": depth,
+            "active_sources": active,
+            "parser_limit": max(0, int(parser_limit)),
+            "pending_candidates": pending,
+            "cooldown_seconds": max(0.0, float(cooldown_seconds)),
+        }
+        self._pipeline_observed_at = now
+        self.flush()
+
     def snapshot(self, final: bool = False) -> dict:
         elapsed = max(time.monotonic() - self._started_monotonic, 1e-9)
         finished = int(
@@ -175,7 +230,7 @@ class MetricsRecorder:
         remaining = max(self.target_files - finished, 0)
         eta = remaining / rate if rate > 0 else None
         payload = {
-            "schema_version": 3,
+            "schema_version": 4,
             "session_id": self.session_id,
             "started_at": self.started_at,
             "updated_at": _utc_now(),
@@ -235,6 +290,24 @@ class MetricsRecorder:
                 1,
             ),
             "peak_vram_mb": round(float(self.counters["peak_vram_mb"]), 1),
+        }
+        idle = float(self.counters["gpu_input_idle_seconds"])
+        ready = float(self.counters["gpu_input_ready_seconds"])
+        samples = max(1, int(self.counters["pipeline_queue_depth_samples"]))
+        payload["pipeline"] = {
+            **(self._pipeline_previous or {}),
+            "average_queue_depth": round(
+                float(self.counters["pipeline_queue_depth_total"]) / samples,
+                3,
+            ),
+            "peak_queue_depth": int(self.counters["pipeline_queue_depth_peak"]),
+            "peak_active_sources": int(self.counters["active_sources_peak"]),
+            "peak_pending_candidates": int(self.counters["pending_candidates_peak"]),
+            "gpu_input_idle_seconds": round(idle, 3),
+            "gpu_input_ready_seconds": round(ready, 3),
+            "gpu_input_utilization": round(ready / (ready + idle), 4)
+            if ready + idle
+            else None,
         }
         return payload
 
@@ -332,6 +405,7 @@ def concise_metrics(payload: dict) -> dict:
         "acceptance_funnel": payload.get("acceptance_funnel", {}),
         "failure_categories": payload.get("failure_categories", {}),
         "resources": payload.get("resources", {}),
+        "pipeline": payload.get("pipeline", {}),
         "process_pool_restarts": payload.get("process_pool_restarts", 0),
         "process_pool_recycles": payload.get("process_pool_recycles", 0),
         "source_cooldowns": payload.get("source_cooldowns", 0),

@@ -13,6 +13,7 @@ param(
         "unpack",
         "pack-status",
         "serve",
+        "curate",
         "review-export"
     )]
     [string]$Action = "status",
@@ -40,6 +41,11 @@ param(
     [int]$Port = 8770,
 
     [switch]$OpenBrowser,
+
+    [switch]$NoWorkstationGuard,
+
+    [ValidateRange(0, 64)]
+    [int]$NearDistance = 3,
 
     [ValidateScript({
         $ParsedWorkers = 0
@@ -88,6 +94,12 @@ if (
 }
 if ($PSBoundParameters.ContainsKey("Workers") -and $Action -ne "enrich") {
     throw "Workers is valid only with -Action enrich."
+}
+if ($PSBoundParameters.ContainsKey("NearDistance") -and $Action -ne "curate") {
+    throw "NearDistance is valid only with -Action curate."
+}
+if ($NoWorkstationGuard -and $Action -ne "enrich") {
+    throw "NoWorkstationGuard is valid only with -Action enrich."
 }
 if ($Category -and $Action -ne "retry") {
     throw "Category is valid only with -Action retry."
@@ -214,6 +226,9 @@ if ($Action -eq "retry") {
 }
 if ($Action -eq "enrich") {
     $Arguments += @("--yes", "--workers", $Workers)
+    if ($NoWorkstationGuard) {
+        $Arguments += "--no-workstation-guard"
+    }
 }
 if ($IncludeShort) {
     $Arguments += "--include-short"
@@ -226,6 +241,9 @@ if ($Action -eq "serve") {
     if ($OpenBrowser) {
         $Arguments += "--open-browser"
     }
+}
+if ($Action -eq "curate") {
+    $Arguments += @("--near-distance", $NearDistance)
 }
 Push-Location $Root
 $ForwarderInstalled = $false

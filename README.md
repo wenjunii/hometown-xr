@@ -29,8 +29,24 @@ cannot cross a model change. `data/cache/` remains local to each workstation.
 
 ## Workstation Safety
 
-The RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Run the
-crawler on only one PC at a time.
+The RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
+story enrichment acquire an atomic repository-wide workstation lease, renew it
+during long work, and retain ownership until a verified checkpoint is pushed.
+The checkpoint script releases ownership after confirming the remote commit.
+The lease is credential-free JSON in
+`refs/notes/hometown-xr-workstation-owner`; it does not alter `main`, create a
+CI run, or enter project files. A second PC is blocked while ownership is
+active. Expired ownership with uncheckpointed work is still protected; use
+`-ForceRecovery` only when that workstation's local work is permanently lost.
+
+Before claiming ownership, the guard fetches the current upstream and requires
+a clean, synchronized branch, an exact database/archive digest, and story
+fragments that match their portable packs. Inspect this evidence without
+changing ownership:
+
+```powershell
+.\scripts\workstation.ps1 -Action status -Profile 3080 -IncludePreflight
+```
 
 Git LFS stores `data/checkpoints/progress.db.gz`, a deterministic compressed
 checkpoint. `data/progress.db` is restored locally by setup/handoff and is
@@ -126,7 +142,12 @@ crashes are recovered after the lease timeout, and failed sources retry with
 exponential backoff plus deterministic jitter. Repeated 429/503 pressure opens
 a parent-level circuit cooldown shared by all parser submissions. The parser
 pool is recycled after a bounded amount of work or excessive worker RAM, while
-attempt-exhausted sources remain quarantined for operator review. Output becomes
+attempt-exhausted sources remain quarantined for operator review. A terminated
+process pool discards staged transactions, releases affected claims without
+consuming an attempt, restarts, and retries them in the same run. Metrics sample
+queue depth, active parsers, pending candidates, throttle limits, cooldowns, and
+GPU-input idle/ready time so low utilization can be attributed to download,
+parsing, batching, or inference pressure. Output becomes
 visible only after an entire source is successfully parsed and filtered.
 
 ## Quick Start
@@ -300,6 +321,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\setup.ps1 -Profile 3080` | Create/update the runtime and run diagnostics |
 | `.\scripts\setup.ps1 -Profile 3080 -Tune -Dev` | Also tune this PC and install development tools |
 | `.\scripts\run.ps1 -Profile 3080 run --all` | Start or resume using the selected hardware profile |
+| `.\scripts\workstation.ps1 -Action status -Profile 3080 -IncludePreflight` | Inspect shared ownership and prove this PC has current durable state |
 | `.\scripts\health.ps1 -Profile 3080 -Full -Strict` | Check runtime, Git, checkpoint, dependencies, filters, evaluation, metrics, and output |
 | `.\scripts\maintenance.ps1 -Profile 3080` | Print a read-only prioritized crawl, audit, evaluation, and migration plan |
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
@@ -309,8 +331,11 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\audit.ps1` | Plan a deterministic, isolated historical-source audit |
 | `.\scripts\audit.ps1 -Action run -Profile 3080 -Apply` | Run the reviewed audit without changing historical state |
+| `.\scripts\audit.ps1 -Action evidence -Report PATH` | Validate exactly which crawls an immutable audit report covers |
+| `.\scripts\audit.ps1 -Action adopt -Report PATH -Apply` | Archive valid evidence and adopt only covered crawl signatures |
 | `.\scripts\evaluation.ps1` | Show annotation balance and the next evaluation action |
 | `.\scripts\evaluation.ps1 -Action plan` | Print balanced human-labeling queues without assigning labels |
+| `.\scripts\evaluation.ps1 -Action campaign` | Show resumable required-label progress and blocked evidence queues |
 | `.\scripts\evaluation.ps1 -Action serve -OpenBrowser` | Open the local browser annotation workbench |
 | `.\scripts\evaluation.ps1 -Action multilingual` | Report language evidence, anchor gaps, and keyword misses |
 | `.\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25` | Review a focused batch interactively |
@@ -329,12 +354,14 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action verify` | Build and verify the story-fragment checksum catalog |
 | `.\scripts\stories.ps1 -Action serve -OpenBrowser` | Search, inspect, and human-review complete source stories locally |
 | `.\scripts\stories.ps1 -Action review-export` | Export only stories marked Selected without rewriting source text |
+| `.\scripts\stories.ps1 -Action curate` | Rank and cluster exact-source stories without dropping or rewriting them |
 | `.\scripts\stories.ps1 -Action pack-status` | Compare local source fragments with the synchronized story packs |
 | `.\scripts\stories.ps1 -Action pack` | Rebuild and verify deterministic story packs |
 | `.\scripts\stories.ps1 -Action unpack` | Restore missing local source fragments from synchronized packs |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
+| `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
 | `.\scripts\dependency-audit.ps1` | Validate profile pins and the dated vulnerability policy |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
@@ -345,6 +372,7 @@ The underlying Python CLI remains available directly:
 | --- | --- |
 | `python main.py run --crawl ID` | Start or resume one crawl |
 | `python main.py run --all` | Process every known crawl |
+| `python main.py workstation status --profile 3080 --preflight` | Inspect remote ownership and local checkpoint freshness |
 | `python main.py run --all --strategy round-robin --chunk-size 100` | Rotate bounded chunks across old and new crawls |
 | `python main.py run --all --strategy yield-aware --chunk-size 100` | Prioritize smoothed high-yield crawls while retaining exploration and coverage |
 | `python main.py run --limit 5` | Process at most five ready sources globally |
@@ -382,13 +410,17 @@ The underlying Python CLI remains available directly:
 | `python main.py stories verify` | Build and verify the fragment checksum catalog |
 | `python main.py stories serve --open-browser` | Serve the local searchable story review workbench |
 | `python main.py stories review-export` | Export human-selected exact-source stories |
+| `python main.py stories curate` | Write deterministic story quality ranks and duplicate clusters |
 | `python main.py stories pack-status` | Check local fragment changes against synchronized packs |
 | `python main.py stories pack` | Build deterministic synchronized packs |
 | `python main.py stories unpack` | Restore missing local fragments from verified packs |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
+| `python main.py audit evidence --report PATH` | Dry-run evidence validation and eligible crawl adoption |
+| `python main.py audit adopt --report PATH --yes` | Archive evidence and stamp only proven-equivalent crawl rows |
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
 | `python main.py evaluation plan` | Build balanced human-labeling steps without synthesizing labels |
+| `python main.py evaluation campaign` | Show the guided baseline campaign and missing queues |
 | `python main.py evaluation sample` | Build a real-text annotation sample |
 | `python main.py evaluation annotate` | Label samples interactively |
 | `python main.py evaluation annotate --split holdout --quick` | Label a balanced holdout queue with model categories accepted |
@@ -396,6 +428,8 @@ The underlying Python CLI remains available directly:
 | `python main.py evaluation multilingual` | Write multilingual coverage and keyword-miss diagnostics |
 | `python main.py evaluation undo --sample-id ID` | Restore the previous label and annotation metadata |
 | `python main.py evaluation report` | Compute precision, recall, F1, and tuning |
+| `python main.py model-migration plan` | Show every blocker to a shared model-stack upgrade |
+| `python main.py model-migration validate` | Exit nonzero until all migration evidence passes |
 | `python main.py evaluation replay` | Compact local decisions into the shared replay reservoir |
 | `python main.py model-validation capture --profile 3080` | Capture the tracked semantic-output baseline |
 | `python main.py model-validation compare --candidate PATH` | Enforce model-output regression limits |
@@ -589,6 +623,20 @@ selected corpus with:
 `stories_reviewed.jsonl.gz` and `stories_reviewed.md` retain the exact extracted
 story text plus review metadata. They never paraphrase or generate a story.
 
+Build the deterministic review ranking with:
+
+```powershell
+.\scripts\stories.ps1 -Action curate
+```
+
+`stories_curated.jsonl.gz` retains every full exact-source row and adds only an
+explainable `curation` object. Its score combines semantic and narrative
+strength, source-window completeness, paragraph continuity, and boilerplate
+risk. Exact and near duplicates point to the highest-ranked canonical story but
+remain in the export with all capture provenance. The Story Explorer can sort
+by this quality score. This is review prioritization, not generated text and not
+an automatic human selection.
+
 Story enrichment defaults to adaptive workers in `scripts\stories.ps1`. It
 starts with three concurrent source workers and can rise to eight after repeated
 successful sources. This phase is network, gzip, and CPU parsing work; it does
@@ -688,9 +736,9 @@ workstation:
 The final checkpoint refreshes the story exports again, builds
 `data/stories/_catalog.json.gz` and verified story packs, scans the complete
 staged transfer for credentials, commits all non-ignored durable products,
-pushes the current branch, and verifies its remote commit. It never adds
-downloaded models, the live database, caches, Parquet files, hardware overrides,
-runtime telemetry, or credential-like paths.
+pushes the current branch, verifies its remote commit, and releases the shared
+workstation lease. It never adds downloaded models, the live database, caches,
+Parquet files, hardware overrides, runtime telemetry, or credential-like paths.
 
 ## Parquet And Deduplication
 
@@ -816,8 +864,10 @@ pass the resulting immutable report as evidence:
 
 ```powershell
 .\scripts\audit.ps1 -Action run -Profile 3080 -PerCrawl 5 -Apply
-.\scripts\filter-state.ps1 -Action stamp-current `
-  -AuditReport .\data\audits\AUDIT_ID\report.json -Apply
+.\scripts\audit.ps1 -Action evidence `
+  -Report .\data\audits\AUDIT_ID\report.json
+.\scripts\audit.ps1 -Action adopt `
+  -Report .\data\audits\AUDIT_ID\report.json -Apply
 ```
 
 The report must match the current filter signature, prove unchanged normalized
@@ -826,6 +876,11 @@ The database records the audit ID and report SHA-256 for each adoption, and the
 validated report is copied to `data/checkpoints/audit-evidence/` for the next Git
 handoff. Existing output and checkpoint rows remain untouched when evidence is
 missing or inconsistent.
+
+The `evidence` action is read-only and prints the exact eligible crawls, source
+counts, report digest, and guarded adoption command. The `adopt` action performs
+the same validation again, archives the immutable report, and stamps all unknown
+completed rows only within those proven-equivalent crawls.
 
 ## Model And Dependency Validation
 
@@ -838,6 +893,7 @@ capture an ignored candidate on each workstation and compare it:
 ```powershell
 .\scripts\model-validation.ps1 -Action capture -Profile 3080
 .\scripts\model-validation.ps1 -Action compare -Profile 3080
+.\scripts\model-migration.ps1 -Action plan
 ```
 
 Repeat with `4090` and `5090` on those PCs. The comparison requires every sample
@@ -850,6 +906,15 @@ baseline after an approved migration, use:
 ```
 
 Review the diff and rerun all comparisons.
+
+`model-migration plan` is the final gate. It remains blocked until the human
+baseline and blind holdout are complete, historical filter signatures have
+audit evidence, identical real-source metrics exist for all three GPUs, all
+candidate snapshots pass score/concept/threshold limits, and candidate library
+versions agree. `-Action validate` exits nonzero while any requirement is
+missing. Only a fully passing plan can write portable approval evidence with
+`-Action approve -Apply`; updating shared lock files remains a separate reviewed
+code change.
 
 Run the dependency contract and advisory gate with:
 
@@ -867,6 +932,7 @@ Build an unlabeled sample from real committed records and sampled live rejects:
 ```powershell
 .\scripts\evaluation.ps1
 .\scripts\evaluation.ps1 -Action plan
+.\scripts\evaluation.ps1 -Action campaign
 .\scripts\evaluation.ps1 -Action sample -Size 400
 .\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25
 .\scripts\evaluation.ps1 -Action annotate -Prediction accepted -Limit 75
@@ -884,13 +950,18 @@ tuning/holdout split; uncertain rows are used only for tuning. Existing labels,
 notes, annotator, timestamp, and label history are kept when a sample is rebuilt.
 The plan action reserves balanced accepted/rejected tuning and holdout quotas,
 reports missing queues, and never assigns a label; labels require human
-judgment. Annotation queues rotate across prediction and language strata. `-Language`,
+judgment. The campaign action turns those quotas into one stable, resumable
+queue and reports progress against the required 100 labels rather than all 400
+samples. A phase remains visibly blocked when the crawl has not yet supplied
+enough representative rows. Annotation queues rotate across prediction and language strata. `-Language`,
 `-Prediction`, `-Split`, `-SampleId`, `-Relabel`, and `-Quick` support focused
 work, while `-Action undo` restores the previous label.
 
 The browser workbench binds to `127.0.0.1:8765` by default, uses the same atomic
 annotation file and bounded history as the terminal workflow, and supports
-positive, negative, skip, undo, content taxonomy, notes, and queue filters.
+positive, negative, skip, undo, content taxonomy, reviewer identity, notes, and
+queue filters. Labels save atomically and the campaign resumes from the shared
+annotation file after a browser restart.
 Representative holdout rows are blind: model decisions, scores, keywords,
 concepts, and predicted categories are omitted from the browser API until
 evaluation reporting. Use `-Port` when that local port is occupied.
@@ -938,7 +1009,8 @@ The suite covers leases, retries, interruption, source transactions, stable
 IDs, checksum rollback, compact manifest catalogs, inference caching,
 multilingual filtering, real WET parsing, spawned Windows-compatible
 orchestration, representative sampling weights, tuning/holdout isolation,
-audit-gated signature adoption, real-workload recommendations,
+audit-gated signature adoption, cross-PC ownership races, guided campaigns,
+pipeline starvation telemetry, model-migration gates, real-workload recommendations,
 canonical/provenance deduplication, and Parquet export. GitHub
 Actions validates dependency-profile pins and the dated vulnerability policy,
 then runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing on
@@ -964,6 +1036,7 @@ story_products.py       integrity catalog, tiered exports, and quality reports
 story_packing.py        deterministic 64-pack story checkpoint and exact restore
 story_review.py         searchable story index, human decisions, and selected export
 story_workbench.py      local story search and review UI
+story_curation.py       explainable quality ranking and duplicate clustering
 maintenance.py          read-only crawl, audit, evaluation, and migration plan
 deterministic_gzip.py   reproducible gzip writer without timestamp or filename
 text_normalization.py   versioned entity, encoding, and Unicode repair
@@ -975,7 +1048,9 @@ benchmark.py            synthetic precision and isolated real-source benchmarks
 dependency_profiles.py  cross-profile lock and installed-package contract
 dependency_audit.py     pip-audit policy enforcement with an expiry date
 model_regression.py     semantic score/concept/threshold snapshots and comparison
+model_migration.py      labels/audit/benchmark/candidate approval gate
 project_health.py       consolidated workstation and handoff readiness
+workstation_guard.py    atomic remote ownership and checkpoint freshness proof
 dedupe.py               disk-backed exact and SimHash duplicate index
 parquet_export.py       staged partitioned analytical export
 story_reconstruction.py adjacent passages and explainable place/time metadata

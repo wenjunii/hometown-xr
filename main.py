@@ -10,6 +10,7 @@ import shutil
 import signal
 import sys
 import threading
+from contextlib import nullcontext
 from dataclasses import replace
 
 from config import (
@@ -32,6 +33,7 @@ from config import (
     STORIES_DIR,
     STORY_ENRICHMENT_MAX_WORKERS,
     STORY_ENRICHMENT_WORKERS,
+    WORKSTATION_LEASE_HOURS,
     HardwareProfile,
     get_hardware_profile,
 )
@@ -168,6 +170,7 @@ def run(
     settings: RuntimeSettings,
     strategy: str = "round-robin",
     chunk_size: int = 100,
+    workstation_guard: bool = True,
 ) -> None:
     global _shutdown_event, _shutdown_signal_count
     context = multiprocessing.get_context("spawn")
@@ -187,8 +190,14 @@ def run(
         provenance=run_manifest,
     )
 
+    ownership_context = nullcontext(None)
+    if workstation_guard:
+        from workstation_guard import WorkstationLease
+
+        ownership_context = WorkstationLease(settings.profile_name)
+
     try:
-        with CrawlerRunLock(settings.profile_name):
+        with CrawlerRunLock(settings.profile_name), ownership_context as ownership:
             OutputWriter().cleanup_stale_staging()
             logger.info("=" * 70)
             logger.info("Hometown XR Common Crawl Extractor")
@@ -215,6 +224,9 @@ def run(
                 context,
                 metrics,
                 shutdown_event=_shutdown_event,
+                heartbeat_callback=(
+                    ownership.renew_if_due if ownership is not None else None
+                ),
             ) as pipeline:
                 tracker = ProgressTracker()
                 active = _schedule_order(
@@ -244,6 +256,8 @@ def run(
                         total_files += files
                         total_matches += matches
                         sources_scheduled += scheduled
+                        if ownership is not None:
+                            ownership.renew_if_due()
                         if chunked and scheduled > 0:
                             next_round.append(crawl_id)
                     if not chunked or (
@@ -545,6 +559,7 @@ def _evaluation_command(args) -> None:
         annotate,
         build_annotation_sample,
         compact_replay_reservoir,
+        evaluation_campaign,
         evaluation_plan,
         evaluation_report,
         evaluation_status,
@@ -578,6 +593,8 @@ def _evaluation_command(args) -> None:
         print(json.dumps(evaluation_status(), indent=2))
     elif args.evaluation_command == "plan":
         print(json.dumps(evaluation_plan(), indent=2))
+    elif args.evaluation_command == "campaign":
+        print(json.dumps(evaluation_campaign(include_samples=False), indent=2))
     elif args.evaluation_command == "replay":
         print(json.dumps(compact_replay_reservoir(), indent=2))
     elif args.evaluation_command == "undo":
@@ -596,9 +613,33 @@ def _evaluation_command(args) -> None:
 
 def _audit_command(args) -> None:
     global _shutdown_event, _shutdown_signal_count
-    from audit import build_audit_plan, run_audit
+    from audit import (
+        adopt_audit_evidence,
+        audit_evidence_status,
+        build_audit_plan,
+        run_audit,
+    )
     from signatures import build_filter_signature
 
+    signature = build_filter_signature(args.threshold, args.language_threshold)
+    if args.audit_command in {"evidence", "adopt"}:
+        if args.audit_command == "adopt" and not args.yes:
+            raise SystemExit("Refusing to adopt audit evidence without --yes")
+        result = (
+            adopt_audit_evidence(
+                args.report,
+                signature,
+                requested_crawls=args.crawl,
+            )
+            if args.audit_command == "adopt"
+            else audit_evidence_status(
+                args.report,
+                signature,
+                requested_crawls=args.crawl,
+            )
+        )
+        print(json.dumps(result, indent=2))
+        return
     if args.audit_command == "run" and not args.yes:
         raise SystemExit("Refusing to download and run an audit without --yes")
     if args.audit_command == "run":
@@ -670,6 +711,11 @@ def main() -> None:
     run_parser.add_argument("--precision", choices=["auto", "fp32", "fp16"], default="auto")
     run_parser.add_argument("--no-adaptive-batching", action="store_true")
     run_parser.add_argument("--no-cache", action="store_true")
+    run_parser.add_argument(
+        "--no-workstation-guard",
+        action="store_true",
+        help="bypass cross-PC ownership only for deliberate offline recovery",
+    )
 
     subparsers.add_parser("status", help="show processing progress")
     health_parser = subparsers.add_parser(
@@ -714,6 +760,37 @@ def main() -> None:
     database_subparsers.add_parser("archive")
     database_subparsers.add_parser("restore")
     database_subparsers.add_parser("check")
+
+    workstation_parser = subparsers.add_parser(
+        "workstation",
+        help="inspect or change cross-PC checkpoint ownership",
+    )
+    workstation_subparsers = workstation_parser.add_subparsers(
+        dest="workstation_command",
+        required=True,
+    )
+    workstation_status = workstation_subparsers.add_parser("status")
+    workstation_status.add_argument(
+        "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+    )
+    workstation_status.add_argument("--preflight", action="store_true")
+    workstation_preflight = workstation_subparsers.add_parser("preflight")
+    workstation_preflight.add_argument(
+        "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+    )
+    for workstation_action in ("claim", "release"):
+        owner_parser = workstation_subparsers.add_parser(workstation_action)
+        owner_parser.add_argument(
+            "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+        )
+        owner_parser.add_argument("--yes", action="store_true")
+        if workstation_action == "claim":
+            owner_parser.add_argument(
+                "--lease-hours",
+                type=int,
+                default=WORKSTATION_LEASE_HOURS,
+            )
+            owner_parser.add_argument("--force-recovery", action="store_true")
 
     checkpoint_parser = subparsers.add_parser(
         "checkpoint",
@@ -799,6 +876,38 @@ def main() -> None:
     model_compare.add_argument("--minimum-concept-agreement", type=float, default=0.99)
     model_compare.add_argument("--minimum-threshold-agreement", type=float, default=1.0)
 
+    migration_parser = subparsers.add_parser(
+        "model-migration",
+        help="gate shared model-stack upgrades on complete cross-PC evidence",
+    )
+    migration_subparsers = migration_parser.add_subparsers(
+        dest="model_migration_command",
+        required=True,
+    )
+    for migration_action in ("plan", "validate", "approve"):
+        migration_action_parser = migration_subparsers.add_parser(migration_action)
+        migration_action_parser.add_argument(
+            "--baseline",
+            default=str(MODEL_BASELINE_PATH),
+        )
+        for migration_profile in ("3080", "4090", "5090"):
+            migration_action_parser.add_argument(
+                f"--candidate-{migration_profile}",
+                default=str(
+                    DATA_DIR
+                    / "evaluation"
+                    / f"model-candidate-{migration_profile}.json"
+                ),
+            )
+        if migration_action == "approve":
+            migration_action_parser.add_argument(
+                "--output",
+                default=str(
+                    DATA_DIR / "checkpoints" / "model-migration-evidence.json"
+                ),
+            )
+            migration_action_parser.add_argument("--yes", action="store_true")
+
     parquet_parser = subparsers.add_parser("parquet", help="export partitioned Parquet")
     parquet_parser.add_argument("--dedupe", choices=["none", "exact", "near"], default="exact")
     parquet_parser.add_argument("--near-distance", type=int, default=3)
@@ -823,6 +932,7 @@ def main() -> None:
     evaluation_subparsers.add_parser("report")
     evaluation_subparsers.add_parser("status")
     evaluation_subparsers.add_parser("plan")
+    evaluation_subparsers.add_parser("campaign")
     evaluation_subparsers.add_parser("replay")
     evaluation_subparsers.add_parser("multilingual")
     serve_parser = evaluation_subparsers.add_parser("serve")
@@ -890,6 +1000,11 @@ def main() -> None:
         "review-export",
         help="export stories selected in the review workbench",
     )
+    stories_curate_parser = stories_subparsers.add_parser(
+        "curate",
+        help="rank and cluster exact-source stories deterministically",
+    )
+    stories_curate_parser.add_argument("--near-distance", type=int, default=3)
     for action in ("plan", "enrich", "status"):
         story_action = stories_subparsers.add_parser(action)
         story_action.add_argument("--crawl", action="append")
@@ -903,6 +1018,11 @@ def main() -> None:
                 "--workers",
                 type=str,
                 default=STORY_ENRICHMENT_WORKERS,
+            )
+            story_action.add_argument(
+                "--no-workstation-guard",
+                action="store_true",
+                help="bypass cross-PC ownership only for deliberate offline recovery",
             )
     stories_export_parser = stories_subparsers.add_parser("export")
     stories_export_parser.add_argument("--include-short", action="store_true")
@@ -942,6 +1062,18 @@ def main() -> None:
     audit_run_parser.add_argument("--no-cache", action="store_true")
     audit_run_parser.add_argument("--sample-rate", type=float, default=AUDIT_SAMPLE_RATE)
     audit_run_parser.add_argument("--yes", action="store_true")
+    for audit_action in ("evidence", "adopt"):
+        evidence_parser = audit_subparsers.add_parser(audit_action)
+        evidence_parser.add_argument("--report", required=True)
+        evidence_parser.add_argument("--crawl", action="append")
+        evidence_parser.add_argument("--threshold", type=float, default=SEMANTIC_THRESHOLD)
+        evidence_parser.add_argument(
+            "--language-threshold",
+            type=float,
+            default=LANG_DETECTION_THRESHOLD,
+        )
+        if audit_action == "adopt":
+            evidence_parser.add_argument("--yes", action="store_true")
 
     filter_parser = subparsers.add_parser(
         "filters", help="inspect or selectively refresh filter-signature state"
@@ -970,7 +1102,14 @@ def main() -> None:
             parser.error("--chunk-size must be positive")
         settings = _runtime_settings(args)
         crawl_ids = get_all_crawl_ids() if args.all else [args.crawl or DEFAULT_CRAWL_ID]
-        run(crawl_ids, args.limit, settings, args.strategy, args.chunk_size)
+        run(
+            crawl_ids,
+            args.limit,
+            settings,
+            args.strategy,
+            args.chunk_size,
+            workstation_guard=not args.no_workstation_guard,
+        )
     elif args.command == "status":
         show_status()
     elif args.command == "health":
@@ -1033,6 +1172,25 @@ def main() -> None:
                     indent=2,
                 )
             )
+    elif args.command == "workstation":
+        from workstation_guard import WorkstationLease
+
+        profile = get_hardware_profile(args.profile)
+        lease_hours = getattr(args, "lease_hours", WORKSTATION_LEASE_HOURS)
+        if lease_hours <= 0:
+            parser.error("--lease-hours must be positive")
+        lease = WorkstationLease(profile.name, lease_hours=lease_hours)
+        if args.workstation_command == "status":
+            result = lease.status(include_preflight=args.preflight)
+        elif args.workstation_command == "preflight":
+            result = lease.preflight()
+        elif not args.yes:
+            parser.error(f"workstation {args.workstation_command} requires --yes")
+        elif args.workstation_command == "claim":
+            result = lease.claim(force_recovery=args.force_recovery)
+        else:
+            result = lease.release()
+        print(json.dumps(result, indent=2))
     elif args.command == "cache":
         from inference_cache import InferenceCache
 
@@ -1110,6 +1268,27 @@ def main() -> None:
             )
         print(json.dumps(result, indent=2))
         if args.model_validation_command == "compare" and not result["safe"]:
+            raise SystemExit(1)
+    elif args.command == "model-migration":
+        from model_migration import approve_model_migration, build_model_migration_plan
+
+        candidate_paths = {
+            profile: getattr(args, f"candidate_{profile}")
+            for profile in ("3080", "4090", "5090")
+        }
+        result = build_model_migration_plan(
+            baseline_path=args.baseline,
+            candidate_paths=candidate_paths,
+        )
+        if args.model_migration_command == "approve":
+            if not args.yes:
+                parser.error("model-migration approve requires --yes")
+            result = {
+                "plan": result,
+                "evidence": approve_model_migration(result, args.output),
+            }
+        print(json.dumps(result, indent=2))
+        if args.model_migration_command == "validate" and not result["ready"]:
             raise SystemExit(1)
     elif args.command == "parquet":
         from parquet_export import export_parquet
@@ -1211,7 +1390,14 @@ def main() -> None:
             _shutdown_event = threading.Event()
             _shutdown_signal_count = 0
             try:
-                with CrawlerRunLock("story-enrichment"):
+                ownership_context = nullcontext(None)
+                if not args.no_workstation_guard:
+                    from workstation_guard import WorkstationLease
+
+                    ownership_context = WorkstationLease(
+                        get_hardware_profile("auto").name
+                    )
+                with CrawlerRunLock("story-enrichment"), ownership_context as ownership:
                     with watch_story_shutdown(_shutdown_event):
                         result = enrich_story_sources(
                             crawl_ids=args.crawl,
@@ -1219,6 +1405,11 @@ def main() -> None:
                             limit=limit,
                             workers=args.workers,
                             shutdown_event=_shutdown_event,
+                            heartbeat_callback=(
+                                ownership.renew_if_due
+                                if ownership is not None
+                                else None
+                            ),
                         )
             finally:
                 _shutdown_event = None
@@ -1241,6 +1432,13 @@ def main() -> None:
                         DATA_DIR / "exports",
                     ),
                 }
+        elif args.stories_command == "curate":
+            if not 0 <= args.near_distance <= 64:
+                parser.error("--near-distance must be between 0 and 64")
+            from story_curation import write_story_curation
+
+            with CrawlerRunLock("story-curation"):
+                result = write_story_curation(near_distance=args.near_distance)
         elif args.stories_command == "pack":
             with CrawlerRunLock("story-pack"):
                 packed = build_story_packs()

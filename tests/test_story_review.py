@@ -83,6 +83,8 @@ def test_story_review_index_filters_saves_and_exports_selected_rows(tmp_path):
     assert index.status()["stories"] == 2
     assert index.query(search="hometown")["total"] == 1
     assert index.query(language="fr")["stories"][0]["story_id"] == "story-two"
+    assert index.query(sort="quality")["stories"][0]["quality_score"] >= 0
+    assert index.status()["curation"]["source_text_preserved"]
 
     index.review(
         "story-one",

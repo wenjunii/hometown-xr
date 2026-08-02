@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("plan", "run")]
+    [ValidateSet("plan", "run", "evidence", "adopt")]
     [string]$Action = "plan",
 
     [ValidateSet("auto", "3080", "4090", "5090")]
@@ -25,6 +25,8 @@ param(
 
     [string[]]$Crawl,
 
+    [string]$Report,
+
     [switch]$IncludeCurrent,
 
     [switch]$Apply,
@@ -43,8 +45,11 @@ $Python = Join-Path $Root ".venv\Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $Python)) {
     throw "Virtual environment is missing. Run .\scripts\setup.ps1 first."
 }
-if ($Action -eq "run" -and -not $Apply) {
-    throw "Running an audit downloads sources and uses the GPU; pass -Apply after reviewing the plan."
+if ($Action -in @("run", "adopt") -and -not $Apply) {
+    throw "$Action changes operational state; pass -Apply after reviewing the plan or evidence."
+}
+if ($Action -in @("evidence", "adopt") -and [string]::IsNullOrWhiteSpace($Report)) {
+    throw "Report is required for audit evidence or adoption."
 }
 if ($null -ne $SemanticThreshold -and ($SemanticThreshold -lt 0 -or $SemanticThreshold -gt 1)) {
     throw "SemanticThreshold must be between 0 and 1."
@@ -63,7 +68,13 @@ foreach ($Override in @{
     }
 }
 
-$Arguments = @((Join-Path $Root "main.py"), "audit", $Action, "--per-crawl", $PerCrawl)
+$Arguments = @((Join-Path $Root "main.py"), "audit", $Action)
+if ($Action -in @("plan", "run")) {
+    $Arguments += @("--per-crawl", $PerCrawl)
+}
+else {
+    $Arguments += @("--report", $Report)
+}
 foreach ($CrawlId in $Crawl) {
     $Arguments += @("--crawl", $CrawlId)
 }
@@ -109,6 +120,9 @@ if ($Action -eq "run") {
     if ($NoCache) {
         $Arguments += "--no-cache"
     }
+}
+elseif ($Action -eq "adopt") {
+    $Arguments += "--yes"
 }
 
 $ExitCode = 1

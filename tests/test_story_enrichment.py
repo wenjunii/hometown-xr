@@ -91,13 +91,20 @@ def test_embedded_story_enrichment_is_resumable_and_exports_deduplicated_stories
     _write_match(writer, "crawl-data/two.warc.wet.gz", "2026-02-01")
 
     before = plan_story_enrichment(output_dir, stories_dir, limit=10)
-    result = enrich_story_sources(output_dir, stories_dir, limit=10)
+    heartbeats = []
+    result = enrich_story_sources(
+        output_dir,
+        stories_dir,
+        limit=10,
+        heartbeat_callback=lambda: heartbeats.append(True),
+    )
     after = plan_story_enrichment(output_dir, stories_dir, limit=10)
     exported = export_stories(stories_dir, export_dir, output_dir=output_dir)
 
     assert before["pending_sources"] == 2
     assert result["completed_sources"] == 2
     assert result["stories_written"] == 2
+    assert heartbeats
     assert all(row["embedded_stories"] == 1 for row in result["sources"])
     assert after["pending_sources"] == 0
     assert exported["unique_stories"] == 1

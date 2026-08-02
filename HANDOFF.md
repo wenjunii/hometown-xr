@@ -1,7 +1,9 @@
 # Workstation Handoff Guide
 
 Use this procedure to move Hometown XR among the RTX 3080, RTX 4090, and
-RTX 5090 PCs. Never run the crawler on more than one PC at a time.
+RTX 5090 PCs. The crawler enforces one active workstation with an atomic lease
+stored in the remote Git notes ref `refs/notes/hometown-xr-workstation-owner`.
+The lease contains host/profile/checkpoint metadata only, never credentials.
 
 ## Shared And Local State
 
@@ -29,6 +31,7 @@ The following remain local to each PC:
 - `data/evaluation/model-comparison*.json`
 - `data/dependency-audit.local.json`
 - `data/progress.db` (restored working copy)
+- `data/.workstation-owner.local.json` (current lease token)
 - `data/stories/_records/` (restored exact-source working fragments)
 - uncheckpointed live candidate evaluation samples
 - `.env*`, credential files, private keys, and service-account files
@@ -76,6 +79,7 @@ Confirm the complete local state after setup:
 
 ```powershell
 .\scripts\health.ps1 -Profile 3080 -Full -Strict
+.\scripts\workstation.ps1 -Action status -Profile 3080 -IncludePreflight
 ```
 
 To measure parser concurrency against real data, compare identical completed
@@ -118,7 +122,8 @@ merged; the script does not bypass repository protection.
 Checkpointing verifies every output checksum, compacts manifests and SQLite,
 merges replay/run history, creates the deterministic compressed database
 archive, and refreshes story exports, provenance, quality reports, and the story
-integrity catalog before Git stages anything. It then packs every verified local
+integrity catalog plus the deterministic story-curation ranking before Git
+stages anything. It then packs every verified local
 fragment into at most 64 deterministic Git LFS files under
 `data/stories/_packs/`; the thousands of individual `_records` files remain
 ignored local working state.
@@ -154,6 +159,16 @@ metrics, model baseline, output checks, and story-pack integrity. Existing
 changed or extra local fragments block the pull. `-SkipVerify` skips diagnostics
 but still restores the checkpoint, so a virtual environment is required. Rerun
 `scripts\setup.ps1` whenever dependency lock files changed.
+
+The first normal crawl or story-enrichment command claims shared ownership
+after repeating these freshness checks. A second workstation is refused while
+that lease is active. The lease renews during long work and remains assigned to
+the current PC while its durable state is not checkpointed. A successful
+checkpoint push releases it automatically. `workstation.ps1 -Action claim
+-Apply` and `-Action release -Apply` are available for diagnosis; normal work
+does not require manual claims. An expired lease marked `uncheckpointed` cannot
+be taken by another PC unless `-ForceRecovery` is passed deliberately after the
+original local work is confirmed lost.
 
 During the one-time upgrade from the formerly tracked raw database, any command
 that opens a missing project DB also restores the validated archive. This keeps
@@ -193,8 +208,10 @@ least five sources per crawl and provide its report explicitly:
 
 ```powershell
 .\scripts\audit.ps1 -Action run -Profile 3080 -PerCrawl 5 -Apply
-.\scripts\filter-state.ps1 -Action stamp-current `
-  -AuditReport .\data\audits\AUDIT_ID\report.json -Apply
+.\scripts\audit.ps1 -Action evidence `
+  -Report .\data\audits\AUDIT_ID\report.json
+.\scripts\audit.ps1 -Action adopt `
+  -Report .\data\audits\AUDIT_ID\report.json -Apply
 ```
 
 The database stores the audit ID and report hash, while the validated report is
@@ -207,6 +224,7 @@ Check the shared sample balance and next human-review action with:
 ```powershell
 .\scripts\evaluation.ps1
 .\scripts\evaluation.ps1 -Action plan
+.\scripts\evaluation.ps1 -Action campaign
 .\scripts\evaluation.ps1 -Action serve -OpenBrowser
 .\scripts\evaluation.ps1 -Action multilingual
 ```
@@ -217,6 +235,8 @@ merges them into the shared replay without copying machine-local candidate files
 The localhost workbench hides all model evidence for representative holdout
 rows. The multilingual report identifies languages that still need samples and
 human-labeled keyword misses.
+The browser starts in the required campaign queue, saves each label atomically,
+and resumes from the same balanced phase on another PC after checkpointing.
 
 When a dependency, CUDA, precision, or model change is proposed, capture a
 candidate on that workstation and compare it with the tracked baseline:
@@ -224,13 +244,17 @@ candidate on that workstation and compare it with the tracked baseline:
 ```powershell
 .\scripts\model-validation.ps1 -Action capture -Profile 4090
 .\scripts\model-validation.ps1 -Action compare -Profile 4090
+.\scripts\model-migration.ps1 -Action plan
 .\scripts\dependency-audit.ps1
 ```
 
 Use the matching profile on each PC. Candidate and comparison files are ignored;
 the baseline and dated dependency policy are shared. A model-stack migration is
 not complete until comparisons pass on the 3080, 4090, and 5090 and the
-human-labeled evaluation minimums are met.
+human-labeled evaluation minimums are met. The migration gate also requires an
+audited historical filter state, consistent candidate libraries, and identical
+real-source benchmark coverage on all three profiles. `-Action validate` exits
+nonzero until every requirement passes.
 
 Review recent shared runs or compare all hardware profiles with:
 
@@ -270,6 +294,7 @@ receiving a checkpoint, inspect and resume their exact-source backfill with:
 .\scripts\stories.ps1 -Action status -Limit 10
 .\scripts\stories.ps1 -Action enrich -Limit 10 -Apply
 .\scripts\stories.ps1 -Action export
+.\scripts\stories.ps1 -Action curate
 ```
 
 Only one PC may run story enrichment at a time. It does not change canonical
@@ -288,7 +313,9 @@ Search and human-review the complete exported stories locally:
 ```
 
 The review file and selected exact-source exports synchronize at the next
-checkpoint. No LLM writes story text or review decisions.
+checkpoint. The curated export retains every exact-source row and adds only
+deterministic ranking and duplicate metadata. No LLM writes story text, ranking
+evidence, or review decisions.
 
 If status shows quarantined `missing_records` after upgrading from an older
 story extractor, dry-run and then reset only that compatibility category:
@@ -326,9 +353,12 @@ bounded category batch; omit `-Category` only after reviewing the full report.
 The failure report separates transient Common Crawl pressure from worker,
 inference, and output failures. HTTP retries honor `Retry-After`, add jitter,
 temporarily reduce parser concurrency, and open an escalating shared cooldown
-after 429/503 pressure. A terminated process pool is rebuilt automatically up
-to three times; healthy pools are periodically recycled after bounded work or a
-high-RAM worker. Attempt-exhausted sources are reported as quarantined and are
+after 429/503 pressure. A terminated process pool discards staged output,
+releases affected claims without consuming attempts, and retries them after
+rebuilding automatically up to three times. Healthy pools are periodically
+recycled after bounded work or a high-RAM worker. Run metrics expose queue
+depth, parser limits, pending candidates, and GPU-input idle time.
+Attempt-exhausted sources are reported as quarantined and are
 left untouched until a bounded operator retry.
 
 The current filter contract includes native semantic anchors for all 20 keyword

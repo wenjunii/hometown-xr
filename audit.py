@@ -344,6 +344,82 @@ def archive_adoption_evidence(
     return target
 
 
+def audit_evidence_status(
+    report_path: str | Path,
+    current_signature: str,
+    requested_crawls: list[str] | None = None,
+) -> dict:
+    """Validate one report and describe the exact signature adoption it permits."""
+    evidence = load_adoption_evidence(
+        report_path,
+        current_signature,
+        requested_crawls=requested_crawls,
+    )
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    adoption = report.get("adoption") or {}
+    selected = set(evidence["eligible_crawls"])
+    return {
+        "schema_version": 1,
+        "valid": True,
+        "historical_state_changed": False,
+        "current_signature": current_signature,
+        "audit_id": evidence["audit_id"],
+        "report_path": evidence["report_path"],
+        "report_sha256": evidence["report_sha256"],
+        "eligible_crawls": evidence["eligible_crawls"],
+        "by_crawl": {
+            crawl_id: details
+            for crawl_id, details in sorted((adoption.get("by_crawl") or {}).items())
+            if crawl_id in selected
+        },
+        "requires_confirmation": True,
+        "adopt_command": (
+            "python main.py audit adopt --report "
+            f'"{evidence["report_path"]}" --yes'
+        ),
+    }
+
+
+def adopt_audit_evidence(
+    report_path: str | Path,
+    current_signature: str,
+    requested_crawls: list[str] | None = None,
+    *,
+    tracker: ProgressTracker | None = None,
+    target_dir: str | Path = AUDIT_EVIDENCE_DIR,
+) -> dict:
+    """Archive validated evidence and atomically stamp only covered crawls."""
+    status = audit_evidence_status(
+        report_path,
+        current_signature,
+        requested_crawls=requested_crawls,
+    )
+    evidence = {
+        "audit_id": status["audit_id"],
+        "report_path": status["report_path"],
+        "report_sha256": status["report_sha256"],
+        "eligible_crawls": status["eligible_crawls"],
+    }
+    archived = archive_adoption_evidence(
+        report_path,
+        evidence,
+        target_dir=target_dir,
+    )
+    tracker = tracker or ProgressTracker()
+    stamped = tracker.stamp_unknown_completed(
+        current_signature,
+        evidence["eligible_crawls"],
+        audit_id=evidence["audit_id"],
+        audit_report_sha256=evidence["report_sha256"],
+    )
+    return {
+        **status,
+        "adopted": True,
+        "rows_stamped": stamped,
+        "archived_report": str(archived),
+    }
+
+
 def run_audit(
     plan: dict,
     settings,

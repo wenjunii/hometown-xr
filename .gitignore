@@ -50,6 +50,8 @@ data/progress.db-shm
 data/progress.db-journal
 data/progress.db.*.tmp
 data/.crawler.lock
+data/.workstation-owner.local.json
+data/.workstation-owner.local.json.tmp
 data/.story-stop-request.json
 data/.story-stop-request.json.*.tmp
 data/.refilter-journal.json

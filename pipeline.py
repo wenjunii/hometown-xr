@@ -668,6 +668,15 @@ class InferenceService:
         ]
         return self.finish_source(SourceFinished(source_file, "failed", error=error))
 
+    def interrupt_source(self, source_file: str, reason: str = "") -> FinalizedSource:
+        """Discard staged work so infrastructure recovery can retry the source."""
+        self.pending = [
+            item for item in self.pending if item[0].source_file != source_file
+        ]
+        return self.finish_source(
+            SourceFinished(source_file, "interrupted", error=reason or None)
+        )
+
     def abort_all(self) -> None:
         self.pending = []
         for transaction in self.transactions.values():
@@ -701,6 +710,7 @@ class ExtractionPipeline:
         metrics: MetricsRecorder,
         shutdown_event=None,
         service: InferenceService | None = None,
+        heartbeat_callback=None,
     ):
         self.settings = settings
         self.context = context
@@ -708,6 +718,7 @@ class ExtractionPipeline:
         self.shutdown_event = shutdown_event or context.Event()
         self.queue = context.Queue(maxsize=max(8, settings.workers * 4))
         self.service = service or InferenceService(settings, metrics)
+        self.heartbeat_callback = heartbeat_callback
         self.executor: ProcessPoolExecutor | None = None
         self.source_throttle = _AdaptiveSourceThrottle(settings.workers)
         self.sources_since_recycle = 0
@@ -878,14 +889,17 @@ class ExtractionPipeline:
             record_result(claim, result)
 
         def recover_broken_pool(exc: BrokenProcessPool) -> None:
-            nonlocal pool_restarts
+            nonlocal pool_restarts, submitted
             error = f"Worker process pool terminated: {exc}"
             logger.error("%s", error)
+            released = 0
             for source_file, claim in list(active.items()):
-                failure = self.service.fail_source(source_file, error)
+                interrupted = self.service.interrupt_source(source_file, error)
                 active.pop(source_file, None)
                 fallback_results.pop(source_file, None)
-                record_result(claim, failure)
+                record_result(claim, interrupted)
+                released += 1
+            submitted = max(0, submitted - released)
             futures.clear()
             fallback_results.clear()
             if pool_restarts >= PROCESS_POOL_MAX_RESTARTS:
@@ -995,6 +1009,17 @@ class ExtractionPipeline:
                 continue
 
             now = time.monotonic()
+            try:
+                queue_depth = self.queue.qsize()
+            except (AttributeError, NotImplementedError, OSError):
+                queue_depth = 0
+            self.metrics.record_pipeline_state(
+                queue_depth=queue_depth,
+                active_sources=len(active),
+                parser_limit=throttle.current,
+                pending_candidates=len(self.service.pending),
+                cooldown_seconds=throttle.cooldown_remaining(),
+            )
             if not received:
                 for source_file, (result, returned_at) in list(fallback_results.items()):
                     if now - returned_at >= 5:
@@ -1004,6 +1029,15 @@ class ExtractionPipeline:
             if now - last_heartbeat >= HEARTBEAT_INTERVAL_SECONDS:
                 tracker.heartbeat_claims(active.values())
                 self.metrics.flush(force=True)
+                if self.heartbeat_callback is not None:
+                    try:
+                        self.heartbeat_callback()
+                    except Exception as exc:
+                        logger.error(
+                            "Workstation ownership renewal failed; stopping safely: %s",
+                            exc,
+                        )
+                        self.shutdown_event.set()
                 last_heartbeat = now
 
             if self.shutdown_event.is_set():

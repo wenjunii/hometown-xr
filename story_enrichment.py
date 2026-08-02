@@ -450,6 +450,7 @@ def enrich_story_sources(
     limit: int | None = None,
     workers: int | str = STORY_ENRICHMENT_WORKERS,
     shutdown_event=None,
+    heartbeat_callback=None,
 ) -> dict:
     """Enrich a bounded parallel source batch without changing match output."""
     auto_workers = str(workers).lower() == "auto"
@@ -534,7 +535,18 @@ def enrich_story_sources(
                     submit_next()
 
                 while active:
-                    completed, _ = wait(active, return_when=FIRST_COMPLETED)
+                    completed, _ = wait(
+                        active,
+                        timeout=30,
+                        return_when=FIRST_COMPLETED,
+                    )
+                    if heartbeat_callback is not None:
+                        try:
+                            heartbeat_callback()
+                        except Exception:
+                            if shutdown_event is not None:
+                                shutdown_event.set()
+                            raise
                     for future in completed:
                         active_row = active.pop(future)
                         source_file = str(active_row["source_file"])
@@ -566,7 +578,7 @@ def enrich_story_sources(
                             adjustments=controller.adjustments,
                         )
                     finished = len(results)
-                    if (
+                    if completed and (
                         finished <= controller.maximum
                         or finished % 10 == 0
                         or finished == len(selected_files)

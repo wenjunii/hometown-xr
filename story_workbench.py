@@ -46,6 +46,7 @@ _HTML = """<!doctype html>
     </select></label>
     <label>Sort<select id="sort">
       <option value="match">Match order</option>
+      <option value="quality">Story quality</option>
       <option value="score">Semantic score</option>
       <option value="length">Passage length</option>
       <option value="review">Review status</option>
