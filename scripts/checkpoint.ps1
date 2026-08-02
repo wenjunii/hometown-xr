@@ -64,6 +64,10 @@ try {
         if ($LASTEXITCODE -ne 0) {
             throw "Reviewed story export refresh failed with exit code $LASTEXITCODE."
         }
+        & $Python (Join-Path $Root "main.py") stories curate
+        if ($LASTEXITCODE -ne 0) {
+            throw "Story curation refresh failed with exit code $LASTEXITCODE."
+        }
     }
 
     $CheckpointArgs = @((Join-Path $Root "main.py"), "checkpoint")
@@ -114,6 +118,10 @@ try {
         $RemoteHead = git rev-parse "origin/$Branch"
         if ($LASTEXITCODE -ne 0 -or $LocalHead -ne $RemoteHead) {
             throw "Checkpoint push could not be verified against origin/$Branch."
+        }
+        & $Python (Join-Path $Root "main.py") workstation release --profile auto --yes
+        if ($LASTEXITCODE -ne 0) {
+            throw "Checkpoint was pushed, but shared workstation ownership was not released."
         }
     }
 }

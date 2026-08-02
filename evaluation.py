@@ -914,16 +914,7 @@ def evaluation_plan(
     """Build a balanced human-labeling plan without assigning any labels."""
     path = Path(annotation_path)
     rows = [_enrich_for_active_learning(row) for row in _read_jsonl(path)]
-    holdout_each = max(1, EVALUATION_MIN_HOLDOUT_LABELS // 2)
-    tuning_total = max(0, EVALUATION_MIN_BASELINE_LABELS - holdout_each * 2)
-    tuning_rejected = tuning_total // 2
-    tuning_accepted = tuning_total - tuning_rejected
-    quotas = [
-        ("holdout", False, holdout_each),
-        ("holdout", True, holdout_each),
-        ("tuning", False, tuning_rejected),
-        ("tuning", True, tuning_accepted),
-    ]
+    quotas = _evaluation_quotas()
     steps = []
     total_remaining = 0
     insufficient = []
@@ -980,6 +971,94 @@ def evaluation_plan(
         "browser_command": "python main.py evaluation serve --open-browser",
         "next_actions": status["next_actions"],
     }
+
+
+def _evaluation_quotas() -> list[tuple[str, bool, int]]:
+    holdout_each = max(1, EVALUATION_MIN_HOLDOUT_LABELS // 2)
+    tuning_total = max(0, EVALUATION_MIN_BASELINE_LABELS - holdout_each * 2)
+    tuning_rejected = tuning_total // 2
+    tuning_accepted = tuning_total - tuning_rejected
+    return [
+        ("holdout", False, holdout_each),
+        ("holdout", True, holdout_each),
+        ("tuning", False, tuning_rejected),
+        ("tuning", True, tuning_accepted),
+    ]
+
+
+def evaluation_campaign(
+    annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
+    *,
+    include_samples: bool = True,
+) -> dict:
+    """Build a resumable, quota-balanced human review campaign."""
+    path = Path(annotation_path)
+    rows = [_enrich_for_active_learning(row) for row in _read_jsonl(path)]
+    phases = []
+    samples = []
+    seen = set()
+    completed = 0
+    target_total = 0
+    for split, accepted, target in _evaluation_quotas():
+        matching = [
+            row
+            for row in rows
+            if row.get("evaluation_split", "tuning") == split
+            and bool(row.get("predicted_accept")) is accepted
+        ]
+        labeled = sum(row.get("label") in {"positive", "negative"} for row in matching)
+        available_rows = annotation_queue(
+            path,
+            predicted_accept=accepted,
+            split=split,
+        )
+        needed = max(0, target - labeled)
+        planned_rows = available_rows[:needed]
+        prediction = "accepted" if accepted else "rejected"
+        phase_id = f"{split}-{prediction}"
+        for row in planned_rows:
+            sample_id = str(row.get("sample_id", ""))
+            if sample_id and sample_id not in seen:
+                samples.append({**row, "campaign_phase": phase_id})
+                seen.add(sample_id)
+        completed += min(target, labeled)
+        target_total += target
+        phases.append(
+            {
+                "id": phase_id,
+                "split": split,
+                "prediction": prediction,
+                "target": target,
+                "completed": min(target, labeled),
+                "remaining": needed,
+                "available": len(available_rows),
+                "queued": len(planned_rows),
+                "blocked": len(planned_rows) < needed,
+            }
+        )
+    blocked = [phase for phase in phases if phase["blocked"]]
+    result = {
+        "schema_version": 1,
+        "campaign_id": "human-baseline-v1",
+        "annotation_path": str(path),
+        "requires_human_judgment": True,
+        "automatic_labeling_allowed": False,
+        "target": target_total,
+        "completed": completed,
+        "remaining": max(0, target_total - completed),
+        "progress": round(completed / target_total, 6) if target_total else 1.0,
+        "queued": len(samples),
+        "ready": completed >= target_total and not blocked,
+        "phases": phases,
+        "blocked_phases": blocked,
+        "next_phase": next(
+            (phase["id"] for phase in phases if phase["queued"]),
+            None,
+        ),
+    }
+    if include_samples:
+        result["samples"] = samples
+    return result
 
 
 def annotate(

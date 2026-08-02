@@ -1,6 +1,7 @@
 import gzip
 import json
 
+import metrics
 from metrics import (
     MetricsRecorder,
     compact_run_history,
@@ -92,3 +93,39 @@ def test_metrics_expose_funnel_failures_resources_and_concise_history(tmp_path):
     )
     assert history["shown"] == 1
     assert profiles["profiles"]["3080"]["files_completed"] == 1
+
+
+def test_pipeline_metrics_explain_gpu_input_starvation(tmp_path, monkeypatch):
+    now = [100.0]
+    monkeypatch.setattr(metrics.time, "monotonic", lambda: now[0])
+    recorder = MetricsRecorder("3080", 7, 800, tmp_path / "metrics")
+    recorder.record_pipeline_state(
+        queue_depth=0,
+        active_sources=7,
+        parser_limit=7,
+        pending_candidates=0,
+    )
+    now[0] += 5
+    recorder.record_pipeline_state(
+        queue_depth=4,
+        active_sources=7,
+        parser_limit=7,
+        pending_candidates=800,
+    )
+    now[0] += 5
+    recorder.record_pipeline_state(
+        queue_depth=1,
+        active_sources=3,
+        parser_limit=4,
+        pending_candidates=100,
+        cooldown_seconds=30,
+    )
+
+    payload = recorder.snapshot()
+
+    assert payload["schema_version"] == 4
+    assert payload["pipeline"]["gpu_input_idle_seconds"] == 5.0
+    assert payload["pipeline"]["gpu_input_ready_seconds"] == 5.0
+    assert payload["pipeline"]["gpu_input_utilization"] == 0.5
+    assert payload["pipeline"]["peak_queue_depth"] == 4
+    assert payload["pipeline"]["parser_limit"] == 4

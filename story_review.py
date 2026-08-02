@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 from config import DATA_DIR, STORIES_DIR
 from deterministic_gzip import gzip_binary_writer
+from story_curation import curate_story_rows
 
 STORY_REVIEW_SCHEMA_VERSION = 1
 STORY_REVIEW_DECISIONS = {"selected", "rejected", "unsure"}
@@ -161,6 +162,8 @@ def _summary(row: dict, review: dict | None) -> dict:
     seed = row.get("seed") or {}
     story = row.get("story") or {}
     text = _story_text(row)
+    curation = row.get("curation") or {}
+    duplicate = curation.get("duplicate") or {}
     return {
         "story_id": str(row.get("story_id", "")),
         "record_id": str(row.get("record_id", "")),
@@ -180,6 +183,12 @@ def _summary(row: dict, review: dict | None) -> dict:
             story.get("paragraph_count", len(story.get("paragraphs", []))) or 0
         ),
         "excerpt": " ".join(text.split())[:320],
+        "quality_score": float(curation.get("quality_score", 0.0)),
+        "curation_rank": int(curation.get("rank", 0) or 0),
+        "eligible_default": bool(curation.get("eligible_default")),
+        "duplicate_kind": str(duplicate.get("kind", "canonical")),
+        "canonical_story_id": str(duplicate.get("canonical_story_id", "")),
+        "quality_warnings": list(curation.get("warnings") or []),
         "decision": str((review or {}).get("decision", "unreviewed")),
         "notes": str((review or {}).get("notes", "")),
         "reviewer": str((review or {}).get("reviewer", "")),
@@ -197,7 +206,11 @@ class StoryReviewIndex:
     ):
         self.export_path = Path(export_path)
         self.reviews_path = Path(reviews_path)
-        self.rows = load_story_export(self.export_path)
+        curation = curate_story_rows(load_story_export(self.export_path))
+        self.curation = {
+            key: value for key, value in curation.items() if key != "rows"
+        }
+        self.rows = curation["rows"]
         self.by_id = {
             str(row["story_id"]): row for row in self.rows if row.get("story_id")
         }
@@ -249,6 +262,7 @@ class StoryReviewIndex:
             "keywords": keywords,
             "deterministic_extraction": True,
             "generated_text": False,
+            "curation": self.curation,
         }
 
     def query(
@@ -292,7 +306,15 @@ class StoryReviewIndex:
             if decision and row_decision != decision:
                 continue
             rows.append(_summary(row, review))
-        if sort == "score":
+        if sort == "quality":
+            rows.sort(
+                key=lambda row: (
+                    -row["quality_score"],
+                    row["match_numbers"] or [10**12],
+                    row["story_id"],
+                )
+            )
+        elif sort == "score":
             rows.sort(
                 key=lambda row: (
                     -row["semantic_score"],
@@ -316,8 +338,15 @@ class StoryReviewIndex:
                     row["match_numbers"] or [10**12],
                 )
             )
-        elif sort != "match":
-            raise ValueError("sort must be match, score, length, or review")
+        elif sort == "match":
+            rows.sort(
+                key=lambda row: (
+                    row["match_numbers"] or [10**12],
+                    row["story_id"],
+                )
+            )
+        else:
+            raise ValueError("sort must be match, quality, score, length, or review")
         total = len(rows)
         return {
             "total": total,

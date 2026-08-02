@@ -18,8 +18,9 @@ from config import (
 )
 from database_checkpoint import database_sync_status
 from dependency_profiles import installed_dependency_status, validate_dependency_profiles
-from evaluation import evaluation_plan, evaluation_status
+from evaluation import evaluation_campaign, evaluation_plan, evaluation_status
 from metrics import compare_profiles
+from model_migration import build_model_migration_plan
 from progress import ProgressTracker
 from signatures import build_filter_signature
 
@@ -233,6 +234,17 @@ def build_health_checks(payload: dict, full: bool = False) -> list[dict]:
         "model regression baseline exists" if payload["model_baseline_exists"] else "model regression baseline is missing",
         "Run python main.py model-validation capture --profile PROFILE" if not payload["model_baseline_exists"] else None,
     )
+    migration = payload["model_migration"]
+    add(
+        "model_migration_gate",
+        "pass" if migration["ready"] else "warning",
+        (
+            "all migration evidence is complete"
+            if migration["ready"]
+            else f"{len(migration['blockers'])} migration requirement(s) blocked"
+        ),
+        "Run scripts/model-migration.ps1 -Action plan" if not migration["ready"] else None,
+    )
     if full:
         output = payload["output"]
         add(
@@ -291,6 +303,9 @@ def collect_project_health(profile_name: str = "auto", full: bool = False) -> di
     signature = build_filter_signature()
     filters = tracker.get_filter_signature_summary(signature)
     plan = build_audit_plan(signature, per_crawl=2, tracker=tracker)
+    evaluation = evaluation_status()
+    metrics = compare_profiles()
+    dependency_profiles = validate_dependency_profiles()
     payload = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -300,20 +315,27 @@ def collect_project_health(profile_name: str = "auto", full: bool = False) -> di
         "database": database_sync_status(),
         "progress": tracker.get_summary(),
         "filters": filters,
-        "evaluation": evaluation_status(),
+        "evaluation": evaluation,
         "evaluation_plan": evaluation_plan(),
+        "evaluation_campaign": evaluation_campaign(include_samples=False),
         "audit_readiness": {
             "selected_sources": plan["total_sources"],
             "sources_by_crawl": plan["sources_by_crawl"],
             "command": "python main.py audit plan --per-crawl 2",
         },
         "dependencies": {
-            "profiles": validate_dependency_profiles(),
+            "profiles": dependency_profiles,
             "installed": installed_dependency_status(profile.name),
         },
-        "metrics": compare_profiles(),
+        "metrics": metrics,
         "model_baseline_exists": (PROJECT_ROOT / "data/evaluation/model-baseline.json").exists(),
     }
+    payload["model_migration"] = build_model_migration_plan(
+        evaluation=evaluation,
+        filters=filters,
+        metrics=metrics,
+        dependencies=dependency_profiles,
+    )
     if full:
         payload["output"] = verify_output_integrity()
         payload["stories"], payload["story_packs"] = collect_story_storage_health()

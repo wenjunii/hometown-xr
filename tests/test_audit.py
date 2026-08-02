@@ -1,9 +1,12 @@
 import json
+from pathlib import Path
 
 import pytest
 
 from audit import (
+    adopt_audit_evidence,
     archive_adoption_evidence,
+    audit_evidence_status,
     build_audit_plan,
     compare_audit_outputs,
     load_adoption_evidence,
@@ -104,11 +107,64 @@ def test_audit_report_is_validated_before_signature_adoption(tmp_path):
         evidence,
         target_dir=tmp_path / "shared-evidence",
     ) == archived
+    status = audit_evidence_status(report_path, "new", ["crawl"])
+    assert status["valid"]
+    assert status["eligible_crawls"] == ["crawl"]
+    assert "audit adopt" in status["adopt_command"]
 
     report["sources"][0]["added_matches"] = 1
     report_path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(ValueError, match="internally inconsistent"):
         load_adoption_evidence(report_path, "new", ["crawl"])
+
+
+def test_audit_adoption_archives_evidence_and_stamps_only_validated_crawl(tmp_path):
+    tracker = ProgressTracker(tmp_path / "progress.db")
+    tracker.initialize_paths(["one.wet.gz", "two.wet.gz"], "crawl")
+    tracker.mark_completed("one.wet.gz", 10, 1)
+    tracker.mark_completed("two.wet.gz", 10, 0)
+    report_path = tmp_path / "report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "audit_id": "audit-adopt",
+                "filter_signature": "current",
+                "summary": {"historical_state_changed": False},
+                "adoption": {
+                    "eligible_crawls": ["crawl"],
+                    "minimum_sources_per_crawl": 1,
+                    "by_crawl": {
+                        "crawl": {
+                            "eligible": True,
+                            "selected_sources": 1,
+                            "completed_sources": 1,
+                        }
+                    },
+                },
+                "sources": [
+                    {
+                        "crawl_id": "crawl",
+                        "audit_status": "completed",
+                        "added_matches": 0,
+                        "removed_matches": 0,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = adopt_audit_evidence(
+        report_path,
+        "current",
+        tracker=tracker,
+        target_dir=tmp_path / "evidence",
+    )
+
+    assert result["adopted"]
+    assert result["rows_stamped"] == 2
+    assert Path(result["archived_report"]).exists()
+    assert tracker.get_filter_signature_summary("current")["current"] == 2
 
 
 def test_output_match_set_digest_ignores_normalization_repairs(tmp_path):

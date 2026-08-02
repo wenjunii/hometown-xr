@@ -10,6 +10,7 @@ from evaluation import (
     annotate,
     annotation_queue,
     compact_replay_reservoir,
+    evaluation_campaign,
     evaluation_plan,
     evaluation_report,
     label_annotation,
@@ -463,3 +464,53 @@ def test_evaluation_plan_balances_human_work_without_labeling(tmp_path, monkeypa
     assert result["requires_human_judgment"]
     assert all("evaluation annotate" in step["command"] for step in result["steps"])
     assert all("label" not in row for row in map(json.loads, path.read_text().splitlines()))
+
+
+def test_evaluation_campaign_is_resumable_balanced_and_reports_blocked_phases(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_BASELINE_LABELS", 4)
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_HOLDOUT_LABELS", 2)
+    path = tmp_path / "annotations.jsonl"
+    rows = [
+        {
+            "sample_id": "holdout-accepted",
+            "paragraph": "accepted holdout",
+            "predicted_accept": True,
+            "evaluation_split": "holdout",
+            "sample_role": "benchmark",
+            "language": "en",
+            "label": "positive",
+        },
+        {
+            "sample_id": "tuning-rejected",
+            "paragraph": "rejected tuning",
+            "predicted_accept": False,
+            "evaluation_split": "tuning",
+            "language": "fr",
+        },
+        {
+            "sample_id": "tuning-accepted",
+            "paragraph": "accepted tuning",
+            "predicted_accept": True,
+            "evaluation_split": "tuning",
+            "language": "en",
+        },
+    ]
+    path.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+    campaign = evaluation_campaign(path)
+
+    assert campaign["target"] == 4
+    assert campaign["completed"] == 1
+    assert campaign["queued"] == 2
+    assert campaign["blocked_phases"][0]["id"] == "holdout-rejected"
+    assert {row["campaign_phase"] for row in campaign["samples"]} == {
+        "tuning-accepted",
+        "tuning-rejected",
+    }
+    assert all("label" not in row for row in rows[1:])

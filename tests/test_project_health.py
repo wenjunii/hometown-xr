@@ -25,6 +25,7 @@ def _payload():
         "filters": {"current": 0, "unknown": 10, "stale": 0},
         "metrics": {"profiles": {"3080": {}}},
         "model_baseline_exists": False,
+        "model_migration": {"ready": False, "blockers": [{"name": "labels"}]},
     }
 
 
@@ -38,6 +39,7 @@ def test_health_checks_keep_readiness_gaps_as_warnings():
         "filter_signatures",
         "hardware_metrics",
         "model_baseline",
+        "model_migration_gate",
     }
 
 

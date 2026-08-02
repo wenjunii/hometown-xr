@@ -161,6 +161,34 @@ def test_interrupted_source_discards_staged_output(tmp_path):
     assert not writer.manifest_path(source).exists()
 
 
+def test_process_pool_recovery_interrupt_discards_output_for_immediate_retry(tmp_path):
+    source = "crawl-data/pool-retry.warc.wet.gz"
+    writer = OutputWriter(tmp_path / "output")
+    metrics = MetricsRecorder("3080", 1, 10, tmp_path / "metrics")
+    service = InferenceService(
+        _settings(),
+        metrics,
+        matcher=FakeMatcher(),
+        language_detector=FakeLanguageDetector(),
+        writer=writer,
+        sampler=NoopSampler(),
+    )
+    paragraph = Paragraph(
+        "https://example.test",
+        "2026-01-01",
+        "I remember my home and my family from childhood.",
+        "crawl",
+        source,
+    )
+    service.handle_candidate_batch(CandidateBatch(source, [(paragraph, ["home"])]))
+
+    result = service.interrupt_source(source, "process pool restarted")
+
+    assert result.status == "interrupted"
+    assert writer.find_source_outputs(source) == []
+    assert not writer.manifest_path(source).exists()
+
+
 def test_shadow_batch_passes_source_probability_to_sampler(tmp_path):
     class CapturingSampler(NoopSampler):
         def __init__(self):

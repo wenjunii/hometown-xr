@@ -1,0 +1,12 @@
+{
+  "canonical_stories": 1340,
+  "deterministic": true,
+  "eligible_default": 1247,
+  "exact_duplicates": 0,
+  "generated_text": false,
+  "near_distance": 3,
+  "near_duplicates": 312,
+  "schema_version": 1,
+  "source_text_preserved": true,
+  "stories": 1652
+}

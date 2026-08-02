@@ -45,17 +45,21 @@ jobs:
           python main.py filters --help
           python main.py filters stamp-current --help
           python main.py audit --help
+          python main.py audit evidence --help
           python main.py health --help
+          python main.py workstation --help
           python main.py stories --help
           python main.py stories enrich --help
           python main.py stories export --help
           python main.py evaluation --help
           python main.py evaluation annotate --help
           python main.py evaluation plan
+          python main.py evaluation campaign
           python main.py evaluation serve --help
           python main.py evaluation multilingual
           python main.py benchmark --help
           python main.py model-validation --help
+          python main.py model-migration plan --help
           python main.py metrics --help
           python main.py retry --help
           python main.py failures --help
