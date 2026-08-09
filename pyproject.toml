@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=75,<76"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hometown-xr-extractor"
+version = "0.10.0"
+description = "Resumable multilingual Common Crawl narrative extractor"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { file = "LICENSE" }
+dependencies = [
+    "boto3==1.43.47",
+    "fasttext-wheel==0.9.2",
+    "ftfy==6.3.1",
+    "numpy==1.26.4",
+    "pyarrow==25.0.0",
+    "requests==2.34.2",
+    "sentence-transformers==2.7.0",
+    "torch==2.1.0",
+    "tqdm==4.68.4",
+    "transformers==4.40.2",
+    "warcio==1.8.1",
+]
+
+[project.scripts]
+hometown-xr = "main:main"
+
+[tool.setuptools]
+py-modules = [
+    "audit",
+    "annotation_workbench",
+    "benchmark",
+    "checkpoint",
+    "concepts",
+    "config",
+    "credential_guard",
+    "dependency_audit",
+    "dependency_profiles",
+    "crawl_catalog",
+    "dedupe",
+    "database_checkpoint",
+    "downloader",
+    "evaluation",
+    "evidence_bundle",
+    "failure_analysis",
+    "recovery_campaign",
+    "export_md",
+    "inference_cache",
+    "keywords",
+    "language_detector",
+    "main",
+    "maintenance",
+    "matcher",
+    "metrics",
+    "model_regression",
+    "model_migration",
+    "output",
+    "operations_dashboard",
+    "parquet_export",
+    "pipeline",
+    "processor",
+    "progress",
+    "project_health",
+    "quality",
+    "record_identity",
+    "refilter_output",
+    "review",
+    "run_lock",
+    "runtime",
+    "scheduling",
+    "signatures",
+    "story_reconstruction",
+    "story_context",
+    "story_control",
+    "story_curation",
+    "story_enrichment",
+    "full_source_recovery",
+    "story_operations",
+    "story_packing",
+    "story_products",
+    "story_review",
+    "story_workbench",
+    "deterministic_gzip",
+    "text_normalization",
+    "workstation_guard",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

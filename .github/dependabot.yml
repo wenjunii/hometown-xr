@@ -1,0 +1,67 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directories:
+      - "/"
+      - "/4090"
+      - "/5090"
+    schedule:
+      interval: weekly
+    groups:
+      aws-sdk:
+        patterns:
+          - boto3
+          - botocore
+          - s3transfer
+      http-stack:
+        patterns:
+          - certifi
+          - charset-normalizer
+          - idna
+          - requests
+          - urllib3
+      developer-tools:
+        patterns:
+          - pip-audit
+          - pytest
+          - ruff
+          - setuptools
+          - tomli
+      routine-dependencies:
+        patterns:
+          - "*"
+        group-by: dependency-name
+        exclude-patterns:
+          - fasttext-wheel
+          - ftfy
+          - huggingface-hub
+          - mpmath
+          - numpy
+          - pyarrow
+          - regex
+          - safetensors
+          - scikit-learn
+          - scipy
+          - sentence-transformers
+          - sympy
+          - tokenizers
+          - torch
+          - transformers
+    # These result-sensitive packages are migrated together after regression,
+    # human-label, and real-workload validation on every GPU profile.
+    ignore:
+      - dependency-name: fasttext-wheel
+      - dependency-name: ftfy
+      - dependency-name: huggingface-hub
+      - dependency-name: mpmath
+      - dependency-name: numpy
+      - dependency-name: pyarrow
+      - dependency-name: regex
+      - dependency-name: safetensors
+      - dependency-name: scikit-learn
+      - dependency-name: scipy
+      - dependency-name: sentence-transformers
+      - dependency-name: sympy
+      - dependency-name: tokenizers
+      - dependency-name: torch
+      - dependency-name: transformers

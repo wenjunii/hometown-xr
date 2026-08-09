@@ -1,0 +1,2421 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-07-21T23:39:24.517258+00:00",
+  "git_commit": "4dff9b7a65fa42f23a49df06354353db5dee61ff",
+  "profile": "3080",
+  "model": {
+    "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "semantic_threshold": 0.45
+  },
+  "libraries": {
+    "sentence-transformers": "2.7.0",
+    "torch": "2.1.0+cu121",
+    "transformers": "4.40.2"
+  },
+  "annotation_path": "C:\\Users\\wenju\\.gemini\\antigravity\\scratch\\cc-home-extractor\\data\\evaluation\\annotations.jsonl",
+  "samples": [
+    {
+      "sample_id": "0010bb20eac83bbdc5e60122b6cae90707e1b5c03408371d31f9f63e202c51b5",
+      "semantic_score": 0.2331543,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "001c30dbfcd0fd1373a7ca9ecbaf75ab287a707905a35332aa08842dc2d4a0b9",
+      "semantic_score": 0.26733398,
+      "concept_match": "\u0e09\u0e31\u0e19\u0e40\u0e01\u0e34\u0e14\u0e41\u0e25\u0e30\u0e40\u0e15\u0e34\u0e1a\u0e42\u0e15\u0e43\u0e19\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e01\u0e34\u0e14 \u0e17\u0e38\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e44\u0e1b \u0e04\u0e27\u0e32\u0e21\u0e17\u0e23\u0e07\u0e08\u0e33\u0e43\u0e19\u0e27\u0e31\u0e22\u0e40\u0e14\u0e47\u0e01\u0e41\u0e25\u0e30\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e23\u0e31\u0e27\u0e01\u0e47\u0e2b\u0e27\u0e19\u0e04\u0e37\u0e19\u0e21\u0e32",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00236cb2cc106e30d5dc90dc8a0f400d89ff43c7c99189a7028eefe93820f6bb",
+      "semantic_score": 0.090271,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "002bc39512c936634a530a01a5c2dae1535ac18cf3f7966121f3de61e55ab661",
+      "semantic_score": -0.00223351,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "004127b85f1cb79ac1524ead5d652422ea6371c11b5c7f035d6cb08e4062a745",
+      "semantic_score": 0.07995605,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00773bcd360913df6b3697c0e3fe36af2a76604c0718413e545145b5acfe60ea",
+      "semantic_score": 0.18249512,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00aa207334cc82ee8736ab096085a828e9853f3fee48492b3d61938b3be28159",
+      "semantic_score": 0.06091309,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00bd51951efdb4e48cca162a3ee140e613f9dec9c9a0ae77f650a8667c0183fc",
+      "semantic_score": 0.10272217,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00faa388c9c6785d1cbf00300ef7123909af61e5dbde59b3aa2f4ed5db573378",
+      "semantic_score": 0.1484375,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "00ff47cb17f749382070ea85a7b4728decf5a8ff0d69a8755f47ba75c35cb655",
+      "semantic_score": 0.03128052,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "010a897dbbe79b172739690b049c4f1e0a75b996af9345244edf80d231867450",
+      "semantic_score": 0.15991211,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0166429da8224d732abf9903aec79317f09d2b586c4d5a44a43f007473f8cf95",
+      "semantic_score": 0.15698242,
+      "concept_match": "I remember my childhood vividly \u2014 the sounds, the smells, the rhythm of daily life in the neighborhood where I was raised.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0188556fb4127be3b380a651bcb87070efe2cbe0410a427d243d24dfc4349f9d",
+      "semantic_score": 0.06604004,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "018b05ee418137cbb26f8b055efbc9e4bf9a17104d736c8aeae633e75f73d4b2",
+      "semantic_score": 0.16064453,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "01c3bfa95624652c9751ba9c3cb277e0574da4ead2f2a7d0f54cb813c90c2bac",
+      "semantic_score": 0.19787598,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "01c8f75993bbfc9e29eea9ddd4a45f9a71927e75979f94cb1b9ccc3e48fea2af",
+      "semantic_score": 0.10906982,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "01e0e80ce969f0264243693d5c25eea2ac96d012f9b9ed8f1ce6d5935e7abd9e",
+      "semantic_score": 0.06463623,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "022533e3d1741e5806144eefbd67ebe929687cc71c12b902e6b9e805cd1d50e5",
+      "semantic_score": 0.08563232,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0230531d5264c7143b3f19b4dac020af93b961874cb980b8a0800e5052ad2b11",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0251a0760d0dbdabb6597615ef5a4e5e085acd91c1611e921a418ae41bb6a6a5",
+      "semantic_score": 0.12609863,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02627c2a9d660519bf01d526fdfd14aa6856dfcae164e0eacb8a114f44752eae",
+      "semantic_score": 0.21533203,
+      "concept_match": "Ich bin in meiner Heimatstadt geboren und aufgewachsen; bei jeder R\u00fcckkehr kommen Kindheitserinnerungen zur\u00fcck.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "026f4c6627f4da968ef97cd32979a1703f83c8f4ddb27ba31bde8acb47c5fea3",
+      "semantic_score": 0.13562012,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02a8b3e9d03cb86663cd88a4a05d4836a8d3a16f6be978974e12c40e9ce9b434",
+      "semantic_score": 0.08935547,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02aad3c2859a503cd7c733908fe5240cb2e632e08a8d052e945813effb20f72b",
+      "semantic_score": 0.23413086,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02b32358885cbb359422613e857c0b62c9614016702a8bca52085d75b576ea83",
+      "semantic_score": 0.20007324,
+      "concept_match": "\u79c1\u306f\u6545\u90f7\u3067\u751f\u307e\u308c\u80b2\u3061\u3001\u5e30\u308b\u305f\u3073\u306b\u5b50\u3069\u3082\u306e\u9803\u306e\u753a\u3084\u5bb6\u65cf\u306e\u8a18\u61b6\u304c\u3088\u307f\u304c\u3048\u308a\u307e\u3059\u3002",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02cb0573eaed07b1faa1f8f1451e1b670982b1056293c79068c0ecc8914c80a4",
+      "semantic_score": 0.29223633,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "02df98c1d630aeded66c4e3f52b4ceaec339518c9486ac9bea31ba0f140d23f1",
+      "semantic_score": 0.05450439,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0303d7b9338ba89eacce8a196010cddf048df3b74bc4cfe21825f38e2b7c3ebd",
+      "semantic_score": 0.11743164,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "032762837fd91a175443b15837d01e783c3cb3563a4e14b321fbe2bae00c4f18",
+      "semantic_score": 0.07415771,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "032f8fba53bafc1793213ac11e53c3642110248d00d869b5e08034d0c0a7f919",
+      "semantic_score": 0.06072998,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "034b27cff47caaeabb54384f3b036539c63ad1488fd2b97cd1f6355c25eef251",
+      "semantic_score": 0.18994141,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "038180480a12aa8d9f57c2890c54b953556a0f8e90f68787dcd9a68aaaca16f2",
+      "semantic_score": 0.13171387,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "038210b7fe08e2a853443ae3bb1c5c7e077aa801f529c564fe9e05634eb3ff83",
+      "semantic_score": 0.10687256,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "038b6b06d60af799f318e37f95a3c3e5ab6d28b37a42010b456c852cab999d7c",
+      "semantic_score": 0.14904785,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "039b473a45fd523e8088356d6576f7a465569f4a06a1fe4c7a8926b6c2f425ea",
+      "semantic_score": 0.14978027,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "03cea92b3574a124bdee8dc226963a3c63b7ff8641df458babeb17c88702189c",
+      "semantic_score": 0.49169922,
+      "concept_match": "I remember my childhood vividly \u2014 the sounds, the smells, the rhythm of daily life in the neighborhood where I was raised.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "03e3e94b0f46038d046971d42370e31efbe3a2dcf9b008f3ae8315ad5761f556",
+      "semantic_score": 0.09649658,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "03e513569fce3f2e82f966b22ded60964feb5ed0455eddbbe3fe1f8e51d0e0d7",
+      "semantic_score": 0.15808105,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "040bc6048f67efba880bab089e92789d73a68e49c0636bcf41c966e27914d21b",
+      "semantic_score": 0.12353516,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0436dd0428e2f4a7c21e5074077407bc1bdaabb7eb20c07bbe7d9647440c197e",
+      "semantic_score": 0.04263306,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0439b09bbcb05fe226456c2013c2c85f75f835f8b1dc68a8f578ec927f85963e",
+      "semantic_score": 0.16381836,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0448667c2d511472830626a9c040b3d96f72acd90f3701f21899cd08b9113358",
+      "semantic_score": 0.10723877,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "045adfba34b9c11ba15246d013cb472ca17cd2ed521bbb09c6e5ec991b7529ef",
+      "semantic_score": -0.02613831,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "04822d270fd7d2a812296da4d598e28cf141d1fe77abc58b33dbecf5a38b6dba",
+      "semantic_score": 0.54394531,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "048dd865162623b5d3177f6343087523c17f6db26d5e4bd648b13fddf99760d4",
+      "semantic_score": 0.11810303,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "04b77ed69553abd8a939eb45914a203d8dc8f7e883b715d3b2bbcbcd6b7d676b",
+      "semantic_score": 0.09265137,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "04fa8b802d827f97a3b36c7a4d5dbdcbea16cbbaaa2930578443d8185078582a",
+      "semantic_score": 0.64208984,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "051114139fc144652315f3dc4366386db287b383f61958d9176b59746137684a",
+      "semantic_score": 0.15820312,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "052d9dbbe60aded92fe633e706f1aaa7f3af13503b709ba3478feeb5d9d78bea",
+      "semantic_score": 0.07611084,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0532d1809a72b2b70c54330fd03a4c8bc446c494deffe95230bc252ac20b0abe",
+      "semantic_score": 0.09338379,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "056e77a0012c03b99bcdba62d5a9f968fb643a91747aea34ef1c43b49d347349",
+      "semantic_score": 0.04315186,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0574e6c8b5925fd07de57f8bd7742c1537cc44c42656200cdc3b9e8598cfb60b",
+      "semantic_score": 0.10168457,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "057d7307579374f1c5619d8b032c8427ebd9caafcde10d9c503d3c27c9ac5d7f",
+      "semantic_score": 0.22961426,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "058b286ebeb79d7d2f8f49e9d2da0716328aeef3d187f57222db7c896ae27522",
+      "semantic_score": 0.02149963,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05bf43987a79ed6b7725a334e59a6ce9899f31c6537e6058510d0058e6930bfd",
+      "semantic_score": 0.10882568,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05c32f69bfd92c6c64c84725afabea193406a4bec195edd0947f0a9aefd042d4",
+      "semantic_score": 0.15039062,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05ccc08bbb938089354da7d260b9ea2b8c5b87a71a8ea9abd7cc3f2327f04f07",
+      "semantic_score": 0.10742188,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05cdb2813ad15e3978d01af093b8678f16764cd4d341121ded4c812acf5a3899",
+      "semantic_score": 0.10327148,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05df742e7a9609a44f67e4c040136aac2c9b2d293dd229f60413ead83dabe302",
+      "semantic_score": 0.07055664,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "05ff321cb5f327e1d8c0416b35673f266d6af93afc0505673d58adb2edd67696",
+      "semantic_score": 0.49609375,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0616691af1e2492d382592d33515c2cd14d0eb7358452d9d4f6aa5aec1fb6f96",
+      "semantic_score": 0.12609863,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "06349a20cc9dc30b354e6b53fec2ec7a5cbf62d8984a7e43ab8363ed27cf8feb",
+      "semantic_score": 0.22546387,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0643e8dc878e0bfcaf5f9794a90deaff81e49692abf6107fd1096d0449816345",
+      "semantic_score": 0.49414062,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "064b17af3b24343a3126e02d2da4ae9faf07d5ff500bdc3ce320a8aba0cb8d87",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0672d1b01b972ea693d4db42920c88c06094d9a623d8a4aab62d7bb9e7a3af7b",
+      "semantic_score": 0.07122803,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "068d5e0740f8d3122d3ba44d3bdbc365e7d16d2c5ae2ba3169bb2dc8fc8e0726",
+      "semantic_score": 0.02258301,
+      "concept_match": "\u092e\u0947\u0930\u093e \u091c\u0928\u094d\u092e \u0914\u0930 \u092a\u093e\u0932\u0928-\u092a\u094b\u0937\u0923 \u092e\u0947\u0930\u0947 \u0917\u0943\u0939\u0928\u0917\u0930 \u092e\u0947\u0902 \u0939\u0941\u0906; \u0935\u0939\u093e\u0901 \u0932\u094c\u091f\u0924\u0947 \u0939\u0940 \u092c\u091a\u092a\u0928 \u0914\u0930 \u092a\u0930\u093f\u0935\u093e\u0930 \u0915\u0940 \u092f\u093e\u0926\u0947\u0902 \u0924\u093e\u091c\u093c\u093e \u0939\u094b \u091c\u093e\u0924\u0940 \u0939\u0948\u0902\u0964",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0699f4f68b3e5f5a577b22c4426d197877ecfa5495e4eeabd0102c3dc6455792",
+      "semantic_score": 0.15466309,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "06ae35afb9b42ff0239199a58bb2ebbc150ca95ff601e7afecd584b2eebfe543",
+      "semantic_score": 0.46508789,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "06dec0dc0937f352e22fd5ccb0feb5fedc3dc88aa1a2a1eb1cc2ce06c00dbe8b",
+      "semantic_score": 0.06433105,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "07384a839646e65831ca130ccf37a909b44be0168e37b103c71b8a890ebe3636",
+      "semantic_score": 0.13415527,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "073a1644b7a9b96e86b626a46e07fdbb1d346ecd7d2f2b902a19649f4fcbf895",
+      "semantic_score": 0.10717773,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "07dc155a9b8ce7660d5d415aacf27d740e7fdbd9d8e24d7491c409dbf6ab0b69",
+      "semantic_score": 0.10546875,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "07dfb5bd07fdc5685d31ad50026fe3e54ab98e92475dd1907ab4ec5e7ba48f96",
+      "semantic_score": 0.27099609,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "07eb2a7291aae3608b3c1733b406170573fd674bf67c09c789d27e465bf9568c",
+      "semantic_score": 0.1114502,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0814f3943c558be46e5e5dc911a981156a398340c7d7a92b7e3fe7a4d94f4a42",
+      "semantic_score": 0.12634277,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "08a352976a1b0cf62f5c1781bb67ad93387cd4d8d29d01fc237244189641d62c",
+      "semantic_score": 0.61035156,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "08d15aad645026b6d7401c1a702de484e10658c2dd4b0332dcec82c5980189f4",
+      "semantic_score": 0.17724609,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "08dc223ab14964f5cf5a5308f154fb3956a316afd6b83103b784720238fc52b7",
+      "semantic_score": 0.02174377,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "08e35037add8ff452d805412ccdc01d17be6680f9aab3729f4462ff14f6947f5",
+      "semantic_score": 0.50537109,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0905551539b6edb359ec4e5a09f2876c4cbba102e5f2e88a8cbeef0d907ebfc2",
+      "semantic_score": 0.19921875,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "090ab3a1e6b9ab250136a075098f807d9e8071e8aff4e08147783c14c075f6ae",
+      "semantic_score": 0.18811035,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0926afb96b5f814dc7fbaa99252573ea17f900746ae62410d9245cc9d05d84f0",
+      "semantic_score": 0.09851074,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "095a960a44dd37dd4ddee638b6e57d0b7edf4c46e90e37120faa54e6051e60e8",
+      "semantic_score": 0.13232422,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0970fae43681f9f66d6bb8c79b29db3ca97a7bc1cac1c497af90a0266f0cddf7",
+      "semantic_score": 0.26293945,
+      "concept_match": "Saya lahir dan dibesarkan di kampung halaman; setiap kali kembali, kenangan masa kecil dan keluarga muncul lagi.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09b082813225e36f44f27779a18ba99785394fa853f3c31bf97e41603fea4790",
+      "semantic_score": 0.38964844,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09cbc8aaf525a70b3c3da3419ed57f330259266da9d2cda45bbd553bf69b54e8",
+      "semantic_score": 0.09631348,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09ce83a8f2dd7ebc9a2306621736185ad84518c912843cf09030fece99fd43a6",
+      "semantic_score": 0.11968994,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09d0729008684bae2dbc22eb8518fe175757c7f4f3ec037615a1e9f5f65455a0",
+      "semantic_score": 0.05456543,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09e9220c7b5de7c3664de5295e53c760a09935e2b3ae66a23a70fa884bc88ca6",
+      "semantic_score": 0.00847626,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "09f1821de3ab39b890f294908ede610885651f2b6e74e631b706cb9c5de438e5",
+      "semantic_score": 0.10198975,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a3da6c9c4b094d5eaf5447179f487c58a1dba56320422bed6fb6cc85336151e",
+      "semantic_score": 0.20056152,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a496667c4845fd7b01d481ea474e5f3c5da29eea389f7c9bc47eeab434cb8a4",
+      "semantic_score": 0.24499512,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a4a519a5109ede9ed4db8d16b4b866f4388bca9327c725133578977dc82da32",
+      "semantic_score": 0.14404297,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a5ebd4ff633b02d6905550b394a08c0f49385f25bc493a73b58e4254b1aba17",
+      "semantic_score": 0.13647461,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a6728bb4412a05e1efcd4da1427dcc6376857eacd34398b845b5953b2cd15ad",
+      "semantic_score": 0.21813965,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a9ab990ba98c8bc5e0cca785397224b55a5af128f96f2d95d0890f6b1c233f1",
+      "semantic_score": 0.10900879,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0a9ffe3ac5776446faadc0fe391c81d3d3e225a53d0a1d2620521cf430029d5a",
+      "semantic_score": 0.53173828,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0aa4c225b3527b1c5772274b4515221550f1dd80f720baac9869889f7b7484d8",
+      "semantic_score": 0.06842041,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0afb707cea77e10e8af0c0af8d72c8c9a916d03a34236c16a0028bdf8f9b0c50",
+      "semantic_score": 0.48046875,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0b057dbae861f3243cb607ba4103c20ed2a6e4aea24b1f1b11f49a96014b8556",
+      "semantic_score": 0.13256836,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0b0a68f43b824e0f2b127c96a9bec9eda58e17888d80c956d8072676a85e2225",
+      "semantic_score": 0.15087891,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0b35f9e0229d02b831f3cdc7d6d95b19df4055e1331bb3220622b0e3294d2e1b",
+      "semantic_score": 0.12316895,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0b36d9cbfc29d5285fb0301c34fb93b7fa47edc56764c52878ac12ff34f3c9c3",
+      "semantic_score": 0.08251953,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0b555a0fe525c80a91338f81c35ee8e95a91fd858666d68c0b5ef500106bac7e",
+      "semantic_score": 0.10839844,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0bce0cd1834ce53b5d0ce3998b0239cca1e5049b8fc346c89d306a9a6325308e",
+      "semantic_score": 0.08526611,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0bf70b9c729f3c2e046fa38dedc93effa2f73d53994208bd41c12680de4087dd",
+      "semantic_score": 0.1550293,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c070d8ec6f85f2b68414ca32e1fc021006f7df336865fbaf2279fea1344f80a",
+      "semantic_score": 0.13549805,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c1152a8872d2b7dfb631ab4ce2c865d8cd0dbc3967a7b33984d40c408f06da3",
+      "semantic_score": 0.54101562,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0c15a12f6e89d3f50f2115b5ab89231b0d4baea480cf2fcdf6d5814c977c4691",
+      "semantic_score": 0.06842041,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c2060edaec66d32055db0730fde8b48c95917acfc340be656119922a2c785f2",
+      "semantic_score": 0.2121582,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c4a07abde2c5938bfbecc12cb8706639fd6cbdb020bacdb99737ed69a1ebe2f",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0c557fbba116a20f007a99c9a8bda11df06d60ea1a9d71d7dcf5bc6e67b71381",
+      "semantic_score": 0.19824219,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c561c1aa6400e6c520a436f18c58d5f926769082068c914bed7783d4310ed1a",
+      "semantic_score": 0.10491943,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c681cebe2f2838689fc412cc0ae9ef3c8f7ad1c3f8300c860b2da092dcc2d3b",
+      "semantic_score": 0.10205078,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c6e2c38b3fa3e8684c3953ecdca50d8b604f3a7e5d9ebd555cf64edd547d77e",
+      "semantic_score": 0.24804688,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c87aa3b449903417823b5cfbba8d3ac810aed6bbf3e44db6a54eeaaa25f5893",
+      "semantic_score": 0.00391769,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c88859d3c07c74a7d5f43bca2e2d9806492198107a39c751b1ee4d62c89d66f",
+      "semantic_score": 0.20373535,
+      "concept_match": "\u79c1\u306f\u6545\u90f7\u3067\u751f\u307e\u308c\u80b2\u3061\u3001\u5e30\u308b\u305f\u3073\u306b\u5b50\u3069\u3082\u306e\u9803\u306e\u753a\u3084\u5bb6\u65cf\u306e\u8a18\u61b6\u304c\u3088\u307f\u304c\u3048\u308a\u307e\u3059\u3002",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0c8ef4fe6551fafe223e28dbbd00ad5c49d964593fbe2856bf5e6d1a70d7646b",
+      "semantic_score": 0.22094727,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0cbc3d6d777c151f8d5e1e2b3b6d4a7b8b962904e137fd12097e5b9410f4cb0d",
+      "semantic_score": 0.00081158,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "0ce025c205c59bf78fe75fef5460089163e2dba17e6d7b7f2d49aa469351bab5",
+      "semantic_score": 0.48510742,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0d009a8a7fd72b98a033fa713d776c6bcc69285e250799d3ca75dbe9bd93c00c",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0dd7e21ed48a75e23145272d37292f7b4dd4bae527770a8ad2de63093666aae5",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0e3da2d8e46f695d649bcafb85e12d70e709f398601082c4daeba7789add2ba4",
+      "semantic_score": 0.47680664,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0e9dc0753461636c6b58611be5ffe94ebf001e2ddeb44ed247e90b8e92b151d0",
+      "semantic_score": 0.53955078,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0ea87c83ce83e39e8304c46da0f970ce4cf9cfd293e9b5933ed8b3a458556fa4",
+      "semantic_score": 0.47290039,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0fa1491b4e764f9ceec3573624946ace7a96dfa055e7285bad07076ec2e5517a",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0fc0052160dd841ce4bc6527716f7bd144d9a194b132daefb78b9a68cfad4eee",
+      "semantic_score": 0.50683594,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0fc9f5a6abafd94970b06b69fb81ece73d2046795f3bf3c253ba4544dfe7e2b8",
+      "semantic_score": 0.45532227,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "0ff17fbd19a84a4ccd1395f5efc003d5dd6372ced33f97269f74fdff1dc3406c",
+      "semantic_score": 0.51513672,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "11038ee5c042675e912a4ef43f3ebd0de83734d8841fce57eabf8c5d03fd62c3",
+      "semantic_score": 0.50244141,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "11d87ed60a106ea1cae1da95ae9416d9fc20d852e16e2a2fec834df28e15e7d8",
+      "semantic_score": 0.47167969,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "13713781b08229001e0ff0a234a83c1726c59caeb9bc57d928b5698be9641d72",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "140a4f858cfea00630cb8e54f9283eaf142ad186c44b04de37d65549047fb9bb",
+      "semantic_score": 0.47070312,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1645210ebd5c8372e599ea2d7dc91319dea4e6beb4a5b358a7a15e0ad588990a",
+      "semantic_score": 0.45556641,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "16a03d8c2b41e7139d01b96dc3f24c337801e42f6db1a0cb5b1e17375037b72d",
+      "semantic_score": 0.57177734,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "18cd809a4d6aea421004b9cf0a3c78cdbd59eba18319e996c62bdae892b7ea07",
+      "semantic_score": 0.59521484,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1913859b78f693491b5fe89c55071bb737f38f009d4d68259326b7c6fd8a535c",
+      "semantic_score": 0.47192383,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "19c7d4ad3a59fe1913f61162f44047c8011033cdb52513c8f44ecc93b35c79ed",
+      "semantic_score": 0.15942383,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "1a1744a51bbec844b1639aea5b464045d3d914f130a11c42106522257878e177",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1ad3315387b4e357d91bb9086b27f46ba325b492c3d339c1488f1402b1b40b06",
+      "semantic_score": 0.46044922,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1c2de6f4a9ec169d2de3e345a1a41f320c6246f245e33051a162c6a4d7004ebd",
+      "semantic_score": 0.49072266,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1ead82f53d47175162900fce1c9a536f45aa6dcf36d45d7001f701c38b97872c",
+      "semantic_score": 0.4519043,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1f570f5f65442c40578c97413de5c5d5ae3f371044b89787fd42b8fffd97b05b",
+      "semantic_score": 0.52001953,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1fa7e9947c5b07a9bdc6565a3e4cecdbc82a20b88555cf7525601507b04279d9",
+      "semantic_score": 0.46899414,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "1fff1662b47d2cd3181e99b5c248488d6f4f377aba25beb5adb6b25980c3b14b",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "201d7a1f8a618c4a8638410a841e384d0a16b1712c0252d8f39984e51a7fb9f9",
+      "semantic_score": 0.52685547,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "22e9cdcf99de9fccc0dc2baf17f41d1adf94f7e77b818800665e70da0ccb2f35",
+      "semantic_score": 0.53662109,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "23da4fcab98cb85a301eb08c6702848aa55e6416a3082d1aa44dbe5e837d864d",
+      "semantic_score": 0.48144531,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "24079775f1e67e1ba811eb8f29862259e9c768f8d9463b9e2656eb88e91119df",
+      "semantic_score": 0.45874023,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "26b2509219253057ab6ff6a3a6fdb17d88a570450d365d3202349b6d424dc35f",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "273a26edaf6813e69e870a131c802a910223c97c355e77be968c59bb86162a7b",
+      "semantic_score": 0.05993652,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "2780a66f6e9968bfe6c641953bf221fd335b400abf92a919c0644b861ba5bfe1",
+      "semantic_score": 0.46166992,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "28042b9c118fcaaa2729bec63bd3f20478ce717bc2148643951e3de487504d99",
+      "semantic_score": 0.51025391,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "282976dbcd9aae328018e1eed3e4bac14797f8fbf2b0dab53bd9053a16295a3d",
+      "semantic_score": 0.50976562,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2a8513b61324947706fcbf92e24678c77f842e254b9f9309a4e41727c77375b6",
+      "semantic_score": 0.47387695,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2c0d5612881b95314e69f6f84302f8616ed4b8cf25a669cfe3a42b724eeadb1f",
+      "semantic_score": 0.53955078,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2ce217a47a81549c8dbc92cd32177d25428e74bbfae278c0c357c2a21c4f2736",
+      "semantic_score": 0.47290039,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2d9fc57df7c88711264ed762a3cf9824e317e3d5228d394b2b923d1c2e518c73",
+      "semantic_score": 0.48046875,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2f0af57a8a0f87355a06aac39ce31e2d124f0789df59032195f905a06478f702",
+      "semantic_score": 0.48046875,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2f70fa5b8bcecf2fa9c5bedf2a55a6178c47dd485ee363bba6b86224062e339f",
+      "semantic_score": 0.48217773,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "2fda9ef4933c5109adc953baa8c963b88813afa0262718b49a94c39b105b0963",
+      "semantic_score": 0.48339844,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3004c5b65b917e363c7e2e8312107956dfb727523ad2978e3630a43ec65df553",
+      "semantic_score": 0.45043945,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3140c032969886e67b6435ba069df26ba7efb4a2c3905dde06aae9a8d290ae52",
+      "semantic_score": 0.49121094,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "31dbc2119b7f55a1f9338fd9163b756410d254497dc9c90f92871b43bdf52005",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "324603c4d2e3e0c7aec4a99137afa4b2cb6a8e3dbb6bc4519174f8e94e6f975e",
+      "semantic_score": 0.46972656,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "32c109e35b81472247f4b0da3a9ae8924f0d0c4d462fbffe4e1417cbf9a4f810",
+      "semantic_score": 0.54541016,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3598626acd86e2cbd15caadbbfc6e519bfa27456180245cc733d147e0651db91",
+      "semantic_score": 0.52832031,
+      "concept_match": "Ich bin in meiner Heimatstadt geboren und aufgewachsen; bei jeder R\u00fcckkehr kommen Kindheitserinnerungen zur\u00fcck.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "35a9c07d29704c41ce3ceb5d4bfde3346b86c0d4146a48eed77d78ad5005286b",
+      "semantic_score": 0.50048828,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "35b88a8a1da09b80bf99d773243aa4d3e62fe503faf71b91bdd976c44b5a6a82",
+      "semantic_score": 0.55761719,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "363e73e8717518bd851ab7bccc0829853bb39cfe81f9ca86de77a10a86d1e27c",
+      "semantic_score": 0.56347656,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "37a07c8bd1ed45caad06aa3e5b996507a5d108fe381a942614eca7d5dd3279ed",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "389eab2bce34c8680fa3dca2ac65ef933f57546b084e905f7507dad2c2371082",
+      "semantic_score": 0.66699219,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3917dae7cfb16f4c2aa2bb896f917b846b0e48082659ee7fee9fefd0db46e605",
+      "semantic_score": 0.49462891,
+      "concept_match": "\ub098\ub294 \uace0\ud5a5\uc5d0\uc11c \ud0dc\uc5b4\ub098 \uc790\ub790\uace0, \ub2e4\uc2dc \ub3cc\uc544\uac08 \ub54c\ub9c8\ub2e4 \uc5b4\ub9b0 \uc2dc\uc808\uc758 \uac70\ub9ac\uc640 \uac00\uc871\uc5d0 \ub300\ud55c \uae30\uc5b5\uc774 \ub5a0\uc624\ub978\ub2e4.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "395f2a2fb8a64c3247ba9aef4cd6cd36b8bb3f75344482be9a25162a14186c19",
+      "semantic_score": 0.47216797,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "397da7d890302e4a503833879ea9a5622fff7d310e274ce37be55d61c7d904f5",
+      "semantic_score": 0.45166016,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3a360cc4cf66d159d46624288d1ff9c4e4e73c0c7cd7ebc16d38ab52d8fb19c4",
+      "semantic_score": 0.4699707,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3d18a9717a27291cecafe3c6c62310ef249531bb9b09f1cff398f290697cac8e",
+      "semantic_score": 0.47338867,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3d3f083545ba9b6423ac072f19743d53f23fd1f384a3e73bde1239196a1e2137",
+      "semantic_score": 0.45410156,
+      "concept_match": "My family was forced to leave our homeland, and starting over in a new country was the hardest thing I have ever done.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3e3e017ab17878cb581eb2ac0e6e90fde8bb6fe5444caafbfa1c1ef4bac6701e",
+      "semantic_score": 0.45654297,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "3f1519d55504bd4ef7b2c7c87f96ad26295d322e27e918f52023904155842857",
+      "semantic_score": 0.49902344,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "409925a0d002ab61d018b750e7d571e89cff445b8e3099b4412ec2acb206af12",
+      "semantic_score": 0.48852539,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "414b0e9a2d3c542874a7b32f1c57765baa9050573af939330227f70b77d82ce9",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "41e55605971774ddb93f9cadee261aebff62a670ba0e7547aa2b0d1be68217a3",
+      "semantic_score": 0.56347656,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "430ef20c8fcc048c328b285bb5eeeed8d5c22394520ca4b39aa3712df344f4fb",
+      "semantic_score": 0.52099609,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "449917b071282af2b4d5ff20fcc0feba035bb3366fd8ee93934b442bdf9205bb",
+      "semantic_score": 0.0904541,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "44a373331614b39487c8e186155769411aac8e0a54360233bf470c6d52d4d370",
+      "semantic_score": 0.47143555,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "44b72c8d4769e00195f2bf802ddfc9f4152531c090448db8803af828d117fb48",
+      "semantic_score": 0.48046875,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "45df10b13e60233fa80952bbf33ecc8f8a7110a37fc81dd758eb36f3c6f24e65",
+      "semantic_score": 0.48486328,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "45f763dd0bfa784cbf88abd97937b52fecbe21fb711a9f60fe7f29118847f2c4",
+      "semantic_score": 0.52148438,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "482031e96f2be7f648196bd2ca5328c38bdbd5db0fc9fe465ea1559c26407009",
+      "semantic_score": 0.45410156,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "48581de93da9b83520a780279127faecc9b35226bff0e5f1ecdc7c080e22a153",
+      "semantic_score": 0.45410156,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4912ffeb41fce54cba028d05a831f95584671ca8cece72cdb0e0fef231f6963d",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "49a59624a948b92c60ffa5a76fda26d90a039e0a6a4684122ec148542b5e18fa",
+      "semantic_score": 0.45166016,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4a7ec2035ddafacbf65fa6161d1e09fa02bb8b96d743413c2053e2d973f884ca",
+      "semantic_score": -0.00714493,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "4b1987fd63efb2cdfbc0e03cefbd267fd4e2e0f39447883787309302951a0788",
+      "semantic_score": 0.48510742,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4d407708a6c1c6b2d94760ebae7c4af08bf68c70016c8340233892633b3d6cdb",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4d680aaf60707ba2af4ef2f7f2f0bcab33c201bf87bab566d39b8d299a9f8819",
+      "semantic_score": 0.50634766,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4dd96cc794f79cad43bae639d19aa8aa567d5749aa2334635d39c2691109206e",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "4ee66ed28ac0b8a19b6da4f6c7d160bfc4fcd6e64508bbf35d8a9840f0d05669",
+      "semantic_score": 0.48999023,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "50395a596aaf25bf08b88dc8225d432ee718cb3d2f53d142fe9bfb550cb64604",
+      "semantic_score": 0.45947266,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5093622e94fe2767c9f2ed179bce5479a8e1e4c83064c3df9ac179ada06445b9",
+      "semantic_score": 0.50878906,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "51c4878d0432edb963a6ac966baa7d3183a2472fafc9dfe4a99a5d66341e291e",
+      "semantic_score": 0.45361328,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "52038a32e2629af42ed8da14b2ffd5dae4a28bea3e718608eb94d268d07ec7e6",
+      "semantic_score": 0.4909668,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "52dd0a3a29cb03b857b6f037ac7373a457e09d9cf7c92550ffcd3964bee04a0c",
+      "semantic_score": 0.453125,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "52e916d203868674ba743b9f90b28d660f9edc8f36fda4c0289b375ab04d96f9",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "548b393b323dbc3ec8e40688669b03ed6f55e1134f01bc5743f10c41272a96f2",
+      "semantic_score": 0.46508789,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "55fd4520fd49c0f57b32bfce7611301d7eb9c720bf0366b700a2e39877db734e",
+      "semantic_score": 0.47729492,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "566c10d780ade7978c5591897f76c980268825cdb8f9854483c6bcbca1df29dd",
+      "semantic_score": 0.46899414,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "573c871798e57e3ead7dd39a01c206d80d516af8633adb1888ccca6c5cf2862f",
+      "semantic_score": 0.51513672,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5788eb4cff60c793d1cff8ee6b15ff30bd729acf1676a38cdd1d6f5c551d0126",
+      "semantic_score": 0.54541016,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "579edefc5b5e991228744e8391523bd4a7144ce9cc40467b66fb59a8adc64e05",
+      "semantic_score": 0.63769531,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "58ee843766880517291e5983ec3ab0e46e6ebdb7d7e9fbc93de9102b4bcb0a35",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "595cae0b67bf5cb4b4119425bc7de22364ebb69fe0ea3af82f04d4738d66d4d5",
+      "semantic_score": 0.49487305,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "59f39f5760d3f422b3c26f4e05c0aca3a3de54e24e86a4bf88d5137b6aeaf96c",
+      "semantic_score": 0.48754883,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5a2964208953c74c334eba77e0f489360ee7760e19aabb2bb583a5ab039f57a9",
+      "semantic_score": 0.53222656,
+      "concept_match": "Nac\u00ed y crec\u00ed en mi pueblo natal; cuando regreso, vuelven los recuerdos de mi infancia.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5bb72a61a79a4dd80b33a227f4e4182fbdbcb22e4520413088157199e7b84ca6",
+      "semantic_score": 0.46435547,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5bc65578ab343ce7cf5f199b048b043cd0d4600f30a2575025a9cb370a123da5",
+      "semantic_score": 0.50683594,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5cba072032326d48fc67232fbcab4b981b89fc9d0e60a71b3ef24d5ee459e816",
+      "semantic_score": 0.46850586,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5cf6b1438a4d788c2fb10e2b70373ae55ba671f135577c70d3f814bdbe2a2b33",
+      "semantic_score": 0.46166992,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5d5e964b7a015e5317c2124328f78c54771afaea49dc4db3cf729d0d762a1b96",
+      "semantic_score": 0.4855957,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5e5712cd5805b4d7a71bc7ea153027aba48af74451d66149d5659080ce66c009",
+      "semantic_score": 0.46459961,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "5e8f6c337247713cd901a274af9472ba5dff301a6fa491ebaeb89bb440f4e18c",
+      "semantic_score": 0.5078125,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "60df4fae32c728554d9886e16f476646a57270a15062ee17db57898030d634f7",
+      "semantic_score": 0.46850586,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "61709326dbbcda72b38436b7a97590a5623234e6ef2252c15cafde23b6a9d675",
+      "semantic_score": 0.46313477,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "62280554bb23329e582a8becd01155917fa94113268e29816872ad167df59383",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "63d4a994ce863449fc9f01715f74379344c6b1b4365c23340ce20c11803fcb14",
+      "semantic_score": 0.48950195,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6463376807197edcf04031bb5927f40f39b30b009e28709d27eb11cf2d75817c",
+      "semantic_score": 0.46850586,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "64b877776b910c1108c66926dbd137ae750b00137e877456fca93907d3ea3a12",
+      "semantic_score": 0.4909668,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "67b9f9c2a5975185160b820279ce5e4b80c260b8cbb17a4f9db556d3484d11fd",
+      "semantic_score": 0.08453369,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "687fe53ea537ef7035e0b3ca77d9f77a329684d8f55f77fc36260059406492c0",
+      "semantic_score": 0.46850586,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "69924eb3c3687616d3004ec092604843de28c0a5a4dc92b9ae8ee4bef19adda4",
+      "semantic_score": 0.46899414,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6ac3617c6065c061ada5c37f68d63b05571c48128be63b2efa395927f0f6a3a1",
+      "semantic_score": 0.453125,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6c16d935c07bc9e7760bf045ba461d7105e78a6e5f2e1d8403e0da5c85f2ccf7",
+      "semantic_score": 0.46337891,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6cb1b4ece40c98b13c4f74c8eac135ecd284fd639b3479ad2580ebd61a6aa75d",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6dda686e661f6f6c2019f0ca6380101324810576bd1ef80f0d918c2fd7074918",
+      "semantic_score": 0.47192383,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6e5bd382300f00ef23dd3b28a809aa914f38d1b31f6b89f22285c86326051a00",
+      "semantic_score": 0.46484375,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6e7abc25d12611d5112c0e32aa40d81bad45d586b237a697c25baccbd24b1490",
+      "semantic_score": 0.46728516,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6f190267fa171321ecc27bd2add08e7261cb777804c145f8c59af1ba6004e734",
+      "semantic_score": 0.46166992,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "6fb1dc635f74e3778fb8e3861b18964bd5d12ace9d6d672e601b0bea3aae2510",
+      "semantic_score": 0.45922852,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "72054a63d1bd04fbcbd78822e6670d8e9e57100d06baf365761cfeb496aaecdd",
+      "semantic_score": 0.46484375,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7250c59d64ded0eaf1ced37811b09668237c671f6d67bd2d666b36bb91273d98",
+      "semantic_score": 0.46044922,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7255d775951b4a43e67cef45768ec7db63bf08d111d87454889b03419698c526",
+      "semantic_score": 0.48925781,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "75b425b36c203f4264b98eb616ef8d792de844e5058bbd5347500f58c4ade9ce",
+      "semantic_score": 0.45654297,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "75efcd27aa83518c29df09ea9484b9d9312bd95fae680d0925b30df01f655ba4",
+      "semantic_score": 0.48632812,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7640c746463be2b3dda520338915f16101c86e602d8a41ad6dc0a1d0fbf4d2c5",
+      "semantic_score": 0.14672852,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "76c075451b7bd6b37bd5f5c07814c207638b54db93987f82f7828ca284179a84",
+      "semantic_score": 0.48046875,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7775e77f44303c4322095e9ca3eac11a56ba42e2b097d61867c6aedecf31c4b6",
+      "semantic_score": 0.0723877,
+      "concept_match": "Ik ben geboren en opgegroeid in mijn geboortestad; telkens als ik terugkeer, komen herinneringen aan mijn jeugd en familie boven.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "7a83bc24480eb4c3ee6cc59e5495bf464c00df90d71cefdb80029e665e6e948e",
+      "semantic_score": 0.4597168,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7d3d7cda0b10b6197c0123d841c6722077ba8d643b7ee695247dab98479aea45",
+      "semantic_score": 0.50048828,
+      "concept_match": "My family was forced to leave our homeland, and starting over in a new country was the hardest thing I have ever done.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7dc31e14f1dd2b675e41d01a753b604eeffbe6d31e36d9adf404283a4b212c0c",
+      "semantic_score": 0.46875,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7e70b740ddf9a6a415a6c3364fcf77d843782b8135b6ba00b1a282c06abb29ff",
+      "semantic_score": 0.45654297,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "7eac72093e3d17ae96adc26416e9057f6b30f7685c431534c8d6956afd59a8f6",
+      "semantic_score": 0.50244141,
+      "concept_match": "\u0e09\u0e31\u0e19\u0e40\u0e01\u0e34\u0e14\u0e41\u0e25\u0e30\u0e40\u0e15\u0e34\u0e1a\u0e42\u0e15\u0e43\u0e19\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e01\u0e34\u0e14 \u0e17\u0e38\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e44\u0e1b \u0e04\u0e27\u0e32\u0e21\u0e17\u0e23\u0e07\u0e08\u0e33\u0e43\u0e19\u0e27\u0e31\u0e22\u0e40\u0e14\u0e47\u0e01\u0e41\u0e25\u0e30\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e23\u0e31\u0e27\u0e01\u0e47\u0e2b\u0e27\u0e19\u0e04\u0e37\u0e19\u0e21\u0e32",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "80aff27b5f05efa3d58e695b3d2b5a96665e3bb48d11eb29e9741f4620db67b1",
+      "semantic_score": 0.53808594,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "81323c672b702b9ffca9bf0adcf9762198a0740a4c7a28672995744bbf753b86",
+      "semantic_score": 0.484375,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "81efdccf68939ec42d9cea8c7d521bcca4d14ec0aa5165f39350dd070ac6aba9",
+      "semantic_score": 0.51220703,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "825711d3c1d3ac9c12e5abfcd81ce23af644d77d056d82f00f5e9472950c9211",
+      "semantic_score": 0.55908203,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8264804db96ab4f8e9284b223194e626b38681bc9e9f9a3588e055b2bbdc8b2e",
+      "semantic_score": 0.45825195,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "834e845bc5a47fa08372535a692c944f7a2e9b4d65a0c83c6854d8bcce17544c",
+      "semantic_score": 0.53222656,
+      "concept_match": "My family was forced to leave our homeland, and starting over in a new country was the hardest thing I have ever done.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "84032d3e9c8730d5676b5a7dbbc97b99b83ce1a69eded4f8534a4d6f2edd3976",
+      "semantic_score": 0.46728516,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8416fd3c84b665496ebd88ed36e2f7478cde2dc48b52651da8d048115f2ad485",
+      "semantic_score": 0.45947266,
+      "concept_match": "Growing up in my parents' house, I learned the values and traditions that would stay with me for the rest of my life.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "86af8e58692dabe5695f4e68058d35cf4c3229d94184e847109076abf8fb8436",
+      "semantic_score": 0.50830078,
+      "concept_match": "I remember my childhood vividly \u2014 the sounds, the smells, the rhythm of daily life in the neighborhood where I was raised.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "873a92c89dc1a5dad37a90a779fce76ae63c406df522b4d2fa9d93403bcffd28",
+      "semantic_score": 0.50634766,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "882e015591feaaf087d1dd20aa3eead8885687df6d81ceb949ee08637f73a89d",
+      "semantic_score": 0.61328125,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "89057102b876fb027836da07e586ff4a64b9c8be79532be839670f51bf88c80b",
+      "semantic_score": 0.47851562,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "898baa4cc9a10d14fc4803d86fd859bd022acf7e706915d923c2568f08f966cf",
+      "semantic_score": 0.35498047,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "89bdeb7637abc37d3b093896f5b9c4a092d27e4a630ecabfc82e82f650506c02",
+      "semantic_score": 0.46728516,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8a04d6353eba03135d00ac7a35e73f7af2733160ca6c64894d21f0a6ebdc5e9b",
+      "semantic_score": 0.47875977,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8a6d10112efae3f866f39646a782585249311294ac0b4ef175d3396aa7c686c9",
+      "semantic_score": 0.46166992,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8c24e31c385549c2261f393f40bbe1e661c818e4a5a43f29ab63f2db08fdf5e1",
+      "semantic_score": 0.42993164,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "8c9af54950e5f7fcd397ecc2e27da00efde3a52cc7d49f8d633d39c2efbec2c7",
+      "semantic_score": 0.45654297,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8cdf763bce2296d0456347f06d9f1778da87dcfb7a9e161fb5dba8327a65d675",
+      "semantic_score": 0.50976562,
+      "concept_match": "Nasci e cresci na minha cidade natal; quando volto, lembro de toda a minha inf\u00e2ncia.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "8ea78dadd0139ee4104dc6ec040b219d20d4e7379ca1de4329b4e807aac94c42",
+      "semantic_score": 0.20275879,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "8f9b3fea5d8e988888d6fcc315e96b9d66d33a830f925132e30c196cf6c8b6d0",
+      "semantic_score": 0.47460938,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "90069ccb3ba21ae7a6f2526491aad33389ece8d550787a1332c58e24ade03ae5",
+      "semantic_score": 0.51025391,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "913e51098f9f9374864ce35f2939fa66f59103546ee64fea79c14052a25820e8",
+      "semantic_score": 0.46533203,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "92155cffbd1d941c74394463edfac8468ce755bbe3a95545322c3e22f718a777",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "92cdb44c7f6a03a42bf92b17f10f7cce193ca7da4120534f65b4288ec4503ca7",
+      "semantic_score": 0.44995117,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "9305f9ab0d22610c836bd42f164f0112f49031ecaef42c443afb2f7558ea43db",
+      "semantic_score": 0.51367188,
+      "concept_match": "Ik ben geboren en opgegroeid in mijn geboortestad; telkens als ik terugkeer, komen herinneringen aan mijn jeugd en familie boven.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "93afd25e89d74de629f337aa205b26fee8e54efb89bfd102d5d37a3d91307641",
+      "semantic_score": 0.54785156,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "95bc9b4807e75f084a1d6f95959a322bef977f0241ccbf18996e76c8f699fccd",
+      "semantic_score": 0.52685547,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9649202ebaa789515fcf4752c31fe2561dfbab7cb30015197d9f596832a8a5f6",
+      "semantic_score": 0.46582031,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "96e46863d5f1b76f18c44c6fdf5feb9ec672062074dd6492de8a3fc6e468aec2",
+      "semantic_score": 0.58154297,
+      "concept_match": "\u0e09\u0e31\u0e19\u0e40\u0e01\u0e34\u0e14\u0e41\u0e25\u0e30\u0e40\u0e15\u0e34\u0e1a\u0e42\u0e15\u0e43\u0e19\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e01\u0e34\u0e14 \u0e17\u0e38\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e44\u0e1b \u0e04\u0e27\u0e32\u0e21\u0e17\u0e23\u0e07\u0e08\u0e33\u0e43\u0e19\u0e27\u0e31\u0e22\u0e40\u0e14\u0e47\u0e01\u0e41\u0e25\u0e30\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e23\u0e31\u0e27\u0e01\u0e47\u0e2b\u0e27\u0e19\u0e04\u0e37\u0e19\u0e21\u0e32",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "983fde585a8669f1c82bf7c1fa2d990e81639cb3323f9a30955022cc0979025e",
+      "semantic_score": 0.45410156,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9bd35049f3dc083ccc2c677744072eb053d5ec421903ed53c7781cde88d32833",
+      "semantic_score": 0.48046875,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9c3540e2cd662e3da94f3d930e8dab153cc9c97653e873f0fef312e5d0a8b19b",
+      "semantic_score": 0.52929688,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9ceaa50fc454f6f72aaa009c674e530c45a51f089e6b54f3afc23c6ca6265c74",
+      "semantic_score": 0.45629883,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9d8430f72975361003db0021926b9da0af99e37b67d4d6829ae622e585c8f649",
+      "semantic_score": 0.48046875,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9d9ffd9638d51b8551c4ef6303a4bf4b6d8b0df3ba4bf4636c2d4139631542de",
+      "semantic_score": 0.50488281,
+      "concept_match": "\u0648\u064f\u0644\u062f\u062a \u0648\u0646\u0634\u0623\u062a \u0641\u064a \u0628\u0644\u062f\u062a\u064a\u060c \u0648\u0643\u0644\u0645\u0627 \u0639\u062f\u062a \u0625\u0644\u064a\u0647\u0627 \u0639\u0627\u062f\u062a \u0625\u0644\u064a\u0651 \u0630\u0643\u0631\u064a\u0627\u062a \u0627\u0644\u0637\u0641\u0648\u0644\u0629 \u0648\u0627\u0644\u0639\u0627\u0626\u0644\u0629.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9f3542d3e67b1fae5898cce4e0031f9f896a008727c5f7dd95bfa7ec2b217826",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9f3a85f53f2455e01bd6a7687b29652486a872b29dabb072da0b38f57412642c",
+      "semantic_score": 0.47875977,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9f595ed0c921077f03342dacf4b8272713a2e3599ae9bdc84d32677faf24fbe3",
+      "semantic_score": 0.54541016,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "9f953c2e97fdc838fd7ff22932448fa3ec507bfdd7119981f578c524cf2dd6fc",
+      "semantic_score": 0.59472656,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a116314885caab60a35adb677649aa04fe1b2d6e5adbeaa14640ae815a4368a9",
+      "semantic_score": 0.47265625,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a21ec4a1144324981fcec5763b3ab4ddfe072abf0acc112df3cd85681929c3b4",
+      "semantic_score": 0.46337891,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a2923a097896ea4bd9a7bff885ecec13cda2daa2998298494ec5376d7bea9152",
+      "semantic_score": 0.45678711,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a2d9899fd60a6c0408b8dc0212d48e764c2ffba557d3462a8aab4a70b878b026",
+      "semantic_score": 0.49707031,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a386c1d65c40bf41a8fd4bbe8f19e707ddbb28b4ee949de79edbf873c5773c18",
+      "semantic_score": 0.63671875,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a3e12457a6b8e7fabd7c8c77d58a9a5d0eb2a64b16e0887354c8b71c76d8a855",
+      "semantic_score": 0.50878906,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a665669f4062e1752c273986dd7ff1ba399cb20aceca19ab4564bd407016c338",
+      "semantic_score": 0.47143555,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a6d2d8200b1f11eb1db2747ac485c3621e39e5838847ec829092c7b251ff6fa0",
+      "semantic_score": 0.45678711,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a7014938093eb44f75a5a446a7f2456dd81e00f5218bc3884d75a594bddcbcc4",
+      "semantic_score": 0.47485352,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a8047fc822e67cec7b6743b44c234d30f4fc9dfc352afb59855955e9134bfed6",
+      "semantic_score": 0.46948242,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "a807adcf7c9fe4fb539bb0f4aa017fde049809f0b9384a457937d1557b2cf6ee",
+      "semantic_score": -0.00097942,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "a957952c1f4db8d3f521dbf63f9832970bd638832b04ac32c04696021abf03ac",
+      "semantic_score": 0.61425781,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "aa58723d28bcbfd6d6ceee50b48bf3ee0eeff5ffb71903de6525ec8b5cabafb1",
+      "semantic_score": 0.52490234,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "ad841cb31a7f8edffed760ed92d325eb9da7cac0fd0bec768d9c1dd2947cb842",
+      "semantic_score": 0.46948242,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "ad9d0e19008d49b6fe1e169fa7f9512ee3913ca9485cbb88c26af197efb691f5",
+      "semantic_score": 0.46337891,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "adbadea3275ee3c14b0017fba8e127db8d9bf612ad4642b192f75aea774ed488",
+      "semantic_score": 0.48168945,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "aee0156a52113af7884572c417876338e817dceeacf939f9936c1275e4b8f1a1",
+      "semantic_score": 0.60400391,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "aff6519e1d947a68c94c3c2e476d0854978f73262ba378a797a843690a33c4cf",
+      "semantic_score": 0.46166992,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b034f637d0edbd5b4b791f8f5bea327be83ed61f106bc47811203a008740cbe8",
+      "semantic_score": 0.57324219,
+      "concept_match": "\u0648\u064f\u0644\u062f\u062a \u0648\u0646\u0634\u0623\u062a \u0641\u064a \u0628\u0644\u062f\u062a\u064a\u060c \u0648\u0643\u0644\u0645\u0627 \u0639\u062f\u062a \u0625\u0644\u064a\u0647\u0627 \u0639\u0627\u062f\u062a \u0625\u0644\u064a\u0651 \u0630\u0643\u0631\u064a\u0627\u062a \u0627\u0644\u0637\u0641\u0648\u0644\u0629 \u0648\u0627\u0644\u0639\u0627\u0626\u0644\u0629.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b069cf431c926ac08a86a08405dc9dca5ad690bfda58d556ffe7d4120e292979",
+      "semantic_score": 0.47192383,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b1b6fae3e20c8747e525921f3ca53ca6af77fd755ef402509095888262e6de1e",
+      "semantic_score": 0.4934082,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b2465720bbc7cccf271d7ab771c357754774c6cc79e4ddc93103337fb97daa7f",
+      "semantic_score": 0.4777832,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b2692892fea71a094322f63af431d71b059b7b28d9f26ffdf147aa67326457dc",
+      "semantic_score": 0.48486328,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b3352b5e2b57ef78cd36c865743ce0d67e926bb1e3639958f739a1b12c150a97",
+      "semantic_score": 0.52832031,
+      "concept_match": "Ich bin in meiner Heimatstadt geboren und aufgewachsen; bei jeder R\u00fcckkehr kommen Kindheitserinnerungen zur\u00fcck.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b33e5e399761a29f92e3c40c8dbb3e91b2169c9fd02b63d2ec474a50b9bb2cc9",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b3e18bc9cb8f3ce632deefd945573b4cbe77246fcd49aae080cee37509f1cead",
+      "semantic_score": 0.47192383,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b5f9d605b3fdc9359af1810c581ae4d853bcbab3e16d4bfc0855ec2d82639ab1",
+      "semantic_score": 0.46508789,
+      "concept_match": "After living abroad for many years, I ache with longing for my homeland and the simple life I once knew there.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b67423b6843afeed31f967e9ba49df416e3d9aff16e6510f2567c2e0bacef4d5",
+      "semantic_score": 0.22192383,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "b6c86c3bb0f20dcd75dafcca74a0acced3e5704b5dd7fd03b3a3662fc565046f",
+      "semantic_score": 0.45410156,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b70868958063795bd38e955e78eddd825fd43f314b63fa87a145e0a068996cb0",
+      "semantic_score": 0.57373047,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b7c6e29cc2b8c156c7a39847bb812b39166e37497f2a81611ca27566cc301255",
+      "semantic_score": 0.56933594,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b80e899ae576b9c47eb10956e75d18d6a1c86bbd8c727f7fa2261b6816c95303",
+      "semantic_score": 0.45166016,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b88b2c750ee5a506849ae7dc3fc42b43b91642d12c50df7e9b76967de044a075",
+      "semantic_score": 0.47119141,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b8fee4678fd7ec2e89ceecff7ac968fad4405da3abaf5ccd314f4ba9c90ffdaa",
+      "semantic_score": 0.50439453,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "b914571fe650aa7f57b09ff69ee134fba37fe6cf4fe673679f75fe01619bcc71",
+      "semantic_score": 0.49975586,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "bb2a8a049fb6db3c9e1d6fd36ef55cf9f5580f4fa19e69342fcc985fe2b267d1",
+      "semantic_score": 0.47802734,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "bc5185790701a87c3fcdbcbb1c6cb384caad9fcd5ee99120b95e527c79812e11",
+      "semantic_score": 0.54785156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "bc5bf62ab3d699f0b2ea42837569dfa7e47521d2c9e8ef90e56203fe50e9b072",
+      "semantic_score": 0.50927734,
+      "concept_match": "\u0648\u064f\u0644\u062f\u062a \u0648\u0646\u0634\u0623\u062a \u0641\u064a \u0628\u0644\u062f\u062a\u064a\u060c \u0648\u0643\u0644\u0645\u0627 \u0639\u062f\u062a \u0625\u0644\u064a\u0647\u0627 \u0639\u0627\u062f\u062a \u0625\u0644\u064a\u0651 \u0630\u0643\u0631\u064a\u0627\u062a \u0627\u0644\u0637\u0641\u0648\u0644\u0629 \u0648\u0627\u0644\u0639\u0627\u0626\u0644\u0629.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c00c36242e41bc5b109b19ee6f8829bb780ba6dfe10202141b2074a826bc7fa9",
+      "semantic_score": 0.58251953,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c0324dd91ccf5d2fc0ce944fadd52288026ae8d081a54448d499724ac7e712d5",
+      "semantic_score": 0.05236816,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "c1fa3dc1154784c7f7b3f99824f1079c4ac568968eb05cdce9e97671cad655fa",
+      "semantic_score": 0.49438477,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c36526319189fe0a05c3aba670cae6c791504fbfc0003cb3685cd18af8730b5d",
+      "semantic_score": 0.57958984,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c5fc44bba45ae09b43973c57a00d4adc9ccadaf870ace4ffe4764ce964084256",
+      "semantic_score": 0.45556641,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c75ed8e8b005298c10bb1f0b3693b3168d77cc3a4342bc6bd8e7de30ad554100",
+      "semantic_score": 0.46899414,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c8311930a3f1224bb0f2872f4bbc96a011616d8cfa62d4188bceac6b75a69240",
+      "semantic_score": 0.58056641,
+      "concept_match": "Nac\u00ed y crec\u00ed en mi pueblo natal; cuando regreso, vuelven los recuerdos de mi infancia.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c974c6d902c034e7bf9b19d13e51b6121453de05e97a41122247388650717ed2",
+      "semantic_score": 0.49462891,
+      "concept_match": "\ub098\ub294 \uace0\ud5a5\uc5d0\uc11c \ud0dc\uc5b4\ub098 \uc790\ub790\uace0, \ub2e4\uc2dc \ub3cc\uc544\uac08 \ub54c\ub9c8\ub2e4 \uc5b4\ub9b0 \uc2dc\uc808\uc758 \uac70\ub9ac\uc640 \uac00\uc871\uc5d0 \ub300\ud55c \uae30\uc5b5\uc774 \ub5a0\uc624\ub978\ub2e4.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c9ce82ef286fb22446b5851b3051fa4528306f9c6fbce4b3f501cbe95cd5894b",
+      "semantic_score": 0.46337891,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c9e2a5b1c0f5716d8e1b25b599426e479f3141514456228c599e346adfce7331",
+      "semantic_score": 0.46020508,
+      "concept_match": "When I returned to the town where I spent my childhood, I felt overwhelming emotion and a deep sense of connection.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "c9eb06f7fb2d7aee740e15187f83fe360052c7a78d737189306c008c912a7b92",
+      "semantic_score": 0.05230713,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "cb54d26cf9158a0529817d5a177d816ae01b2deecc997c19843655951f8bbf89",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cb6bb9668766da96d58053602dea6a7006cff71b118b70330477af3492f9cb77",
+      "semantic_score": 0.49511719,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cbd7093c5908e192e1b383ee5fb2fe10eba4d4c71406b2708f7a22c62814c1e2",
+      "semantic_score": 0.48974609,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cc17808a58d15d348637adce704c80053f58426badfaad511f80c43a04f900a2",
+      "semantic_score": 0.58349609,
+      "concept_match": "\u042f \u043d\u0430\u0440\u043e\u0434\u0438\u0432\u0441\u044f \u0456 \u0432\u0438\u0440\u0456\u0441 \u0443 \u0440\u0456\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0442\u0456, \u0456 \u043a\u043e\u0436\u043d\u0435 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u043e\u0436\u0438\u0432\u043b\u044f\u0454 \u0441\u043f\u043e\u0433\u0430\u0434\u0438 \u043f\u0440\u043e \u0434\u0438\u0442\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0430 \u0440\u043e\u0434\u0438\u043d\u0443.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cc89763be17e9478a8a2fa92ac14718f14622a01776aaeccab18da0b229e403e",
+      "semantic_score": 0.45239258,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cd2c5a53e1e51545cef95f5b7b235b6afcf6cdf66b33f20d6d71a6c0fa728d6a",
+      "semantic_score": 0.46508789,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "cf37fec22cbe1e2146f7d9b7275167c0dbc563db10a6139ca69c80389ce6a16c",
+      "semantic_score": 0.47167969,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d024d1d3cd93db37e60c04cf1defcbde8f09644bc2fef76d2dacf14c4cd67e38",
+      "semantic_score": 0.46337891,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d29a783fc432e3a4dbeda1447bc0e2a8b5d6a27f602b066b4be942aa7fce3253",
+      "semantic_score": 0.45410156,
+      "concept_match": "Je suis n\u00e9 et j'ai grandi dans ma ville natale; y retourner r\u00e9veille mes souvenirs d'enfance.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d3cd8d83b6d06ef303151a3090840706ce0a57e4411aa4f1f3f36e6f6bc8ab30",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d66840658ac918298aea212f817c8d87db538b9c3c6c33d719bb98dfdd88452e",
+      "semantic_score": 0.48876953,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d6bb03b685cedab92f9c01dd666f7f30293010a76fdd6327f311951fd866b03f",
+      "semantic_score": 0.56347656,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "d85a7e59d663065bea1344402077849036167b8c088de965a3f2bcbc423fad0b",
+      "semantic_score": 0.46923828,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "db150890a5de4cfffaaae13071ef9d843fd3ad34b8cd93ca5d382b5631c9cf56",
+      "semantic_score": 0.48461914,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "db61eb95196a6eec6f8dd73dffd0c834006db767ee8a15dbcc13a45300797e94",
+      "semantic_score": 0.04153442,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "dbbe1939357afceab5d8dfe6105f789494495db3ab9d7eaae2cd306048c1362b",
+      "semantic_score": 0.46606445,
+      "concept_match": "My earliest memories are of playing outside near our family home. Those carefree days shaped who I became.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "dc41058906e2b58ae8adfb0d14a3e230fa28123f842de9a27e9609180a316d5e",
+      "semantic_score": 0.45166016,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "dc9af487f3fcfbeb336058312b8fbd72526149fe89730bf54cfa833b178630c9",
+      "semantic_score": 0.46337891,
+      "concept_match": "T\u00f4i sinh ra v\u00e0 l\u1edbn l\u00ean \u1edf qu\u00ea h\u01b0\u01a1ng; m\u1ed7i l\u1ea7n tr\u1edf v\u1ec1, k\u00fd \u1ee9c tu\u1ed5i th\u01a1 v\u00e0 gia \u0111\u00ecnh l\u1ea1i hi\u1ec7n v\u1ec1.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "dc9c1eaccfb1d616b492b482e5e3afb88b97db6ee27ea64d7f9852654d3342d0",
+      "semantic_score": 0.45239258,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "dd31b058cdd9b86a53900773f6db0a4c0baee8a20906e34fabdf9c90f96e1fe2",
+      "semantic_score": 0.46679688,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "de33eb4f93b836e5c9f32dfbdb88d0d9275c33a419635392452be28d1f645772",
+      "semantic_score": 0.53271484,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e13658031629f0ad0915a4ac410e15b6bfe395b25dd37acc390fab8db6edaf8f",
+      "semantic_score": 0.48046875,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e16efa8298f85952a1ee95df10c1ca9d546b2d7ca34afbb661490662eafe5970",
+      "semantic_score": 0.55712891,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e270e30b9aa94c0fa819b5f419dec8117f7400a3d8d10ba012f3f16a28073895",
+      "semantic_score": 0.45288086,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e3bc4153e014e70f34da122d84bca61b008d696d4f6e54bbf46524d4f5f7a10f",
+      "semantic_score": 0.0847168,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "e4c26c0434b6a867fa9c15a231c594558974cea422a99b8853bbbe526774056b",
+      "semantic_score": 0.52490234,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e4cbcbab0eb5ddcd788a08802d2fa620adfd4b2f9d446ef93dbbd38940101102",
+      "semantic_score": 0.52929688,
+      "concept_match": "Memleketimde do\u011fup b\u00fcy\u00fcd\u00fcm; her d\u00f6nd\u00fc\u011f\u00fcmde \u00e7ocukluk ve aile an\u0131lar\u0131m yeniden canlan\u0131r.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e537e4e5090ebb6d4d72ff833fb8026b5ab01dc06ac36f6063ace69f28a59631",
+      "semantic_score": 0.53564453,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e7075793532e235214881d33952e6701a248cf0c154b072465af0faae786595d",
+      "semantic_score": 0.10516357,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "e84e45bd940fa01f1c0913bbd6cb4367af02af17f5dda0b8452ef6967c81953c",
+      "semantic_score": 0.46313477,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "e8c6f634d9ce34b702a1371cebfd08d39631e9f6d148bfc179109c6b58d75a3a",
+      "semantic_score": 0.49487305,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "ea03b45e17d22cac6c87dc3bf2a772603d64a8b4469a7683e3f310db0d2889cb",
+      "semantic_score": 0.50244141,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "eb18f923eba4294b2af0a8fb72958859232c59cb2c5ecc7eedf4046ec6b092c5",
+      "semantic_score": 0.46044922,
+      "concept_match": "My family was forced to leave our homeland, and starting over in a new country was the hardest thing I have ever done.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "eb4724f98127e1b5bfd15f605ba66765653996c7d77ad9e2de48259239026704",
+      "semantic_score": 0.47265625,
+      "concept_match": "I decided to trace my family's roots back to the old country. Discovering my heritage gave me a new sense of identity.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "ebfc918a9214fae49874ba43d781075802abc2088e4860836a8ae8f09a91a63e",
+      "semantic_score": 0.19909668,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "ecb124436019999215e43afd94d2edd7a8ecd8b3af981cf6ea881bcc73251624",
+      "semantic_score": 0.48535156,
+      "concept_match": "I grew up in a village surrounded by fields and forests. The landscape of my hometown is etched into my memory.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "ed3b2c2695bf3f8717822e0c20083c170bbfa9bc84c654408c278e4a933a74be",
+      "semantic_score": 0.08074951,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "f0b263787c5efedea0c0580513647e04425276d43ef52dee9b71418a8b7da805",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f0b6ac83c61b715a0fc0096bf591aab6144fb63d576d1408ea8094d46645363d",
+      "semantic_score": 0.53515625,
+      "concept_match": "When I finally came back to the place where I grew up after so many years away, tears streamed down my face.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f0c92491349b9c2471e5e96159364e75598345c9a7ee7e9f6c823aed13b99ef1",
+      "semantic_score": 0.48046875,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f20290d14311fc5a0a76ceb23679461b3e2a5a647e82b4dca5f218d872327f64",
+      "semantic_score": 0.10412598,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "f2287000d78cfce84d86268a86305dda2fff73e734337438c83dca30ab66ec92",
+      "semantic_score": 0.47802734,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f2b6ee32dd1a5150dd5c5805882fd813202c65a53621819416d430d30a8530f9",
+      "semantic_score": 0.49658203,
+      "concept_match": "I remember my childhood vividly \u2014 the sounds, the smells, the rhythm of daily life in the neighborhood where I was raised.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f3c9245cf2378a1284de7c668cf9a8232fd585c4045881d213cdd68bba189763",
+      "semantic_score": 0.49731445,
+      "concept_match": "Being part of the diaspora means I am caught between cultures, always longing for a home that may no longer exist as I remember.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f3d17ce95710ceaa504e5b29a6a6b908d6b9dad251c14fc51c1f680e163735a3",
+      "semantic_score": 0.52832031,
+      "concept_match": "Ich bin in meiner Heimatstadt geboren und aufgewachsen; bei jeder R\u00fcckkehr kommen Kindheitserinnerungen zur\u00fcck.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f3e369937a30c0d38bc71c5250595a38237c78c581b3c1e215e99c5e064c3dda",
+      "semantic_score": 0.53320312,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f416afe034faaf2fdce2a1f73e9042da08a4137058b6a3537a38849c7272c293",
+      "semantic_score": 0.64208984,
+      "concept_match": "When I visit the village where my grandparents grew up, I feel a deep connection to my family's history and traditions.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f49d4ae76d3f4dcf2edc269df0accd3a03e8d1201d5049fda29160935ea81e1e",
+      "semantic_score": 0.11499023,
+      "concept_match": "Home for me is where I feel safe and truly myself. It is the place I return to in my mind when the world feels too big.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "f52d794fc84858508fd9dea3cc4a5415736e9d6ea1a0e21c3958cbd909f1c390",
+      "semantic_score": 0.48461914,
+      "concept_match": "My grandmother used to tell me stories about our ancestors. Those stories made me proud of where my family comes from.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f70838d4b3eee0c900cf4d3f354a2a330214f843a5350cc3abc2b5440e31609f",
+      "semantic_score": 0.11242676,
+      "concept_match": "Home for me is not just a building \u2014 it is the feeling of being among my own people, where I am understood and loved.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "f80b1ac74295b81762660a4ad6d31e3e487f83154d3fcd7308387834ec34e18c",
+      "semantic_score": 0.45581055,
+      "concept_match": "I have moved many times in my life, but the meaning of home \u2014 that deep yearning for a place to call my own \u2014 never fades.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f841775e45740869db1389f702fee7b39059447a7fc5be04569c408b58f465b5",
+      "semantic_score": 0.48632812,
+      "concept_match": "\u6211\u5728\u6545\u4e61\u51fa\u751f\u957f\u5927\uff0c\u6bcf\u6b21\u56de\u53bb\uff0c\u7ae5\u5e74\u7684\u8857\u9053\u3001\u5bb6\u4eba\u548c\u5f80\u4e8b\u90fd\u4f1a\u91cd\u65b0\u6d6e\u73b0\u5728\u5fc3\u91cc\u3002",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f86703fb826e46a629e7aa218ae2476d0a3cfd830924f3fb60751df580e87b1d",
+      "semantic_score": 0.52001953,
+      "concept_match": "\u0648\u064f\u0644\u062f\u062a \u0648\u0646\u0634\u0623\u062a \u0641\u064a \u0628\u0644\u062f\u062a\u064a\u060c \u0648\u0643\u0644\u0645\u0627 \u0639\u062f\u062a \u0625\u0644\u064a\u0647\u0627 \u0639\u0627\u062f\u062a \u0625\u0644\u064a\u0651 \u0630\u0643\u0631\u064a\u0627\u062a \u0627\u0644\u0637\u0641\u0648\u0644\u0629 \u0648\u0627\u0644\u0639\u0627\u0626\u0644\u0629.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "f88d072048adc2a6c10ce6abb718d225b6c70db34d3308ef217e9e715f9ca9f4",
+      "semantic_score": 0.45019531,
+      "concept_match": "I finally found a community where I truly belong. For the first time in my life, I feel accepted and at home.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "fb1bc9e514bc89f77fc135388b1f0e73a8c01e96494eecb301b4d95ec71418f4",
+      "semantic_score": 0.45361328,
+      "concept_match": "After years of searching, I realized that belonging is not about a place but about the people who make me feel like myself.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "fd9a4abcaf4f0f5634da4a99e3c4aa53d0caf2b04331e6f81adb0db4fdd75108",
+      "semantic_score": 0.48730469,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "fe41d25c9bde959e4f4fb16fd5323f4401a2bd7213f01d53d0f350208a066559",
+      "semantic_score": 0.16589355,
+      "concept_match": "I miss my hometown terribly \u2014 the familiar faces, the food, the sound of my mother tongue spoken on every corner.",
+      "above_threshold": false
+    },
+    {
+      "sample_id": "feec723e07debc8d415ff0813aafaed23b8d7f278b5df9560a3251be47587857",
+      "semantic_score": 0.49755859,
+      "concept_match": "I was born and raised in a small town. Every time I go back, I recognize the streets and houses from my childhood.",
+      "above_threshold": true
+    },
+    {
+      "sample_id": "fefdc97588e0830ef1a10cd94673fc820872d9a47c68020074fc4bbaa8d77dac",
+      "semantic_score": 0.47387695,
+      "concept_match": "As an immigrant, I carry two worlds inside me. My heart is split between the country I left and the one I now call home.",
+      "above_threshold": true
+    }
+  ],
+  "sample_count": 400,
+  "sample_digest": "dfc2c416b71dd6fc3448a5b1f3802498f8bfcdea9103d514cb602419628d7559"
+}

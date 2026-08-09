@@ -1,0 +1,43 @@
+[
+  {
+    "id": "english_train_memory",
+    "expected": true,
+    "text": "I remember my childhood home clearly. My mother and I took the train back every summer, and we stayed with my family while I revisited the neighborhood where I grew up."
+  },
+  {
+    "id": "spanish_family_memory",
+    "expected": true,
+    "text": "Yo recuerdo mi hogar y mis primeros anos. Yo hablaba de mi barrio con mis padres; nosotros visitabamos nuestro pueblo y yo guardaba mis recuerdos."
+  },
+  {
+    "id": "chinese_hometown_memory",
+    "expected": true,
+    "text": "\u6211\u8bb0\u5f97\u6211\u7684\u6545\u4e61\u3002\u5c0f\u65f6\u5019\u6211\u4eec\u548c\u6211\u7684\u5bb6\u4eba\u4f4f\u5728\u90a3\u91cc\uff0c\u6211\u4ece\u5c0f\u5c31\u5e38\u5e38\u60f3\u5ff5\u90a3\u4e2a\u5bb6\u3002"
+  },
+  {
+    "id": "portuguese_family_memory",
+    "expected": true,
+    "text": "Eu lembro da minha familia e da minha casa. Eu cresci com minha mae, meu pai e meus irmaos; quando eu era pequeno, eu sempre voltava para casa."
+  },
+  {
+    "id": "privacy_footer",
+    "expected": false,
+    "text": "Privacy policy terms of service contact us. I can create account pages, manage my password, sign up for alerts, and review all rights reserved notices."
+  },
+  {
+    "id": "shopping_page",
+    "expected": false,
+    "text": "Buy now and add to cart. My order can receive a special offer, and I can click here to create account access before the limited time price expires."
+  },
+  {
+    "id": "lyrics_page",
+    "expected": false,
+    "text": "[Chorus] I remember my home, my home, my home. I remember my family and I remember my childhood, repeated as official audio and karaoke lyrics."
+  },
+  {
+    "id": "language_navigation",
+    "expected": false,
+    "text": "English French German Italian Spanish Portuguese Chinese Korean Japanese Russian | home | contact | search | archive | account"
+  }
+]
+

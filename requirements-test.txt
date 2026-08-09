@@ -1,0 +1,10 @@
+pytest==9.0.3
+ruff==0.11.2
+tomli==2.4.1; python_version < "3.11"
+pip-audit==2.10.1
+ftfy==6.3.1
+numpy==1.26.4
+warcio==1.8.1
+requests==2.34.2
+boto3==1.43.47
+pyarrow==25.0.0

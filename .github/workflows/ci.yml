@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Install test dependencies
+        run: |
+          python -m pip install -r requirements-test.txt
+          python -m pip install --no-deps -e .
+      - name: Credential scan
+        run: python credential_guard.py --scope tracked
+      - name: Dependency profile contract
+        run: python dependency_profiles.py --check
+      - name: Dependency vulnerability policy
+        if: runner.os == 'Linux'
+        run: python dependency_audit.py --requirements requirements.txt
+      - name: Lint
+        run: ruff check .
+      - name: Test
+        run: pytest
+      - name: Compile
+        run: python -m compileall -q -x "[\\/](\.venv|data)[\\/]" .
+      - name: CLI smoke test
+        run: |
+          python main.py --help
+          python main.py filters --help
+          python main.py filters stamp-current --help
+          python main.py audit --help
+          python main.py audit evidence --help
+          python main.py health --help
+          python main.py workstation --help
+          python main.py stories --help
+          python main.py stories enrich --help
+          python main.py stories export --help
+          python main.py evaluation --help
+          python main.py evaluation annotate --help
+          python main.py evaluation plan
+          python main.py evaluation campaign
+          python main.py evaluation serve --help
+          python main.py evaluation multilingual
+          python main.py benchmark --help
+          python main.py model-validation --help
+          python main.py model-migration plan --help
+          python main.py metrics --help
+          python main.py retry --help
+          python main.py failures --help
+      - name: Parse PowerShell scripts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem scripts -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName,
+              [ref]$tokens,
+              [ref]$parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              $parseErrors | ForEach-Object { Write-Error $_ }
+              throw "PowerShell parse failed: $($_.FullName)"
+            }
+          }
