@@ -36,7 +36,7 @@ sympy==1.14.0
 threadpoolctl==3.6.0
 tokenizers==0.19.1
 torch==2.12.1+cu130
-tqdm==4.68.4
+tqdm==4.70.0
 transformers==4.40.2
 typing_extensions==4.15.0
 urllib3==2.7.0
