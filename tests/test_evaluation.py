@@ -9,12 +9,14 @@ from evaluation import (
     DecisionSampler,
     annotate,
     annotation_queue,
+    build_annotation_sample,
     compact_replay_reservoir,
     evaluation_campaign,
     evaluation_plan,
     evaluation_report,
     label_annotation,
     multilingual_recall_report,
+    refill_evaluation_campaign,
     undo_annotation,
 )
 from matcher import MatchDecision
@@ -391,6 +393,110 @@ def test_workbench_label_api_preserves_history_and_balances_queue(tmp_path):
     ][0]
     assert labeled["label_history"][0]["label"] is None
     assert labeled["notes"] == "clear memory"
+
+
+def test_campaign_refill_is_deterministic_unlabeled_and_preserved(tmp_path, monkeypatch):
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_BASELINE_LABELS", 8)
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_HOLDOUT_LABELS", 4)
+    annotations = tmp_path / "annotations.jsonl"
+    candidates = tmp_path / "candidates.jsonl"
+    replay = tmp_path / "replay.jsonl.gz"
+    output = tmp_path / "output"
+    output.mkdir()
+    rows = [
+        {
+            "sample_id": f"refill-{index:03d}",
+            "language": "en" if index % 2 else "fr",
+            "paragraph": f"A source paragraph for human review number {index}.",
+            "predicted_accept": bool(index % 2),
+            "sample_role": "tuning",
+            "evaluation_split": "tuning",
+            "selection_reason": "audit_pre_keyword_reservoir",
+        }
+        for index in range(100)
+    ]
+    candidates.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+    preview = refill_evaluation_campaign(
+        annotations,
+        candidates,
+        replay,
+        output,
+    )
+    assert preview["selected"] == 8
+    assert preview["remaining_shortfall"] == 0
+    assert not annotations.exists()
+
+    applied = refill_evaluation_campaign(
+        annotations,
+        candidates,
+        replay,
+        output,
+        apply=True,
+    )
+    saved = [json.loads(line) for line in annotations.read_text(encoding="utf-8").splitlines()]
+    assert applied["campaign"]["blocked_phases"] == []
+    assert len(saved) == 8
+    assert all(row["label"] is None for row in saved)
+    assert all(row["campaign_refill"] for row in saved)
+    assert all(row["sampling_probability"] is None for row in saved)
+    assert {
+        row["evidence_scope"] for row in saved if row["evaluation_split"] == "holdout"
+    } == {"selected_blind_holdout"}
+
+    build_annotation_sample(
+        8,
+        output,
+        candidates,
+        annotations,
+        replay,
+    )
+    rebuilt = [
+        json.loads(line) for line in annotations.read_text(encoding="utf-8").splitlines()
+    ]
+    assert {row["sample_id"] for row in rebuilt} == {row["sample_id"] for row in saved}
+    assert all(row["campaign_refill"] for row in rebuilt)
+
+
+def test_campaign_refill_reassigns_existing_unlabeled_tuning_rows(tmp_path, monkeypatch):
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_BASELINE_LABELS", 8)
+    monkeypatch.setattr(evaluation, "EVALUATION_MIN_HOLDOUT_LABELS", 4)
+    annotations = tmp_path / "annotations.jsonl"
+    candidates = tmp_path / "candidates.jsonl"
+    output = tmp_path / "output"
+    output.mkdir()
+    rows = [
+        {
+            "sample_id": f"existing-{index:03d}",
+            "language": "en",
+            "paragraph": f"An existing tuning paragraph number {index}.",
+            "predicted_accept": bool(index % 2),
+            "sample_role": "tuning",
+            "evaluation_split": "tuning",
+        }
+        for index in range(100)
+    ]
+    serialized = "".join(json.dumps(row) + "\n" for row in rows)
+    annotations.write_text(serialized, encoding="utf-8")
+    candidates.write_text(serialized, encoding="utf-8")
+
+    result = refill_evaluation_campaign(
+        annotations,
+        candidates,
+        tmp_path / "replay.jsonl.gz",
+        output,
+        apply=True,
+    )
+    saved = [json.loads(line) for line in annotations.read_text(encoding="utf-8").splitlines()]
+    reassigned = [row for row in saved if row.get("refill_action") == "reassigned"]
+    assert result["selected"] == 4
+    assert len(saved) == 100
+    assert len(reassigned) == 4
+    assert all(row["evaluation_split"] == "holdout" for row in reassigned)
+    assert all(row["label"] is None for row in reassigned)
 
 
 def test_multilingual_report_finds_anchor_gaps_and_keyword_misses(tmp_path):

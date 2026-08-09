@@ -324,6 +324,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\workstation.ps1 -Action status -Profile 3080 -IncludePreflight` | Inspect shared ownership and prove this PC has current durable state |
 | `.\scripts\health.ps1 -Profile 3080 -Full -Strict` | Check runtime, Git, checkpoint, dependencies, filters, evaluation, metrics, and output |
 | `.\scripts\maintenance.ps1 -Profile 3080` | Print a read-only prioritized crawl, audit, evaluation, and migration plan |
+| `.\scripts\operations.ps1 -Action serve -Profile 3080 -OpenBrowser` | Open the read-only local operations dashboard |
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 -WorkerCount 1,4,7` | Compare worker counts on identical isolated real sources |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
@@ -336,10 +337,16 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\evaluation.ps1` | Show annotation balance and the next evaluation action |
 | `.\scripts\evaluation.ps1 -Action plan` | Print balanced human-labeling queues without assigning labels |
 | `.\scripts\evaluation.ps1 -Action campaign` | Show resumable required-label progress and blocked evidence queues |
+| `.\scripts\evaluation.ps1 -Action refill` | Preview deterministic, label-free campaign queue refill |
+| `.\scripts\evaluation.ps1 -Action refill -Apply` | Supply every campaign phase without assigning labels |
 | `.\scripts\evaluation.ps1 -Action serve -OpenBrowser` | Open the local browser annotation workbench |
 | `.\scripts\evaluation.ps1 -Action multilingual` | Report language evidence, anchor gaps, and keyword misses |
 | `.\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25` | Review a focused batch interactively |
 | `.\scripts\retry.ps1 -All -Category http_503 -Limit 25 -Apply` | Reset one bounded failure batch after a dry-run report |
+| `.\scripts\recovery.ps1 -Action plan -PerCategory 5` | Select a category-balanced failure replay without changing state |
+| `.\scripts\recovery.ps1 -Action run -Profile 3080 -PerCategory 5 -Apply` | Replay exact failures in isolated storage and write evidence |
+| `.\scripts\evidence.ps1 -Action status` | Show portable model and workload evidence for every GPU profile |
+| `.\scripts\evidence.ps1 -Action export -Profile 3080` | Export a credential-free local profile evidence bundle |
 | `.\scripts\stories.ps1 -Action plan -Limit 10` | Plan a bounded historical source-context backfill without downloading |
 | `.\scripts\stories.ps1 -Action enrich -Limit 10 -Workers 3 -Apply` | Reopen matched sources with bounded parallel story expansion |
 | `.\scripts\stories.ps1 -Action enrich -All -Workers auto -Apply` | Adapt story download concurrency to throughput and server pressure |
@@ -379,6 +386,7 @@ The underlying Python CLI remains available directly:
 | `python main.py status` | Show checkpoint progress |
 | `python main.py health --profile 3080 --full --strict` | Fail on unsafe runtime, Git, database, dependency, or output state |
 | `python main.py maintenance plan --profile 3080` | Build a read-only evidence-based maintenance plan |
+| `python main.py operations serve --profile 3080 --open-browser` | Serve the unified read-only operations dashboard |
 | `python main.py metrics` | Show concise latest rates, funnel, failures, resources, and ETA |
 | `python main.py metrics --history --limit 20` | Show compact recent run history |
 | `python main.py metrics --compare-profiles` | Compare aggregate workstation throughput/resources |
@@ -389,6 +397,9 @@ The underlying Python CLI remains available directly:
 | `python main.py cache clear` | Rebuild the local inference cache from empty |
 | `python main.py retry --all --category http_503 --limit 25` | Retry a deterministic bounded failure category |
 | `python main.py failures` | Group failures into HTTP, connection, worker, inference, and output categories |
+| `python main.py recovery-campaign plan --per-category 5` | Select exact failed sources for isolated replay |
+| `python main.py recovery-campaign evidence --report PATH` | Verify which recovered sources still match current failure state |
+| `python main.py recovery-campaign adopt --report PATH --yes` | Archive evidence and reset only verified recovered sources |
 | `python main.py recover --minutes 10` | Release expired source leases |
 | `python main.py verify-output` | Verify committed shard checksums |
 | `python main.py checkpoint` | Verify and compact state for handoff |
@@ -421,6 +432,8 @@ The underlying Python CLI remains available directly:
 | `python main.py evaluation status` | Show sample balance, labels, readiness, and the next action |
 | `python main.py evaluation plan` | Build balanced human-labeling steps without synthesizing labels |
 | `python main.py evaluation campaign` | Show the guided baseline campaign and missing queues |
+| `python main.py evaluation refill` | Preview a deterministic campaign refill without assigning labels |
+| `python main.py evaluation refill --yes` | Apply queue roles with explicit selected-evidence provenance |
 | `python main.py evaluation sample` | Build a real-text annotation sample |
 | `python main.py evaluation annotate` | Label samples interactively |
 | `python main.py evaluation annotate --split holdout --quick` | Label a balanced holdout queue with model categories accepted |
@@ -433,9 +446,61 @@ The underlying Python CLI remains available directly:
 | `python main.py evaluation replay` | Compact local decisions into the shared replay reservoir |
 | `python main.py model-validation capture --profile 3080` | Capture the tracked semantic-output baseline |
 | `python main.py model-validation compare --candidate PATH` | Enforce model-output regression limits |
+| `python main.py evidence status` | Inspect synchronized profile evidence completeness |
+| `python main.py evidence import --path PATH --yes` | Validate and install one portable profile bundle |
 | `python main.py reset` | Delete output, derivatives, and progress |
 
 Use `recover --minutes 0` only after confirming no crawler is running.
+
+## Operations And Portable Evidence
+
+Open the unified local dashboard on the active workstation:
+
+```powershell
+.\scripts\operations.ps1 -Action serve -Profile 3080 -OpenBrowser
+```
+
+The dashboard binds to `127.0.0.1:8770`, is read-only, and refreshes crawl,
+failure, evaluation, story, Git, and GPU-evidence state every 30 seconds. It
+does not start workers, reset failures, assign labels, or change checkpoints.
+Use another `-Port` if 8770 is occupied.
+
+Real workload and model evidence is produced locally, stripped of host names,
+absolute paths, source paragraphs, and credentials, then validated before it
+enters the synchronized checkpoint:
+
+```powershell
+.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 `
+  -WorkerCount 1,7 -Apply
+.\scripts\model-validation.ps1 -Action capture -Profile 3080
+.\scripts\evidence.ps1 -Action export -Profile 3080
+.\scripts\evidence.ps1 -Action import `
+  -Path .\data\evidence-outbox\profile-evidence-3080.json -Apply
+.\scripts\evidence.ps1 -Action status
+```
+
+Repeat that workflow on the 4090 and 5090 PCs. Imported bundles live in
+`data/checkpoints/profile-evidence/`, so normal checkpoint and Git handoff
+brings the validated evidence to every PC. Content digests, model sample
+digests, GPU profile, real-source mode, and output equivalence are checked on
+import. Local outbox files stay ignored.
+
+Use a recovery campaign before manually resetting recurring source failures:
+
+```powershell
+.\scripts\recovery.ps1 -Action plan -PerCategory 5
+.\scripts\recovery.ps1 -Action run -Profile 3080 -PerCategory 5 -Apply
+.\scripts\recovery.ps1 -Action evidence `
+  -Report .\data\audits\recovery-campaigns\RUN_ID\recovery-report.json
+.\scripts\recovery.ps1 -Action adopt `
+  -Report .\data\audits\recovery-campaigns\RUN_ID\recovery-report.json -Apply
+```
+
+The replay uses isolated output and a temporary database. Adoption verifies
+the current filter signature, original failure category, and error digest,
+then returns only successfully replayed sources to `pending`. The recovery
+report is archived under `data/checkpoints/recovery-evidence/` for cross-PC
+review.
 
 ## JSONL Output
 
@@ -933,6 +998,8 @@ Build an unlabeled sample from real committed records and sampled live rejects:
 .\scripts\evaluation.ps1
 .\scripts\evaluation.ps1 -Action plan
 .\scripts\evaluation.ps1 -Action campaign
+.\scripts\evaluation.ps1 -Action refill
+.\scripts\evaluation.ps1 -Action refill -Apply
 .\scripts\evaluation.ps1 -Action sample -Size 400
 .\scripts\evaluation.ps1 -Action annotate -Prediction rejected -Limit 25
 .\scripts\evaluation.ps1 -Action annotate -Prediction accepted -Limit 75
@@ -953,7 +1020,12 @@ reports missing queues, and never assigns a label; labels require human
 judgment. The campaign action turns those quotas into one stable, resumable
 queue and reports progress against the required 100 labels rather than all 400
 samples. A phase remains visibly blocked when the crawl has not yet supplied
-enough representative rows. Annotation queues rotate across prediction and language strata. `-Language`,
+enough evidence rows. The refill action can add or reassign only unlabeled
+reservoir rows, uses a stable hash split, records their former role and
+selection reason, and never assigns a population weight or human label.
+Selected blind holdout evidence remains separate from weighted end-to-end
+benchmark evidence. Annotation queues rotate across prediction and language
+strata. `-Language`,
 `-Prediction`, `-Split`, `-SampleId`, `-Relabel`, and `-Quick` support focused
 work, while `-Action undo` restores the previous label.
 
@@ -1021,7 +1093,9 @@ both Windows and Ubuntu without downloading GPU models or Git LFS data.
 ```text
 main.py                 CLI and run orchestration
 annotation_workbench.py localhost labeling UI and protected JSON API
+operations_dashboard.py unified read-only crawl/evidence/story dashboard
 audit.py                isolated comparison and signature-adoption evidence
+recovery_campaign.py    isolated failed-source replay and exact-path adoption
 pipeline.py             bounded CPU queue and shared GPU inference owner
 progress.py             SQLite leases, retries, and checkpoint migration
 output.py               source transactions, stable IDs, and manifests
@@ -1049,6 +1123,7 @@ dependency_profiles.py  cross-profile lock and installed-package contract
 dependency_audit.py     pip-audit policy enforcement with an expiry date
 model_regression.py     semantic score/concept/threshold snapshots and comparison
 model_migration.py      labels/audit/benchmark/candidate approval gate
+evidence_bundle.py      credential-free cross-PC GPU evidence export/import
 project_health.py       consolidated workstation and handoff readiness
 workstation_guard.py    atomic remote ownership and checkpoint freshness proof
 dedupe.py               disk-backed exact and SimHash duplicate index

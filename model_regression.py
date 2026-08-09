@@ -114,6 +114,32 @@ def compare_model_snapshots(
         raise ValueError("max_score_drift cannot be negative")
     baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
     candidate = json.loads(Path(candidate_path).read_text(encoding="utf-8"))
+    return compare_model_payloads(
+        baseline,
+        candidate,
+        baseline_label=str(baseline_path),
+        candidate_label=str(candidate_path),
+        output_path=output_path,
+        max_score_drift=max_score_drift,
+        minimum_concept_agreement=minimum_concept_agreement,
+        minimum_threshold_agreement=minimum_threshold_agreement,
+    )
+
+
+def compare_model_payloads(
+    baseline: dict,
+    candidate: dict,
+    *,
+    baseline_label: str = "baseline payload",
+    candidate_label: str = "candidate payload",
+    output_path: str | Path | None = None,
+    max_score_drift: float = 0.005,
+    minimum_concept_agreement: float = 0.99,
+    minimum_threshold_agreement: float = 1.0,
+) -> dict:
+    """Compare already-validated payloads, including portable profile evidence."""
+    if max_score_drift < 0:
+        raise ValueError("max_score_drift cannot be negative")
     baseline_rows = {row["sample_id"]: row for row in baseline.get("samples", [])}
     candidate_rows = {row["sample_id"]: row for row in candidate.get("samples", [])}
     missing = sorted(set(baseline_rows) - set(candidate_rows))
@@ -151,12 +177,12 @@ def compare_model_snapshots(
         "schema_version": 1,
         "safe": safe,
         "baseline": {
-            "path": str(baseline_path),
+            "path": baseline_label,
             "libraries": baseline.get("libraries", {}),
             "git_commit": baseline.get("git_commit"),
         },
         "candidate": {
-            "path": str(candidate_path),
+            "path": candidate_label,
             "libraries": candidate.get("libraries", {}),
             "git_commit": candidate.get("git_commit"),
         },

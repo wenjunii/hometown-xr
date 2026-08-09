@@ -63,6 +63,8 @@ data/exports/hometown-xr-export-*.db
 data/hardware-profile.local.json
 data/dependency-audit.local.json
 data/metrics/
+data/evidence-local/
+data/evidence-outbox/
 data/cache/
 data/parquet/
 data/.parquet-staging-*/
@@ -82,6 +84,7 @@ data/output/_manifests/*.json
 data/output/_manifest-catalog.jsonl.gz.tmp
 data/checkpoints/*.tmp
 data/checkpoints/audit-evidence/*.tmp
+data/checkpoints/recovery-evidence/*.tmp
 
 # IDE
 .vscode/

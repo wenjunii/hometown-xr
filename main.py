@@ -65,6 +65,9 @@ _shutdown_signal_count = 0
 def _signal_handler(signum, frame) -> None:
     global _shutdown_signal_count
     del signum, frame
+    if _shutdown_event is None:
+        logger.info("Shutdown requested.")
+        raise KeyboardInterrupt
     if _shutdown_event:
         if _shutdown_signal_count:
             logger.warning("Second shutdown request received; exiting immediately.")
@@ -564,6 +567,7 @@ def _evaluation_command(args) -> None:
         evaluation_report,
         evaluation_status,
         multilingual_recall_report,
+        refill_evaluation_campaign,
         undo_annotation,
     )
 
@@ -595,6 +599,11 @@ def _evaluation_command(args) -> None:
         print(json.dumps(evaluation_plan(), indent=2))
     elif args.evaluation_command == "campaign":
         print(json.dumps(evaluation_campaign(include_samples=False), indent=2))
+    elif args.evaluation_command == "refill":
+        if args.yes is False:
+            print(json.dumps(refill_evaluation_campaign(apply=False), indent=2))
+        else:
+            print(json.dumps(refill_evaluation_campaign(apply=True), indent=2))
     elif args.evaluation_command == "replay":
         print(json.dumps(compact_replay_reservoir(), indent=2))
     elif args.evaluation_command == "undo":
@@ -738,6 +747,23 @@ def main() -> None:
     maintenance_plan_parser.add_argument(
         "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
     )
+    operations_parser = subparsers.add_parser(
+        "operations",
+        help="show or serve the read-only local operations dashboard",
+    )
+    operations_subparsers = operations_parser.add_subparsers(
+        dest="operations_command",
+        required=True,
+    )
+    for operations_action in ("status", "serve"):
+        operations_action_parser = operations_subparsers.add_parser(operations_action)
+        operations_action_parser.add_argument(
+            "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+        )
+        if operations_action == "serve":
+            operations_action_parser.add_argument("--host", default="127.0.0.1")
+            operations_action_parser.add_argument("--port", type=int, default=8770)
+            operations_action_parser.add_argument("--open-browser", action="store_true")
     metrics_parser = subparsers.add_parser(
         "metrics", help="show current or historical operational metrics"
     )
@@ -835,6 +861,42 @@ def main() -> None:
     failures_parser.add_argument("--crawl")
     failures_parser.add_argument("--examples", type=int, default=3)
 
+    recovery_parser = subparsers.add_parser(
+        "recovery-campaign",
+        help="replay bounded failed-source samples before resetting them",
+    )
+    recovery_subparsers = recovery_parser.add_subparsers(
+        dest="recovery_command",
+        required=True,
+    )
+    for recovery_action in ("plan", "run"):
+        recovery_action_parser = recovery_subparsers.add_parser(recovery_action)
+        recovery_action_parser.add_argument("--category", action="append")
+        recovery_action_parser.add_argument("--per-category", type=int, default=5)
+        recovery_action_parser.add_argument(
+            "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
+        )
+        recovery_action_parser.add_argument("--workers", type=int)
+        recovery_action_parser.add_argument("--candidate-batch-size", type=int)
+        recovery_action_parser.add_argument("--inference-batch-size", type=int)
+        recovery_action_parser.add_argument("--encoding-batch-size", type=int)
+        recovery_action_parser.add_argument(
+            "--precision", choices=["auto", "fp32", "fp16"], default="auto"
+        )
+        recovery_action_parser.add_argument("--threshold", type=float, default=SEMANTIC_THRESHOLD)
+        recovery_action_parser.add_argument(
+            "--language-threshold", type=float, default=LANG_DETECTION_THRESHOLD
+        )
+        recovery_action_parser.add_argument("--no-adaptive-batching", action="store_true")
+        recovery_action_parser.add_argument("--no-cache", action="store_true")
+        if recovery_action == "run":
+            recovery_action_parser.add_argument("--yes", action="store_true")
+    for recovery_action in ("evidence", "adopt"):
+        recovery_evidence = recovery_subparsers.add_parser(recovery_action)
+        recovery_evidence.add_argument("--report", required=True)
+        if recovery_action == "adopt":
+            recovery_evidence.add_argument("--yes", action="store_true")
+
     recover_parser = subparsers.add_parser(
         "recover", help="release processing leases older than a threshold"
     )
@@ -852,6 +914,24 @@ def main() -> None:
     benchmark_parser.add_argument("--sources", type=int, default=5)
     benchmark_parser.add_argument("--worker-count", type=int, action="append")
     benchmark_parser.add_argument("--apply", action="store_true")
+
+    evidence_parser = subparsers.add_parser(
+        "evidence",
+        help="export, validate, or import credential-free cross-PC evidence",
+    )
+    evidence_subparsers = evidence_parser.add_subparsers(
+        dest="evidence_command",
+        required=True,
+    )
+    evidence_subparsers.add_parser("status")
+    evidence_export = evidence_subparsers.add_parser("export")
+    evidence_export.add_argument("--profile", choices=sorted(HARDWARE_PROFILES), required=True)
+    evidence_export.add_argument("--output")
+    evidence_export.add_argument("--candidate")
+    evidence_export.add_argument("--workload")
+    evidence_import = evidence_subparsers.add_parser("import")
+    evidence_import.add_argument("--path", required=True)
+    evidence_import.add_argument("--yes", action="store_true")
 
     model_parser = subparsers.add_parser(
         "model-validation",
@@ -933,6 +1013,11 @@ def main() -> None:
     evaluation_subparsers.add_parser("status")
     evaluation_subparsers.add_parser("plan")
     evaluation_subparsers.add_parser("campaign")
+    refill_parser = evaluation_subparsers.add_parser(
+        "refill",
+        help="deterministically fill campaign queues without assigning labels",
+    )
+    refill_parser.add_argument("--yes", action="store_true")
     evaluation_subparsers.add_parser("replay")
     evaluation_subparsers.add_parser("multilingual")
     serve_parser = evaluation_subparsers.add_parser("serve")
@@ -1133,6 +1218,23 @@ def main() -> None:
             )
         else:
             print_latest(full=args.full)
+    elif args.command == "operations":
+        from operations_dashboard import (
+            collect_operations_status,
+            serve_operations_dashboard,
+        )
+
+        if args.operations_command == "status":
+            print(json.dumps(collect_operations_status(args.profile), indent=2))
+        else:
+            if not 1 <= args.port <= 65535:
+                parser.error("--port must be between 1 and 65535")
+            serve_operations_dashboard(
+                args.host,
+                args.port,
+                args.profile,
+                args.open_browser,
+            )
     elif args.command == "list":
         list_crawls()
     elif args.command == "retry":
@@ -1147,6 +1249,51 @@ def main() -> None:
         if args.examples < 0:
             parser.error("--examples cannot be negative")
         show_failures(args.crawl, args.examples)
+    elif args.command == "recovery-campaign":
+        from recovery_campaign import (
+            adopt_recovery_evidence,
+            build_recovery_plan,
+            recovery_evidence_status,
+            run_recovery_campaign,
+        )
+
+        if args.recovery_command in {"evidence", "adopt"}:
+            if args.recovery_command == "adopt" and not args.yes:
+                parser.error("recovery-campaign adopt requires --yes")
+            with CrawlerRunLock("recovery-adoption"):
+                result = (
+                    adopt_recovery_evidence(args.report)
+                    if args.recovery_command == "adopt"
+                    else recovery_evidence_status(args.report)
+                )
+            print(json.dumps(result, indent=2))
+        else:
+            if args.per_category <= 0:
+                parser.error("--per-category must be positive")
+            plan = build_recovery_plan(args.category, args.per_category)
+            if args.recovery_command == "plan":
+                print(json.dumps(plan, indent=2))
+            else:
+                if not args.yes:
+                    parser.error("recovery-campaign run requires --yes")
+                if not plan["sources"]:
+                    parser.error("no failed sources match this recovery campaign")
+                settings = _runtime_settings(args)
+                context = multiprocessing.get_context("spawn")
+                _shutdown_event = context.Event()
+                _shutdown_signal_count = 0
+                try:
+                    with CrawlerRunLock("recovery-campaign"):
+                        result = run_recovery_campaign(
+                            plan,
+                            settings,
+                            context=context,
+                            shutdown_event=_shutdown_event,
+                        )
+                    print(json.dumps(result, indent=2))
+                finally:
+                    _shutdown_event = None
+                    _shutdown_signal_count = 0
     elif args.command == "recover":
         if args.minutes < 0:
             parser.error("--minutes cannot be negative")
@@ -1233,6 +1380,25 @@ def main() -> None:
         from maintenance import collect_maintenance_plan
 
         print(json.dumps(collect_maintenance_plan(args.profile), indent=2))
+    elif args.command == "evidence":
+        from evidence_bundle import (
+            export_evidence_bundle,
+            import_evidence_bundle,
+            portable_evidence_status,
+        )
+
+        if args.evidence_command == "status":
+            result = portable_evidence_status()
+        elif args.evidence_command == "export":
+            result = export_evidence_bundle(
+                args.profile,
+                args.output,
+                candidate_path=args.candidate,
+                workload_path=args.workload,
+            )
+        else:
+            result = import_evidence_bundle(args.path, apply=args.yes)
+        print(json.dumps(result, indent=2))
     elif args.command == "model-validation":
         from model_regression import capture_model_snapshot, compare_model_snapshots
 

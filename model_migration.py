@@ -12,7 +12,7 @@ from config import DATA_DIR, MODEL_BASELINE_PATH
 from dependency_profiles import validate_dependency_profiles
 from evaluation import evaluation_status
 from metrics import compare_profiles
-from model_regression import compare_model_snapshots
+from model_regression import compare_model_payloads, compare_model_snapshots
 from progress import ProgressTracker
 from signatures import build_filter_signature
 
@@ -117,23 +117,56 @@ def build_model_migration_plan(
 
     comparisons = {}
     candidate_libraries = {}
+    baseline_payload = json.loads(baseline.read_text(encoding="utf-8")) if baseline.exists() else None
     for profile in REQUIRED_PROFILES:
         candidate = candidates.get(profile)
-        if candidate is None or not candidate.exists() or not baseline.exists():
+        portable = None
+        if candidate is None or not candidate.exists():
+            try:
+                from evidence_bundle import load_profile_evidence
+
+                portable = load_profile_evidence(profile)
+            except (OSError, ValueError, json.JSONDecodeError):
+                portable = None
+        portable_snapshot = (portable or {}).get("model_snapshot")
+        if (
+            (
+                (candidate is None or not candidate.exists())
+                and portable_snapshot is None
+            )
+            or not baseline.exists()
+        ):
             comparisons[profile] = {
-                "present": bool(candidate and candidate.exists()),
+                "present": bool((candidate and candidate.exists()) or portable_snapshot),
                 "safe": False,
                 "path": str(candidate) if candidate else None,
             }
             continue
-        snapshot = json.loads(candidate.read_text(encoding="utf-8"))
+        snapshot = (
+            json.loads(candidate.read_text(encoding="utf-8"))
+            if candidate is not None and candidate.exists()
+            else portable_snapshot
+        )
         candidate_libraries[profile] = snapshot.get("libraries") or {}
-        comparison = compare_model_snapshots(baseline, candidate)
+        if candidate is not None and candidate.exists():
+            comparison = compare_model_snapshots(baseline, candidate)
+            path_label = str(candidate)
+            digest = _sha256(candidate)
+        else:
+            comparison = compare_model_payloads(
+                baseline_payload,
+                snapshot,
+                baseline_label=str(baseline),
+                candidate_label=f"portable profile evidence: {profile}",
+            )
+            path_label = "portable profile evidence"
+            digest = portable.get("content_sha256")
         comparisons[profile] = {
             "present": True,
             "safe": bool(comparison["safe"]),
-            "path": str(candidate),
-            "sha256": _sha256(candidate),
+            "path": path_label,
+            "sha256": digest,
+            "portable": candidate is None or not candidate.exists(),
             "libraries": snapshot.get("libraries") or {},
             "metrics": comparison["metrics"],
         }

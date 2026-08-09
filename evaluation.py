@@ -686,6 +686,22 @@ def build_annotation_sample(
             for key in ("annotator", "labeled_at", "label_history"):
                 if old.get(key) is not None:
                     row[key] = old[key]
+            for key in (
+                "campaign_refill",
+                "campaign_id",
+                "campaign_phase",
+                "refill_action",
+                "refill_source_role",
+                "refill_source_split",
+                "refill_source_reason",
+                "evidence_scope",
+                "sample_role",
+                "evaluation_split",
+                "sampling_probability",
+                "sample_weight",
+            ):
+                if old.get(key) is not None:
+                    row[key] = old[key]
         row.update(
             {
                 key: value
@@ -695,7 +711,10 @@ def build_annotation_sample(
         )
     selected_ids = {row["sample_id"] for row in rows}
     for old in existing.values():
-        if old.get("label") not in {"positive", "negative"}:
+        if (
+            old.get("label") not in {"positive", "negative"}
+            and not old.get("campaign_refill")
+        ):
             continue
         if old["sample_id"] not in selected_ids:
             rows.append(_enrich_for_active_learning(old))
@@ -706,6 +725,7 @@ def build_annotation_sample(
                 index
                 for index in range(len(rows) - 1, -1, -1)
                 if rows[index].get("label") not in {"positive", "negative"}
+                and not rows[index].get("campaign_refill")
             ),
             None,
         )
@@ -984,6 +1004,130 @@ def _evaluation_quotas() -> list[tuple[str, bool, int]]:
         ("tuning", False, tuning_rejected),
         ("tuning", True, tuning_accepted),
     ]
+
+
+def refill_evaluation_campaign(
+    annotation_path: str | Path = EVALUATION_DIR / "annotations.jsonl",
+    candidate_path: str | Path = EVALUATION_DIR / "candidate_samples.jsonl",
+    replay_path: str | Path = REPLAY_PATH,
+    output_dir: str | Path = OUTPUT_DIR,
+    *,
+    apply: bool = False,
+) -> dict:
+    """Fill campaign queues deterministically without creating human labels."""
+    path = Path(annotation_path)
+    current = [_enrich_for_active_learning(row) for row in _read_jsonl(path)]
+    working = {str(row.get("sample_id", "")): row for row in current}
+
+    candidates_by_id = {
+        str(row.get("sample_id", "")): _enrich_for_active_learning(row)
+        for row in [*_read_jsonl(Path(replay_path)), *_read_jsonl(Path(candidate_path))]
+        if row.get("sample_id")
+    }
+    accepted_by_id = {
+        str(row["sample_id"]): row for row in _output_annotation_rows(output_dir)
+    }
+    accepted_by_id.update(
+        {
+            sample_id: row
+            for sample_id, row in candidates_by_id.items()
+            if bool(row.get("predicted_accept"))
+        }
+    )
+    rejected_by_id = {
+        sample_id: row
+        for sample_id, row in candidates_by_id.items()
+        if not bool(row.get("predicted_accept"))
+    }
+
+    selected = []
+    phases = []
+    for split, accepted, target in _evaluation_quotas():
+        prediction = "accepted" if accepted else "rejected"
+        matching = [
+            row
+            for row in working.values()
+            if row.get("evaluation_split", "tuning") == split
+            and bool(row.get("predicted_accept")) is accepted
+        ]
+        needed = max(0, target - len(matching))
+        pool = accepted_by_id if accepted else rejected_by_id
+        eligible = []
+        for sample_id, source in pool.items():
+            existing = working.get(sample_id)
+            if existing is not None:
+                can_reassign = (
+                    split == "holdout"
+                    and existing.get("evaluation_split", "tuning") != "holdout"
+                    and existing.get("label") not in {"positive", "negative"}
+                )
+                if not can_reassign:
+                    continue
+                source = existing
+            if (
+                split == "holdout"
+                and _evaluation_split(sample_id, "benchmark") != "holdout"
+            ):
+                continue
+            row = _enrich_for_active_learning(
+                {
+                    **source,
+                    "sample_origin": source.get("sample_origin") or "campaign_reservoir",
+                    "sample_role": "benchmark" if split == "holdout" else "tuning",
+                    "evaluation_split": split,
+                    "sampling_probability": None,
+                    "sample_weight": None,
+                    "label": None,
+                    "notes": "",
+                    "campaign_refill": True,
+                    "campaign_id": "human-baseline-v1",
+                    "campaign_phase": f"{split}-{prediction}",
+                    "refill_action": "reassigned" if existing is not None else "added",
+                    "refill_source_role": source.get("sample_role", "legacy"),
+                    "refill_source_split": source.get("evaluation_split", "tuning"),
+                    "refill_source_reason": source.get("selection_reason"),
+                    "selection_reason": "campaign_quota_refill",
+                    "evidence_scope": (
+                        "selected_blind_holdout"
+                        if split == "holdout"
+                        else "selected_tuning"
+                    ),
+                }
+            )
+            eligible.append(row)
+        picked = sorted(eligible, key=_rank)[:needed]
+        selected.extend(picked)
+        working.update({str(row["sample_id"]): row for row in picked})
+        phases.append(
+            {
+                "id": f"{split}-{prediction}",
+                "target": target,
+                "present_before": len(matching),
+                "needed": needed,
+                "eligible": len(eligible),
+                "selected": len(picked),
+                "remaining_shortfall": max(0, needed - len(picked)),
+            }
+        )
+
+    if apply and selected:
+        _atomic_jsonl(path, working.values())
+    result = {
+        "schema_version": 1,
+        "campaign_id": "human-baseline-v1",
+        "annotation_path": str(path),
+        "dry_run": not apply,
+        "applied": bool(apply),
+        "requires_human_judgment": True,
+        "automatic_labeling_allowed": False,
+        "population_weight_assigned": False,
+        "selected": len(selected),
+        "phases": phases,
+        "remaining_shortfall": sum(int(row["remaining_shortfall"]) for row in phases),
+    }
+    if apply:
+        result["campaign"] = evaluation_campaign(path, include_samples=False)
+    return result
 
 
 def evaluation_campaign(

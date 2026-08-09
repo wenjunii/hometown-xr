@@ -1,4 +1,5 @@
 import audit
+import benchmark
 from benchmark import run_workload_benchmark
 
 
@@ -14,6 +15,7 @@ def test_real_workload_benchmark_uses_repeatable_outputs_for_recommendation(
         ],
     }
     monkeypatch.setattr(audit, "build_audit_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(benchmark, "LOCAL_EVIDENCE_DIR", tmp_path / "evidence")
 
     def fake_run(plan, settings, audit_dir, sample_rate):
         del plan, audit_dir, sample_rate
@@ -64,6 +66,7 @@ def test_real_workload_benchmark_refuses_partial_trial_success(tmp_path, monkeyp
         "sources": [{"file_path": "one.wet.gz", "crawl_id": "crawl"}],
     }
     monkeypatch.setattr(audit, "build_audit_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(benchmark, "LOCAL_EVIDENCE_DIR", tmp_path / "evidence")
 
     def fake_run(plan, settings, audit_dir, sample_rate):
         del plan, audit_dir, sample_rate
