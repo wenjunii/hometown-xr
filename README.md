@@ -365,6 +365,9 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action pack-status` | Compare local source fragments with the synchronized story packs |
 | `.\scripts\stories.ps1 -Action pack` | Rebuild and verify deterministic story packs |
 | `.\scripts\stories.ps1 -Action unpack` | Restore missing local source fragments from synchronized packs |
+| `.\scripts\stories.ps1 -Action full-plan -Month 2013-12 -All` | Dry-run complete captured-document recovery and show its HTTP-request ceiling |
+| `.\scripts\stories.ps1 -Action full-recover -Month 2013-12 -Limit 10 -Workers 3 -Apply` | Recover a reviewed, resumable batch through the Common Crawl index |
+| `.\scripts\stories.ps1 -Action full-export -Month 2013-12` | Export full-source narratives and portable structured checkpoints by month |
 | `.\scripts\refresh-results.ps1` | Dry-run current filters and rebuild the local canonical dataset |
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
@@ -425,6 +428,9 @@ The underlying Python CLI remains available directly:
 | `python main.py stories pack-status` | Check local fragment changes against synchronized packs |
 | `python main.py stories pack` | Build deterministic synchronized packs |
 | `python main.py stories unpack` | Restore missing local fragments from verified packs |
+| `python main.py stories full-plan --month 2013-12 --all` | Plan full-source recovery without network access |
+| `python main.py stories full-recover --month 2013-12 --limit 10 --workers 3 --yes` | Recover precise indexed WARC captures for one bounded batch |
+| `python main.py stories full-export --month 2013-12` | Write full-source Markdown and structured monthly exports |
 | `python main.py audit plan --per-crawl 2` | Select matched and zero-match completed sources without changing state |
 | `python main.py audit run --per-crawl 2 --profile 3080 --yes` | Run the selection in an isolated database/output tree |
 | `python main.py audit evidence --report PATH` | Dry-run evidence validation and eligible crawl adoption |
@@ -536,6 +542,12 @@ data/
     stories_<language>.md
     story_quality_report.json
     story_quality_report.md
+  full_sources/
+    _records/                         # ignored local recovery cache
+  full_exports/
+    2013-12/
+      stories_full.jsonl.gz           # portable exact-text recovery checkpoint
+      stories_<language>.md
 ```
 
 Schema version 5 records add bounded story context while retaining versioned
@@ -650,6 +662,45 @@ characters and three sentence endings. Normal exports include only these
 passages. `-IncludeShort` retains shorter context for diagnostics; it is not
 part of the normal story product. The threshold is useful for review, not a
 claim that a narrative is artistically or factually complete.
+
+### Full-source recovery for production research
+
+The bounded window remains useful for discovery, but production episodes can
+require the rest of the captured source. The separate full-source pass looks up
+the exact URL in the named Common Crawl index, selects the capture nearest the
+recorded capture timestamp, range-fetches that WARC record, and deterministically
+extracts its visible text. It does not ask a model to invent, paraphrase, join,
+or finish source material.
+
+Run the read-only plan before downloading:
+
+```powershell
+.\scripts\stories.ps1 -Action full-plan -Month 2013-12 -All
+```
+
+The reported `network_request_ceiling` is exact for the selected batch: at most
+one index lookup and one WARC range request per capture. Then recover in bounded,
+resumable batches and export the reviewed month:
+
+```powershell
+.\scripts\stories.ps1 -Action full-recover -Month 2013-12 -Limit 10 -Workers 3 -Apply
+.\scripts\stories.ps1 -Action full-status -Month 2013-12 -All
+.\scripts\stories.ps1 -Action full-export -Month 2013-12
+```
+
+Every recovered document has a content hash and one or more seed-linked
+narrative units. A unit is marked `likely_complete`, `unknown`, `start_missing`,
+`end_missing`, `both_missing`, or `gated_or_preview`; these are conservative
+structural findings, not claims about authorship or factual accuracy. Small
+documents are preserved whole. Large documents are bounded only at detected
+structural boundaries or explicit safety ceilings, and any such boundary is
+recorded.
+
+Local per-capture files under `data/full_sources/_records/` are rebuildable and
+ignored. The compressed `data/full_exports/<month>/stories_full.jsonl.gz`
+contains the exact recovered document, narrative units, hashes, and provenance,
+so it is the portable cross-PC checkpoint. A fresh workstation recognizes those
+records and does not download them again.
 
 New schema-5 matches receive this context during crawling. Historical
 schema-2/3/4 matches can be enriched without recrawling the full corpus:

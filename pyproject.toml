@@ -75,6 +75,7 @@ py-modules = [
     "story_control",
     "story_curation",
     "story_enrichment",
+    "full_source_recovery",
     "story_operations",
     "story_packing",
     "story_products",

@@ -23,6 +23,8 @@ from config import (
     DB_PATH,
     DEFAULT_CRAWL_ID,
     DOMAIN_STORY_CAP,
+    FULL_SOURCE_MAX_WORKERS,
+    FULL_SOURCE_WORKERS,
     HARDWARE_PROFILES,
     LANG_DETECTION_THRESHOLD,
     LEASE_TIMEOUT_SECONDS,
@@ -1111,6 +1113,32 @@ def main() -> None:
             )
     stories_export_parser = stories_subparsers.add_parser("export")
     stories_export_parser.add_argument("--include-short", action="store_true")
+    for action in ("full-plan", "full-status", "full-recover"):
+        full_action = stories_subparsers.add_parser(
+            action,
+            help="plan, inspect, or run complete captured-document recovery",
+        )
+        full_action.add_argument("--month", required=True)
+        full_scope = full_action.add_mutually_exclusive_group()
+        full_scope.add_argument("--limit", type=int, default=10)
+        full_scope.add_argument("--all", action="store_true")
+        if action == "full-recover":
+            full_action.add_argument("--yes", action="store_true")
+            full_action.add_argument(
+                "--workers",
+                type=int,
+                default=FULL_SOURCE_WORKERS,
+            )
+            full_action.add_argument(
+                "--no-workstation-guard",
+                action="store_true",
+                help="bypass cross-PC ownership only for deliberate offline recovery",
+            )
+    full_export_parser = stories_subparsers.add_parser(
+        "full-export",
+        help="export recovered narratives for one capture month",
+    )
+    full_export_parser.add_argument("--month", required=True)
 
     audit_parser = subparsers.add_parser(
         "audit", help="plan or run an isolated audit of completed sources"
@@ -1483,6 +1511,11 @@ def main() -> None:
             parser.error("--port must be between 1 and 65535")
         _evaluation_command(args)
     elif args.command == "stories":
+        from full_source_recovery import (
+            export_full_sources,
+            plan_full_source_recovery,
+            recover_full_sources,
+        )
         from story_control import request_story_shutdown, watch_story_shutdown
         from story_enrichment import (
             enrich_story_sources,
@@ -1583,6 +1616,52 @@ def main() -> None:
         elif args.stories_command == "export":
             with CrawlerRunLock("story-export"):
                 result = export_stories(include_short=args.include_short)
+        elif args.stories_command in {"full-plan", "full-status"}:
+            full_limit = None if args.all else args.limit
+            if full_limit is not None and full_limit <= 0:
+                parser.error("--limit must be positive")
+            result = plan_full_source_recovery(args.month, limit=full_limit)
+            if len(result["selection"]) > 10:
+                result["selection_total"] = len(result["selection"])
+                result["selection_truncated"] = True
+                result["selection"] = result["selection"][:10]
+        elif args.stories_command == "full-recover":
+            if not args.yes:
+                parser.error("full source recovery makes Common Crawl requests; pass --yes")
+            if not 1 <= args.workers <= FULL_SOURCE_MAX_WORKERS:
+                parser.error(
+                    f"--workers must be between 1 and {FULL_SOURCE_MAX_WORKERS}"
+                )
+            full_limit = None if args.all else args.limit
+            if full_limit is not None and full_limit <= 0:
+                parser.error("--limit must be positive")
+            ownership_context = nullcontext(None)
+            if not args.no_workstation_guard:
+                from workstation_guard import WorkstationLease
+
+                ownership_context = WorkstationLease(get_hardware_profile("auto").name)
+            _shutdown_event = threading.Event()
+            _shutdown_signal_count = 0
+            try:
+                with CrawlerRunLock("full-source-recovery"), ownership_context as ownership:
+                    with watch_story_shutdown(_shutdown_event):
+                        result = recover_full_sources(
+                            args.month,
+                            limit=full_limit,
+                            workers=args.workers,
+                            shutdown_event=_shutdown_event,
+                            heartbeat_callback=(
+                                ownership.renew_if_due
+                                if ownership is not None
+                                else None
+                            ),
+                        )
+            finally:
+                _shutdown_event = None
+                _shutdown_signal_count = 0
+        elif args.stories_command == "full-export":
+            with CrawlerRunLock("full-source-export"):
+                result = export_full_sources(args.month)
         elif args.stories_command == "report":
             from story_products import (
                 build_story_quality_report,

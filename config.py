@@ -29,11 +29,20 @@ REPLAY_PATH = EVALUATION_DIR / "replay.jsonl.gz"
 RUN_HISTORY_PATH = DATA_DIR / "run-history.jsonl.gz"
 PARQUET_DIR = DATA_DIR / "parquet"
 STORIES_DIR = DATA_DIR / "stories"
+FULL_SOURCES_DIR = DATA_DIR / "full_sources"
+FULL_SOURCE_EXPORTS_DIR = DATA_DIR / "full_exports"
 CACHE_DIR = DATA_DIR / "cache"
 INFERENCE_CACHE_PATH = CACHE_DIR / "inference.db"
 HARDWARE_OVERRIDE_PATH = DATA_DIR / "hardware-profile.local.json"
 
-for directory in (DATA_DIR, OUTPUT_DIR, MODELS_DIR, STORIES_DIR):
+for directory in (
+    DATA_DIR,
+    OUTPUT_DIR,
+    MODELS_DIR,
+    STORIES_DIR,
+    FULL_SOURCES_DIR,
+    FULL_SOURCE_EXPORTS_DIR,
+):
     directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -124,6 +133,12 @@ STORY_AUTO_SUCCESS_WINDOW = 4
 STORY_RETRY_BASE_SECONDS = 300
 STORY_RETRY_MAX_SECONDS = 21_600
 STORY_MAX_SOURCE_ATTEMPTS = 4
+FULL_SOURCE_RECOVERY_VERSION = "common-crawl-document-v1"
+FULL_SOURCE_WORKERS = 3
+FULL_SOURCE_MAX_WORKERS = 8
+FULL_SOURCE_WHOLE_DOCUMENT_CHARS = 60_000
+FULL_SOURCE_MAX_NARRATIVE_CHARS = 120_000
+FULL_SOURCE_MAX_NARRATIVE_PARAGRAPHS = 240
 
 
 # "auto" is resolved lazily by the semantic matcher so importing lightweight
