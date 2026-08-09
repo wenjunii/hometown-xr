@@ -18,6 +18,7 @@ from config import (
     EVALUATION_DIR,
     HARDWARE_OVERRIDE_PATH,
     LANG_DETECTION_THRESHOLD,
+    LOCAL_EVIDENCE_DIR,
     SEMANTIC_THRESHOLD,
     get_hardware_profile,
 )
@@ -303,7 +304,7 @@ def run_workload_benchmark(
 
     from audit import build_audit_plan, output_match_set_digest, run_audit
     from runtime import RuntimeSettings
-    from signatures import build_filter_signature, new_run_id
+    from signatures import build_filter_signature, current_git_commit, new_run_id
 
     signature = build_filter_signature(SEMANTIC_THRESHOLD, LANG_DETECTION_THRESHOLD)
     plan = build_audit_plan(
@@ -386,8 +387,11 @@ def run_workload_benchmark(
     ]
     best = max(eligible, key=lambda trial: trial["files_per_hour"] or 0.0) if eligible else None
     applied = _write_workload_recommendation(profile, best["workers"]) if write and best else None
-    return {
+    result = {
         "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": current_git_commit(),
+        "filter_signature": signature,
         "mode": "isolated_real_sources",
         "profile": profile.name,
         "crawl_id": crawl_id,
@@ -404,3 +408,10 @@ def run_workload_benchmark(
             else "No trial completed every source with equivalent output; settings were not changed."
         ),
     }
+    evidence_path = LOCAL_EVIDENCE_DIR / f"workload-{profile.name}.json"
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = evidence_path.with_suffix(evidence_path.suffix + ".tmp")
+    temporary.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, evidence_path)
+    result["local_evidence_path"] = str(evidence_path)
+    return result

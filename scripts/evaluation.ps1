@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("status", "plan", "campaign", "sample", "annotate", "report", "replay", "undo", "multilingual", "serve")]
+    [ValidateSet("status", "plan", "campaign", "refill", "sample", "annotate", "report", "replay", "undo", "multilingual", "serve")]
     [string]$Action = "status",
 
     [ValidateRange(1, 1000000)]
@@ -28,7 +28,9 @@ param(
     [ValidateRange(1, 65535)]
     [int]$Port = 8765,
 
-    [switch]$OpenBrowser
+    [switch]$OpenBrowser,
+
+    [switch]$Apply
 )
 
 $ErrorActionPreference = "Stop"
@@ -79,6 +81,9 @@ elseif ($Action -eq "serve") {
     if ($OpenBrowser) {
         $Arguments += "--open-browser"
     }
+}
+elseif ($Action -eq "refill" -and $Apply) {
+    $Arguments += "--yes"
 }
 
 $ExitCode = 1

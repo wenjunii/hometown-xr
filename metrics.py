@@ -491,6 +491,16 @@ def compare_profiles(
                 default=0.0,
             ),
         }
+    try:
+        from evidence_bundle import portable_profile_metrics
+
+        for profile, portable in portable_profile_metrics().items():
+            if profile not in profiles:
+                profiles[profile] = portable
+            else:
+                profiles[profile]["portable_evidence"] = True
+    except (OSError, ValueError, json.JSONDecodeError):
+        pass
     return {"profiles": profiles}
 
 

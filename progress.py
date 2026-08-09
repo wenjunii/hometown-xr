@@ -674,6 +674,68 @@ class ProgressTracker:
             )
             return len(paths)
 
+    def select_failed_sources(
+        self,
+        categories: Iterable[str] | None = None,
+        per_category: int = 5,
+    ) -> list[dict]:
+        """Select a deterministic bounded failure sample without changing state."""
+        if per_category <= 0:
+            raise ValueError("per_category must be positive")
+        requested = set(categories or [])
+        selected: dict[str, list[dict]] = {}
+        with self._managed_conn() as conn:
+            rows = conn.execute(
+                "SELECT file_path, crawl_id, error_message, attempt_count, "
+                "next_retry_at, completed_at FROM processing_state "
+                "WHERE status = 'failed' ORDER BY file_path"
+            ).fetchall()
+        for row in rows:
+            category = classify_failure(row["error_message"])
+            if requested and category not in requested:
+                continue
+            bucket = selected.setdefault(category, [])
+            if len(bucket) >= per_category:
+                continue
+            bucket.append(
+                {
+                    "file_path": str(row["file_path"]),
+                    "crawl_id": str(row["crawl_id"]),
+                    "failure_category": category,
+                    "attempt_count": int(row["attempt_count"] or 0),
+                    "next_retry_at": row["next_retry_at"],
+                    "failed_at": row["completed_at"],
+                    "error_sha256": hashlib.sha256(
+                        str(row["error_message"] or "").encode("utf-8")
+                    ).hexdigest(),
+                }
+            )
+        return [row for category in sorted(selected) for row in selected[category]]
+
+    def retry_failed_paths(self, file_paths: Iterable[str]) -> int:
+        """Reset only explicitly verified failed paths for immediate retry."""
+        paths = list(dict.fromkeys(str(path) for path in file_paths if path))
+        if not paths:
+            return 0
+        reset = 0
+        with self._managed_conn() as conn:
+            for path in paths:
+                cursor = conn.execute(
+                    """
+                    UPDATE processing_state
+                    SET status = 'pending',
+                        attempt_count = 0,
+                        next_retry_at = NULL,
+                        started_at = NULL,
+                        heartbeat_at = NULL,
+                        lease_id = NULL
+                    WHERE file_path = ? AND status = 'failed'
+                    """,
+                    (path,),
+                )
+                reset += cursor.rowcount
+        return reset
+
     def get_failure_summary(
         self,
         crawl_id: str | None = None,
