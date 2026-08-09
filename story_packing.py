@@ -333,6 +333,7 @@ def story_pack_status(stories_dir: str | Path = STORIES_DIR) -> dict:
     verification = verify_story_packs(root)
     if not verification["valid"]:
         return {
+            "valid": False,
             "safe_to_pull": False,
             "packs": verification,
             "matching_fragments": 0,
@@ -355,6 +356,7 @@ def story_pack_status(stories_dir: str | Path = STORIES_DIR) -> dict:
         for relative in set(payloads) & set(local)
     )
     return {
+        "valid": True,
         "safe_to_pull": not changed and not (set(local) - set(payloads)),
         "packs": verification,
         "matching_fragments": matching,
