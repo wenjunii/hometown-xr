@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -32,6 +33,26 @@ EXPECTED_PINS = {
         "transformers": "4.40.2",
     },
 }
+
+MIGRATION_GATED_DEPENDENCIES = frozenset(
+    {
+        "fasttext-wheel",
+        "ftfy",
+        "huggingface-hub",
+        "mpmath",
+        "numpy",
+        "pyarrow",
+        "regex",
+        "safetensors",
+        "scikit-learn",
+        "scipy",
+        "sentence-transformers",
+        "sympy",
+        "tokenizers",
+        "torch",
+        "transformers",
+    }
+)
 
 
 def _normalized_name(value: str) -> str:
@@ -72,6 +93,73 @@ def read_project_requirements(path: str | Path) -> dict[str, str]:
     return pins
 
 
+def shared_pin_errors(
+    project: dict[str, str],
+    runtime: dict[str, str],
+    legacy: dict[str, str],
+    blackwell: dict[str, str],
+    test: dict[str, str],
+) -> list[str]:
+    """Return direct-dependency drift across manifests and hardware locks."""
+    errors: list[str] = []
+    for package, expected in project.items():
+        if runtime.get(package) != expected:
+            errors.append(
+                f"requirements.txt and pyproject.toml disagree on {package}"
+            )
+        if package == "torch":
+            continue
+        for scope, pins in (("legacy", legacy), ("5090", blackwell)):
+            if pins.get(package) != expected:
+                errors.append(
+                    f"{scope} lock and pyproject.toml disagree on {package}"
+                )
+    for package in sorted(project.keys() & test.keys()):
+        if test[package] != project[package]:
+            errors.append(
+                f"requirements-test.txt and pyproject.toml disagree on {package}"
+            )
+    return errors
+
+
+def validate_dependabot_policy(path: str | Path) -> dict:
+    """Validate the small stable subset of Dependabot YAML used by this project."""
+    source = Path(path)
+    if not source.exists():
+        return {
+            "valid": False,
+            "ignored_dependencies": [],
+            "errors": [f"Dependabot configuration is missing: {source}"],
+        }
+    text = source.read_text(encoding="utf-8")
+    ignored = {
+        _normalized_name(match.group(1).strip("'\""))
+        for match in re.finditer(
+            r"^\s*-\s+dependency-name:\s*([^\s#]+)",
+            text,
+            flags=re.MULTILINE,
+        )
+    }
+    errors: list[str] = []
+    if not re.search(
+        r"^\s+group-by:\s*dependency-name\s*$", text, flags=re.MULTILINE
+    ):
+        errors.append(
+            "Dependabot routine updates must be grouped by dependency name"
+        )
+    missing = sorted(MIGRATION_GATED_DEPENDENCIES - ignored)
+    if missing:
+        errors.append(
+            "Dependabot must ignore migration-gated dependencies: "
+            + ", ".join(missing)
+        )
+    return {
+        "valid": not errors,
+        "ignored_dependencies": sorted(ignored),
+        "errors": errors,
+    }
+
+
 def _load_policy(path: Path, today: date) -> dict:
     if not path.exists():
         return {
@@ -108,6 +196,7 @@ def validate_dependency_profiles(
         blackwell, blackwell_options = read_requirements(
             root / "requirements-lock-5090.txt"
         )
+        test, _test_options = read_requirements(root / "requirements-test.txt")
     except (KeyError, OSError, ValueError) as exc:
         return {
             "schema_version": 1,
@@ -121,6 +210,7 @@ def validate_dependency_profiles(
         "runtime": runtime,
         "legacy": legacy,
         "5090": blackwell,
+        "test": test,
     }
     for scope, expected_scope in EXPECTED_PINS.items():
         actual_scope = project if scope == "project" else sets[scope]
@@ -131,11 +221,7 @@ def validate_dependency_profiles(
                     f"{scope} requires {package}=={expected}; found {actual or 'missing'}"
                 )
 
-    for package in EXPECTED_PINS["project"]:
-        if runtime.get(package) != project.get(package):
-            errors.append(
-                f"requirements.txt and pyproject.toml disagree on {package}"
-            )
+    errors.extend(shared_pin_errors(project, runtime, legacy, blackwell, test))
     if not any(option.endswith("/cu121") for option in legacy_options):
         errors.append("requirements-lock.txt does not select the CUDA 12.1 index")
     if not any(option.endswith("/cu130") for option in blackwell_options):
@@ -174,6 +260,9 @@ def validate_dependency_profiles(
             f"review in {policy['days_until_review']} day(s)"
         )
 
+    dependabot = validate_dependabot_policy(root / ".github" / "dependabot.yml")
+    errors.extend(dependabot["errors"])
+
     return {
         "schema_version": 1,
         "valid": not errors,
@@ -198,6 +287,7 @@ def validate_dependency_profiles(
             package: project.get(package) for package in EXPECTED_PINS["project"]
         },
         "security_policy": policy,
+        "dependabot_policy": dependabot,
         "errors": errors,
         "warnings": warnings,
     }
