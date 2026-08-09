@@ -55,7 +55,9 @@ def test_story_packs_are_byte_stable_and_restore_exact_fragments(tmp_path):
     assert restored["restored_fragments"] == 2
     assert first.read_bytes() == expected[first.name]
     assert second.read_bytes() == expected[second.name]
-    assert story_pack_status(stories)["safe_to_pull"]
+    status = story_pack_status(stories)
+    assert status["valid"]
+    assert status["safe_to_pull"]
 
 
 def test_story_pack_restore_refuses_changed_local_fragment(tmp_path):
@@ -67,6 +69,7 @@ def test_story_pack_restore_refuses_changed_local_fragment(tmp_path):
 
     status = story_pack_status(stories)
 
+    assert status["valid"]
     assert not status["safe_to_pull"]
     assert status["changed_fragments"]
     with pytest.raises(RuntimeError, match="differ from the checkpoint"):
@@ -84,8 +87,10 @@ def test_story_pack_verification_detects_pack_tampering(tmp_path):
     pack.write_bytes(pack.read_bytes() + b"tampered")
 
     verification = verify_story_packs(stories)
+    status = story_pack_status(stories)
 
     assert not verification["valid"]
+    assert not status["valid"]
     assert verification["errors"]
 
 
