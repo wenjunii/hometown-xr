@@ -1088,6 +1088,20 @@ Actions validates dependency-profile pins and the dated vulnerability policy,
 then runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing on
 both Windows and Ubuntu without downloading GPU models or Git LFS data.
 
+### Dependency Updates
+
+Dependabot keeps AWS, HTTP, and developer-tool families in separate pull
+requests. Other routine updates are grouped by dependency name across the
+3080/4090 and 5090 profiles, so one package cannot silently drift between
+workstations.
+
+Result-sensitive model, language, numerical, and serialization packages are
+excluded from automatic version updates. Upgrade those packages through the
+model-migration workflow, then update `pyproject.toml`, `requirements.txt`,
+`requirements-test.txt`, and both hardware lock files together. CI rejects
+shared direct-pin drift and keeps security advisories visible through the
+dated dependency policy and `pip-audit` checks.
+
 ## Project Structure
 
 ```text
