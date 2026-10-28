@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-28T14:11:04.24016-04:00",
+  "status": "candidate_not_approved",
+  "base_commit": "93ef0947dd462d209ce020ac020bf799e0553960",
+  "capture_note": "Captured in the candidate worktree before commit. Production environment and tracked baseline were not replaced.",
+  "platform": {
+    "os": "Windows",
+    "python": "3.11.9",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti Laptop GPU",
+    "driver": "617.42"
+  },
+  "model": {
+    "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "semantic_threshold": 0.45
+  },
+  "annotation_sha256": "37fb11fe5b0f388467e460cab7807e71c7f40be717d01249c41792ec5b491bd3",
+  "candidate_libraries": {
+    "sentence-transformers": "5.6.1",
+    "torch": "2.13.0+cu130",
+    "transformers": "5.10.4"
+  },
+  "fp16": {
+    "baseline": "data/evaluation/model-baseline.json",
+    "runtime": {
+      "device": "cuda",
+      "precision": "fp16",
+      "encoding_batch_size": 128
+    },
+    "samples": 400,
+    "sample_digest": "dfc2c416b71dd6fc3448a5b1f3802498f8bfcdea9103d514cb602419628d7559",
+    "safe": true,
+    "metrics": {
+      "mean_absolute_score_drift": 0,
+      "max_absolute_score_drift": 0,
+      "concept_agreement": 1,
+      "threshold_decision_agreement": 1
+    }
+  },
+  "fp32": {
+    "baseline": "fresh old-stack capture with identical FP32 settings",
+    "runtime": {
+      "device": "cuda",
+      "precision": "fp32",
+      "encoding_batch_size": 128
+    },
+    "samples": 400,
+    "baseline_digest": "007d340e3ef0764d3455cc71f87287acd4069542879dfc6e34570ea91f574058",
+    "candidate_digest": "c2c48a0272995f4335dc7355db93a61732b3aa7428ad308f2a1504440ee84e7d",
+    "safe": true,
+    "metrics": {
+      "mean_absolute_score_drift": 3e-8,
+      "max_absolute_score_drift": 1.2e-7,
+      "concept_agreement": 1,
+      "threshold_decision_agreement": 1
+    }
+  },
+  "advisory_audit": {
+    "date": "2026-10-28",
+    "exceptions": 0,
+    "known_vulnerabilities": 0,
+    "audited_pins": {
+      "requirements.txt": 11,
+      "requirements-lock.txt": 56,
+      "requirements-lock-5090.txt": 56,
+      "requirements-test.txt": 10
+    },
+    "cuda_lookup": "torch==2.13.0+cu130 mapped to upstream torch==2.13.0 for advisory lookup",
+    "scope": "Pinned entries; Windows runtime closure. Not a Linux CUDA or complete developer dependency closure."
+  },
+  "rollout_blockers": [
+    "4090 and 5090 candidate snapshots and identical real-source benchmarks",
+    "Fresh candidate real-source benchmark on the 3080 (existing historical metrics are not new-candidate evidence)",
+    "Human evaluation and blind holdout minimums (0 labels at validation)",
+    "Historical filter audit evidence (176012 unknown source signatures at validation)"
+  ]
+}

@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -20,7 +21,7 @@ jobs:
           lfs: false
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python }}
           cache: pip
       - name: Install test dependencies
         run: |
@@ -31,8 +32,8 @@ jobs:
       - name: Dependency profile contract
         run: python dependency_profiles.py --check
       - name: Dependency vulnerability policy
-        if: runner.os == 'Linux'
-        run: python dependency_audit.py --requirements requirements.txt
+        if: runner.os == 'Linux' && matrix.python == '3.11'
+        run: python dependency_audit.py
       - name: Lint
         run: ruff check .
       - name: Test

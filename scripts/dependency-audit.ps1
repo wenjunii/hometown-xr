@@ -1,5 +1,5 @@
 param(
-    [string]$Requirements = "requirements.txt"
+    [string[]]$Requirements = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,7 +15,11 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Dependency profile validation failed with exit code $LASTEXITCODE."
     }
-    & $Python (Join-Path $Root "dependency_audit.py") --requirements $Requirements
+    $AuditArguments = @()
+    foreach ($Manifest in $Requirements) {
+        $AuditArguments += @("--requirements", $Manifest)
+    }
+    & $Python (Join-Path $Root "dependency_audit.py") @AuditArguments
     if ($LASTEXITCODE -ne 0) {
         throw "Dependency vulnerability policy failed with exit code $LASTEXITCODE."
     }

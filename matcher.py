@@ -232,6 +232,7 @@ class SemanticMatcher:
             device=device,
             revision=SEMANTIC_MODEL_REVISION,
             trust_remote_code=False,
+            model_kwargs={"use_safetensors": True, "attn_implementation": "eager"},
         )
         if self.precision == "fp16":
             self.model.half()

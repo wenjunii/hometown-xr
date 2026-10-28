@@ -48,7 +48,9 @@ def test_capture_uses_evaluation_ids_without_copying_text(tmp_path, monkeypatch)
 
     class FakeMatcher:
         def __init__(self, **_kwargs):
-            pass
+            self.device = "cpu"
+            self.precision = "fp32"
+            self.encoding_batch_size = 128
 
         def score_paragraphs(self, paragraphs):
             assert paragraphs == ["private evaluation text"]
@@ -69,6 +71,7 @@ def test_capture_uses_evaluation_ids_without_copying_text(tmp_path, monkeypatch)
     )
 
     assert result["sample_count"] == 1
+    assert result["runtime"] == {"device": "cpu", "precision": "fp32", "encoding_batch_size": 128}
     assert "private evaluation text" not in output.read_text(encoding="utf-8")
     assert result["samples"][0]["above_threshold"]
 

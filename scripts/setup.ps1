@@ -14,7 +14,7 @@ $VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
 function New-CompatibleVirtualEnvironment {
     $Candidates = @()
     if (Get-Command py -ErrorAction SilentlyContinue) {
-        foreach ($Version in @("3.10", "3.11", "3.12")) {
+        foreach ($Version in @("3.11", "3.12")) {
             $Candidates += @{
                 Command = "py"
                 Arguments = @("-$Version")
@@ -34,7 +34,7 @@ function New-CompatibleVirtualEnvironment {
         $Compatible = $false
         try {
             & $Command @PrefixArguments -c (
-                "import sys; raise SystemExit(0 if (3, 10) <= sys.version_info[:2] <= (3, 12) else 1)"
+                "import struct, sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] <= (3, 12) and struct.calcsize('P') == 8 else 1)"
             ) 2>$null
             $Compatible = $LASTEXITCODE -eq 0
         }
@@ -50,7 +50,7 @@ function New-CompatibleVirtualEnvironment {
         }
     }
 
-    throw "Unable to create .venv. Install 64-bit Python 3.10, 3.11, or 3.12 and try again."
+    throw "Unable to create .venv. Install 64-bit Python 3.11 or 3.12 and try again."
 }
 
 function Resolve-InstallProfile {
@@ -88,12 +88,13 @@ try {
         New-CompatibleVirtualEnvironment
     }
     & $VenvPython -c (
-        "import sys; raise SystemExit(0 if (3, 10) <= sys.version_info[:2] <= (3, 12) else 1)"
+        "import struct, sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] <= (3, 12) and struct.calcsize('P') == 8 else 1)"
     )
     if ($LASTEXITCODE -ne 0) {
         throw (
             "The existing .venv uses an unsupported Python. " +
-            "Recreate it with 64-bit Python 3.10, 3.11, or 3.12."
+            "Stop project processes, preserve .venv under a backup name, then rerun setup " +
+            "with 64-bit Python 3.11 or 3.12 installed. Nothing was deleted."
         )
     }
 
@@ -112,6 +113,11 @@ try {
         & $VenvPython -m pip install -r (Join-Path $Root "requirements-test.txt")
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    & $VenvPython -m pip check
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $ValidationProfile = if ($InstallProfile -eq "legacy") { "3080" } else { $InstallProfile }
+    & $VenvPython (Join-Path $Root "dependency_profiles.py") --check --installed --profile $ValidationProfile
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     $Archive = Join-Path $Root "data\checkpoints\progress.db.gz"
     $Database = Join-Path $Root "data\progress.db"

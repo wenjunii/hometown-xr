@@ -155,7 +155,7 @@ visible only after an entire source is successfully parsed and filtered.
 Requirements:
 
 - Windows 10 or 11
-- Python 3.10, 3.11, or 3.12
+- 64-bit Python 3.11 or 3.12 (setup prefers 3.11)
 - Git and Git LFS
 - NVIDIA driver compatible with the profile's PyTorch CUDA runtime
 - RTX 3080, RTX 4090, or RTX 5090 GPU
@@ -169,31 +169,40 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup.ps1 -Profile 3080
 ```
 
-Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The 3080 and
-4090 retain the exact CUDA 12.1 PyTorch environment in `requirements-lock.txt`.
-The Blackwell-generation 5090 uses `requirements-lock-5090.txt`, which pins
-stable PyTorch 2.12.1 with its CUDA 13.0 runtime. Add `-Tune` to run a quick
-local hardware benchmark or `-Dev` to install the test toolchain.
+Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The proposed
+Windows runtime uses PyTorch `2.13.0+cu130`, Sentence Transformers `5.6.1`, and
+Transformers `5.10.4` on all three GPUs. Both GPU lock files intentionally pin
+the same versions, including transitive Windows runtime dependencies. Add
+`-Tune` for a quick hardware benchmark or `-Dev` for the test toolchain.
 
-PyTorch and Transformers are excluded from automatic Dependabot version bumps.
-They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay
-separate, and the pinned sentence-transformer constrains compatible
-Transformers releases. CI tests these profile relationships on every change.
-The current model stack has upstream security advisories and is covered by the
-dated migration policy in `.github/dependency-policy.json`; it is not treated as
-silently clean. GitHub repeats the same advisories for mirrored dependency
-manifests, so the alert count is larger than the number of unique issues. CI
-runs `pip-audit` and permits only the exact reviewed vulnerability IDs in that
-policy. A new advisory, a vulnerable package outside the list, or policy expiry
-fails the build.
+**Migration candidate, not rollout approval:** the 3080 semantic comparison
+passed, but the human evaluation and identical real-source benchmarks on all
+three GPUs are still required. Keep this change in a separate worktree and
+environment until the existing migration gate passes. See
+[runtime validation and rollout](docs/security-runtime-validation.md).
+Do not upgrade the working environment just to clear GitHub alerts.
 
-Runtime exposure is narrowed to the configured sentence-transformer model at a
-pinned commit. Remote model code is disabled, the pinned snapshot uses
-Safetensors weights, and operators must not supply arbitrary models,
-checkpoints, tokenizers, or training configurations. These controls reduce
-exposure but do not make the vulnerable libraries clean. Complete the tracked
-model comparison, human evaluation minimums, and identical 3080, 4090, and 5090
-benchmarks before upgrading the shared CUDA and model locks.
+Python 3.10 is no longer supported because patched Pillow and filelock require
+Python 3.11 or newer. Setup refuses an incompatible existing environment and
+does not delete it. Stop project processes and preserve the old `.venv` under
+a backup name before an approved migration; never copy a virtual environment
+between PCs. Use an NVIDIA driver compatible with CUDA 13.0.
+
+Result-sensitive model packages remain excluded from automatic Dependabot
+updates. CI checks the profile contract on Python 3.11 and 3.12 on Windows and
+Linux. The advisory gate audits `requirements.txt`, both GPU locks, and
+`requirements-test.txt`, not just direct model dependencies. The policy in
+`.github/dependency-policy.json` has **no vulnerability exceptions**. A new
+advisory or missing/skipped package coverage fails the build. Any future
+exception must identify exact advisories and have an enforced review deadline;
+an exception-free policy does not need an arbitrary expiry date.
+
+The MiniLM model revision, concept anchors, thresholds, and raw-story extraction
+are unchanged. Remote model code is disabled, Safetensors weights are required,
+and eager attention preserves the previous scoring path. Operators must not
+supply arbitrary models, checkpoints, tokenizers, or training configurations.
+No generative LLM is introduced. GitHub alerts on the default branch remain
+open until the validated changes are merged and GitHub rescans them.
 
 Verify the environment and checkpoint:
 
@@ -372,7 +381,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
 | `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
-| `.\scripts\dependency-audit.ps1` | Validate profile pins and the dated vulnerability policy |
+| `.\scripts\dependency-audit.ps1` | Validate profile pins and audit all four pinned manifests |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 
@@ -1038,8 +1047,22 @@ Run the dependency contract and advisory gate with:
 .\scripts\dependency-audit.ps1
 ```
 
-The exception review date is a deadline for migration work, not a claim that the
-listed advisories are harmless.
+The default audit checks every pinned entry in both Windows runtime locks,
+including dependencies such as Pillow, filelock, and urllib3. CUDA wheel
+versions are checked against their upstream Torch release (for example,
+`2.13.0+cu130` against `2.13.0`); this is an advisory lookup, not a GPU install
+or compatibility test. It does not resolve unpinned Linux-only CUDA packages
+or transitive developer-tool dependencies. Use `python -m pip_audit` as an
+additional installed-environment check. No audit guarantees absence of unknown
+vulnerabilities. To select specific manifests:
+
+```powershell
+.\scripts\dependency-audit.ps1 -Requirements requirements-lock.txt,requirements-lock-5090.txt
+```
+
+If a future advisory needs a temporary exception, its review date is a deadline,
+not a claim that the advisory is harmless. Missing audit coverage is never
+silently allowed.
 
 ## Evaluation
 
@@ -1185,7 +1208,7 @@ metrics.py              funnel, failures, resources, rates, history, and ETA
 failure_analysis.py     stable operational failure categories
 benchmark.py            synthetic precision and isolated real-source benchmarks
 dependency_profiles.py  cross-profile lock and installed-package contract
-dependency_audit.py     pip-audit policy enforcement with an expiry date
+dependency_audit.py     all-manifest vulnerability audit with fail-closed coverage
 model_regression.py     semantic score/concept/threshold snapshots and comparison
 model_migration.py      labels/audit/benchmark/candidate approval gate
 evidence_bundle.py      credential-free cross-PC GPU evidence export/import
