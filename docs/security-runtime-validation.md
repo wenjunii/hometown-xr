@@ -34,6 +34,9 @@ On the RTX 3080 Ti Laptop GPU with driver 617.42:
   tracked baseline and a fresh capture from the original environment.
 - FP32: all 400 concepts and threshold decisions match a fresh FP32 old-stack
   capture. Maximum score drift is 0.00000012 (limit 0.005).
+- Real-source benchmark: five `CC-MAIN-2014-15` files completed with seven
+  workers in 142.422 seconds, with zero failures or process-pool restarts.
+  Both historical matches were reproduced; none were added or removed.
 - All four manifests pass the live advisory audit with no exceptions: 11 direct
   runtime pins, 56 pins in each GPU lock, and 10 direct test pins.
 - `pip check` passes. Unit tests, Ruff, and PowerShell parsing are checked
@@ -57,23 +60,33 @@ are audited; their full resolved closure is not promised by the lock audit.
 
 Keep the candidate in a separate checkout with its own virtual environment.
 Install Python 3.11 or 3.12 and a compatible NVIDIA driver, then run these
-commands from that checkout, substituting the actual profile:
+commands from that checkout, substituting the actual profile. While the PR
+is a draft, use `codex/security-runtime-refresh`, not `main`:
 
 ```powershell
 git lfs pull
 .\scripts\setup.ps1 -Profile 4090 -Dev
-.\scripts\dependency-audit.ps1
-.\scripts\model-validation.ps1 -Action capture -Profile 4090
-.\scripts\model-validation.ps1 -Action compare -Profile 4090
-.\scripts\benchmark.ps1 -Profile 4090 -Real -Crawl CC-MAIN-2014-15 -Sources 5
+.\scripts\validate-runtime.ps1 -Profile 4090
 ```
 
-First record the original PC's precision and batch settings. Preserve matching
-settings in the candidate's ignored `data/hardware-profile.local.json` for an
-apples-to-apples comparison. Do not copy credentials, caches, or the old virtual
-environment. The existing tracked baseline is FP16 evidence; a deliberate
+Use `-Profile 5090` on that PC, and run only one workstation at a time. The
+validation helper checks the actual GPU, installed pins, and live advisories,
+then captures/compares a model snapshot, benchmarks the same five sources with
+seven workers, and exports and validates a credential-free evidence bundle. It stops on a
+failed check or historical output mismatch. FP16 is explicit for validation
+because the tracked baseline is FP16; local tuning files are not modified.
+
+Do not copy credentials, caches, or the old virtual environment. A deliberate
 precision change requires separate review, not a replacement baseline just to
-make a check green. Run only one workstation at a time.
+make a check green. Lower-level `model-validation.ps1 -Action capture` and
+`benchmark.ps1 -Real` also accept `-Precision fp16` or `-Precision fp32`.
+Snapshots and workload evidence preserve the selected precision; workload
+reports list the exact source files for cross-PC comparison.
+
+The exported file is `data/evidence-outbox/profile-evidence-4090.json` (or
+`5090.json` with the same prefix). Bring that JSON back for validation and
+import; do not sync the virtual environment. Compare its source list and
+output digest with the 3080 evidence before any migration approval.
 
 Repeat the real-source benchmark using the same crawl and sources on all three
 GPUs. Historical 3080 metrics do not establish performance or output identity

@@ -66,6 +66,10 @@ def _safe_model_snapshot(payload: dict) -> dict:
         "profile": payload.get("profile"),
         "model": payload.get("model") or {},
         "libraries": payload.get("libraries") or {},
+        "runtime": {
+            key: value for key, value in (payload.get("runtime") or {}).items()
+            if key in {"device", "precision", "encoding_batch_size"}
+        },
         "samples": samples,
         "sample_count": len(samples),
         "sample_digest": payload.get("sample_digest"),
@@ -163,6 +167,7 @@ def export_evidence_bundle(
                 "profile",
                 "crawl_id",
                 "sources_per_trial",
+                "source_files",
                 "historical_state_changed",
                 "cache_enabled",
                 "trials",
@@ -170,6 +175,12 @@ def export_evidence_bundle(
                 "recommended_workers",
                 "warning",
             )
+        }
+        benchmark["runtime"] = {
+            key: value for key, value in (raw.get("runtime") or {}).items()
+            if key in {
+                "precision", "candidate_batch_size", "inference_batch_size", "encoding_batch_size",
+            }
         }
     if snapshot is None and benchmark is None:
         raise ValueError("no local model snapshot or workload benchmark is available")

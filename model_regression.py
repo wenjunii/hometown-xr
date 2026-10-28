@@ -59,15 +59,18 @@ def capture_model_snapshot(
     output_path: str | Path = MODEL_BASELINE_PATH,
     profile_name: str = "auto",
     limit: int | None = None,
+    precision: str | None = None,
 ) -> dict:
     if limit is not None and limit <= 0:
         raise ValueError("limit must be positive")
+    if precision not in (None, "fp32", "fp16"):
+        raise ValueError("precision must be fp32 or fp16")
     annotation = Path(annotation_path)
     rows = _annotation_rows(annotation, limit)
     profile = get_hardware_profile(profile_name)
     matcher = SemanticMatcher(
         encoding_batch_size=profile.encoding_batch_size,
-        precision=profile.precision,
+        precision=precision or profile.precision,
     )
     scores = matcher.score_paragraphs([str(row["paragraph"]) for row in rows])
     samples = [

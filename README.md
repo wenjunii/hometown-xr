@@ -382,6 +382,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
 | `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
 | `.\scripts\dependency-audit.ps1` | Validate profile pins and audit all four pinned manifests |
+| `.\scripts\validate-runtime.ps1 -Profile 3080` | Validate the candidate on the actual GPU and export portable evidence without changing tuning |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 

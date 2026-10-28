@@ -916,6 +916,7 @@ def main() -> None:
     benchmark_parser.add_argument("--sources", type=int, default=5)
     benchmark_parser.add_argument("--worker-count", type=int, action="append")
     benchmark_parser.add_argument("--apply", action="store_true")
+    benchmark_parser.add_argument("--precision", choices=["fp32", "fp16"])
 
     evidence_parser = subparsers.add_parser(
         "evidence",
@@ -950,6 +951,7 @@ def main() -> None:
         "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
     )
     model_capture.add_argument("--limit", type=int)
+    model_capture.add_argument("--precision", choices=["fp32", "fp16"])
     model_compare = model_subparsers.add_parser("compare")
     model_compare.add_argument("--baseline", default=str(MODEL_BASELINE_PATH))
     model_compare.add_argument("--candidate", required=True)
@@ -1386,6 +1388,8 @@ def main() -> None:
                 parser.error("--worker-count must be positive")
             if args.apply and not args.real:
                 parser.error("--apply is only valid with --real")
+            if args.precision and not args.real:
+                parser.error("--precision is only valid with --real")
             result = (
                 run_workload_benchmark(
                     args.profile,
@@ -1393,6 +1397,7 @@ def main() -> None:
                     source_count=args.sources,
                     worker_counts=args.worker_count,
                     write=args.apply,
+                    precision=args.precision,
                 )
                 if args.real
                 else run_benchmark(
@@ -1437,6 +1442,7 @@ def main() -> None:
                 "output_path": args.output,
                 "profile_name": args.profile,
                 "limit": args.limit,
+                "precision": args.precision,
             }
             if args.annotations:
                 keyword_arguments["annotation_path"] = args.annotations

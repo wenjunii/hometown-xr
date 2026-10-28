@@ -15,6 +15,9 @@ param(
 
     [int[]]$WorkerCount,
 
+    [ValidateSet("auto", "fp32", "fp16")]
+    [string]$Precision = "auto",
+
     [switch]$Apply
 )
 
@@ -34,6 +37,9 @@ if ($NoWrite) {
 }
 if ($Real) {
     $Arguments += @("--real", "--crawl", $Crawl, "--sources", $Sources)
+    if ($Precision -ne "auto") {
+        $Arguments += @("--precision", $Precision)
+    }
     foreach ($Count in $WorkerCount) {
         if ($Count -le 0) {
             throw "WorkerCount values must be positive."
@@ -46,6 +52,9 @@ if ($Real) {
 }
 elseif ($Apply) {
     throw "Apply is only valid with -Real."
+}
+elseif ($Precision -ne "auto") {
+    throw "Precision is only valid with -Real."
 }
 
 $ExitCode = 1

@@ -1,6 +1,9 @@
 import json
 import subprocess
 import sys
+from types import SimpleNamespace
+
+import pytest
 
 import model_regression
 from model_regression import compare_model_snapshots
@@ -48,8 +51,9 @@ def test_capture_uses_evaluation_ids_without_copying_text(tmp_path, monkeypatch)
 
     class FakeMatcher:
         def __init__(self, **_kwargs):
+            assert _kwargs["precision"] == "fp16"
             self.device = "cpu"
-            self.precision = "fp32"
+            self.precision = "fp16"
             self.encoding_batch_size = 128
 
         def score_paragraphs(self, paragraphs):
@@ -57,6 +61,9 @@ def test_capture_uses_evaluation_ids_without_copying_text(tmp_path, monkeypatch)
             return [(0.75, "home memory")]
 
     monkeypatch.setattr(model_regression, "SemanticMatcher", FakeMatcher)
+    monkeypatch.setattr(model_regression, "get_hardware_profile", lambda name: SimpleNamespace(
+        name=name, encoding_batch_size=128, precision="fp32",
+    ))
     monkeypatch.setattr(
         model_regression,
         "_library_versions",
@@ -68,12 +75,18 @@ def test_capture_uses_evaluation_ids_without_copying_text(tmp_path, monkeypatch)
         annotations,
         output,
         profile_name="3080",
+        precision="fp16",
     )
 
     assert result["sample_count"] == 1
-    assert result["runtime"] == {"device": "cpu", "precision": "fp32", "encoding_batch_size": 128}
+    assert result["runtime"] == {"device": "cpu", "precision": "fp16", "encoding_batch_size": 128}
     assert "private evaluation text" not in output.read_text(encoding="utf-8")
     assert result["samples"][0]["above_threshold"]
+
+
+def test_capture_rejects_invalid_precision_before_loading_model():
+    with pytest.raises(ValueError, match="precision"):
+        model_regression.capture_model_snapshot(precision="invalid")
 
 
 def test_compare_command_fails_when_regression_limits_are_exceeded(tmp_path):

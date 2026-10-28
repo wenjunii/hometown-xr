@@ -28,6 +28,10 @@ def _candidate(profile="3080"):
         "profile": profile,
         "model": {"name": "model", "revision": "revision", "semantic_threshold": 0.45},
         "libraries": {"torch": "1"},
+        "runtime": {
+            "device": "cuda", "precision": "fp16", "encoding_batch_size": 128,
+            "host": "private-host",
+        },
         "annotation_path": "C:/Users/private/annotations.jsonl",
         "samples": samples,
         "sample_count": 1,
@@ -50,6 +54,10 @@ def test_portable_evidence_strips_paths_validates_digest_and_imports(tmp_path, m
                 "mode": "isolated_real_sources",
                 "profile": "3080",
                 "trial_outputs_agree": True,
+                "source_files": ["one.wet.gz", "two.wet.gz"],
+                "runtime": {
+                    "precision": "fp16", "encoding_batch_size": 128, "host": "private-host",
+                },
                 "trials": [
                     {
                         "workers": 7,
@@ -74,6 +82,10 @@ def test_portable_evidence_strips_paths_validates_digest_and_imports(tmp_path, m
     assert result["credentials_included"] is False
     assert "annotation_path" not in raw
     assert "C:/Users/private" not in raw
+    assert "private-host" not in raw
+    portable = validate_evidence_bundle(outbox)
+    assert portable["model_snapshot"]["runtime"]["precision"] == "fp16"
+    assert portable["workload_benchmark"]["source_files"] == ["one.wet.gz", "two.wet.gz"]
     assert validate_evidence_bundle(outbox)["profile"] == "3080"
 
     preview = import_evidence_bundle(outbox)
