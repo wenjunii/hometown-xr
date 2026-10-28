@@ -77,6 +77,8 @@ treated as proof of equivalent historical output.
 | CC-MAIN-2026-12 | 1 | 0 | 0 | No: below five-source minimum |
 
 The immutable reports are archived under `data/checkpoints/audit-evidence/`.
+Git preserves their raw bytes so Windows/Linux line endings cannot change
+their audit-evidence hashes during sync.
 This is sample-based evidence, not a full replay of all 176012 completed
 sources. No production output or historical signatures were changed. The
 changed source sets require review, and the one-source crawl cannot satisfy
