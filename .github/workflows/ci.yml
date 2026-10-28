@@ -77,7 +77,7 @@ jobs:
               throw "PowerShell parse failed: $($_.FullName)"
             }
           }
-      # Keep the required Linux job red for unapproved vulnerabilities, but
+      # Keep the Linux job red for unapproved vulnerabilities, but
       # still run its unit tests and smoke checks before reporting the blocker.
       - name: Dependency vulnerability policy
         if: runner.os == 'Linux'

@@ -84,6 +84,7 @@ def test_shared_pin_validation_rejects_manifest_drift():
     {"exception_versions": {"torch": ["*"]}},
     {"temporarily_allowed_packages": ["torch"]},
     {"temporarily_allowed_vulnerabilities": {"pillow": ["EXACT-ID"]}},
+    {"temporarily_allowed_vulnerabilities": {"setuptools": ["EXACT-ID"]}},
     {"temporarily_allowed_vulnerabilities": {"torch": ["*"]}},
     {"status": "no_exceptions"},
     {"schema_version": 2},
@@ -116,6 +117,8 @@ def test_5090_setuptools_constraint_is_explicit_and_not_excepted():
     legacy, _ = read_requirements("requirements-lock.txt")
     blackwell, _ = read_requirements("requirements-lock-5090.txt")
     assert legacy["setuptools"] == "84.2.1"
+    assert read_project_requirements("pyproject.toml")["setuptools"] == "84.2.1"
+    assert read_requirements("requirements.txt")[0]["setuptools"] == "84.2.1"
     assert blackwell["setuptools"] == "81.0.0"
     policy = json.loads(Path(".github/dependency-policy.json").read_text(encoding="utf-8"))
     assert "setuptools" not in policy["temporarily_allowed_vulnerabilities"]

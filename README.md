@@ -190,7 +190,7 @@ Setup refuses an incompatible existing environment before upgrading anything.
 Stop project processes and preserve an older `.venv` under an unused backup
 name before running setup. Do not copy a virtual environment between PCs.
 The setup script checks package consistency and every installed lock pin.
-The 3080/4090 lock and test environment use patched setuptools 84.2.1.
+Direct installs, the 3080/4090 lock, and tests use patched setuptools 84.2.1.
 
 PyTorch and Transformers are excluded from automatic Dependabot version bumps.
 They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay

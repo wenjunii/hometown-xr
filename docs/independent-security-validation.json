@@ -8,7 +8,8 @@
   "credentials_published": false,
   "model_migration_approved": false,
   "tests": {
-    "pytest_passed": 243,
+    "pytest_passed": 244,
+    "local_repeat_note": "One repetition hit WinError 5 in unchanged story telemetry atomic replacement; the isolated retry and full 244-test rerun passed.",
     "ruff": "passed",
     "compileall": "passed",
     "powershell_parse": "passed",
@@ -59,7 +60,7 @@
     "setuptools_5090_exception": "explicitly not authorized",
     "manifests": {
       "requirements.txt": {
-        "audited_pins": 16,
+        "audited_pins": 17,
         "valid": true,
         "security_clean": false,
         "vulnerable_packages": [
@@ -312,9 +313,9 @@
     "files": {
       "requirements-lock.txt": "f6f161435c8cdf0cb090b7ff2124f5c3c8c2f88fcfa2c2c84a09a4f7fa91319e",
       "requirements-lock-5090.txt": "97054a6b2db8cbf59b7d564f8fc77dd77b7045102ca5a15465ee3efd2eea912f",
-      "requirements.txt": "63da4450216bb1632a7d56372bef98bc2ecdb7e4924c153cc30580aea1c5750c",
+      "requirements.txt": "bde25d57ce2c41e66fe490ca2d46058cfa7be777c9ba648083f80fd7e951304a",
       "requirements-test.txt": "ba7e06b1edeaf41ec3babc1aa52396de76908660653de2435ea016c00edaad81",
-      "pyproject.toml": "1f4541d903a5dde6c6f9ae188095d7e64167d45abce176caf5f32c7d48d35acf",
+      "pyproject.toml": "685eb17501edae84a42ecb270de6662fa7651f667327e852024fa0b409eaf1a9",
       "matcher.py": "07b7c1ea02412126c8cb360dc819fc7440cedd6ebbce53dd24bf0c9ce135f803",
       "config.py": "ffc41352ea5555777593f72cfc0f8b663be574e205be74f4cd8e4b0594c7c20b",
       "data/evaluation/model-baseline.json": "75980ef049c3c37506856a327a67f71f94bd4c06e5ee52368381c027857e5c0f",

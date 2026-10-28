@@ -15,7 +15,7 @@ an additional exception. Do not bypass it to merge this proposal.
 | urllib3 | 2.7.0 | 2.8.0 |
 
 These pins are shared by direct installs, both GPU locks, and tests.
-The 3080/4090 lock also explicitly pins patched setuptools 84.2.1, previously
+Direct installs, tests, and the 3080/4090 lock also pin patched setuptools 84.2.1, previously
 an unpinned runtime dependency of fasttext-wheel. Model libraries, weights,
 keywords, thresholds, parser logic, and existing extracted results are unchanged.
 Python 3.11 is required for the patched 3080/4090 environment. Setup preserves
@@ -75,13 +75,17 @@ or merge around the security gate.
 See [machine-readable evidence](independent-security-validation.json).
 
 - Isolated Python 3.11.9 environment; the production checkout and its environment were untouched.
-- 243 tests passed, including dependency round trips, exact version bounds, expiry, missing audit coverage, and the early 5090 setup stop.
+- 244 tests passed, including dependency round trips, exact version bounds, expiry, missing audit coverage, and the early 5090 setup stop.
 - Lint, compile, PowerShell parsing, pip consistency, and all 43 installed GPU-lock pins passed.
 - All 400 FP16 model samples matched the tracked baseline exactly: zero score drift, identical concepts and threshold decisions.
 - Five CC-MAIN-2014-15 sources, seven configured workers, 244,996 records: five completed, zero failures, two matches retained, none added or removed.
 - Real-source run: 159.359 seconds, cache disabled, output digest `59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c`.
-- Audited 16 direct pins, 43 pins in each GPU lock, and 16 test pins. The test manifest is clean; direct/3080 pins pass only under the proposed model exception; the 5090 lock fails on setuptools.
+- Audited 17 direct pins, 43 pins in each GPU lock, and 16 test pins. The test manifest is clean; direct/3080 pins pass only under the proposed model exception; the 5090 lock fails on setuptools.
 - All 68 installed packages were additionally audited; only the three unchanged model libraries had findings.
+
+One local repeat hit Windows WinError 5 in unchanged story telemetry's atomic
+file replacement. The isolated retry and full 244-test rerun passed; this
+intermittent filesystem issue was not concealed by changing the unrelated code.
 
 This is a bounded regression check, not full-corpus proof. No real 4090 or
 5090 GPU validation is claimed. Human evaluation, full migration validation,

@@ -21,6 +21,7 @@ dependencies = [
     "pyarrow==25.0.0",
     "requests==2.34.2",
     "sentence-transformers==2.7.0",
+    "setuptools==84.2.1",
     "torch==2.1.0",
     "tqdm==4.68.4",
     "transformers==4.40.2",

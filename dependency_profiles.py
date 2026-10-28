@@ -54,6 +54,11 @@ MIGRATION_GATED_DEPENDENCIES = frozenset(
     }
 )
 
+EXPECTED_SETUPTOOLS_PINS = {
+    "project": "84.2.1", "runtime": "84.2.1", "legacy": "84.2.1",
+    "5090": "81.0.0", "test": "84.2.1",
+}
+
 
 def _normalized_name(value: str) -> str:
     return value.strip().lower().replace("_", "-")
@@ -110,6 +115,10 @@ def shared_pin_errors(
         if package == "torch":
             continue
         for scope, pins in (("legacy", legacy), ("5090", blackwell)):
+            # The 5090's exact, vulnerable toolchain pin is checked separately;
+            # it remains an audit failure, not a security exception.
+            if scope == "5090" and package == "setuptools":
+                continue
             if pins.get(package) != expected:
                 errors.append(
                     f"{scope} lock and pyproject.toml disagree on {package}"
@@ -278,6 +287,9 @@ def validate_dependency_profiles(
                 )
 
     errors.extend(shared_pin_errors(project, runtime, legacy, blackwell, test))
+    for scope, expected in EXPECTED_SETUPTOOLS_PINS.items():
+        if sets[scope].get("setuptools") != expected:
+            errors.append(f"{scope} requires setuptools=={expected}")
     if not any(option.endswith("/cu121") for option in legacy_options):
         errors.append("requirements-lock.txt does not select the CUDA 12.1 index")
     if not any(option.endswith("/cu130") for option in blackwell_options):
