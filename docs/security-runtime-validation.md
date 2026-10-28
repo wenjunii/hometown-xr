@@ -37,6 +37,10 @@ On the RTX 3080 Ti Laptop GPU with driver 617.42:
 - Real-source benchmark: five `CC-MAIN-2014-15` files completed with seven
   workers in 142.422 seconds, with zero failures or process-pool restarts.
   Both historical matches were reproduced; none were added or removed.
+  The end-to-end validation helper repeated this in 123.906 seconds with the
+  identical output digest. These timings are two measurements, not a speedup
+  claim against the old runtime. Portable evidence is tracked in
+  `data/checkpoints/profile-evidence/3080.json`.
 - All four manifests pass the live advisory audit with no exceptions: 11 direct
   runtime pins, 56 pins in each GPU lock, and 10 direct test pins.
 - `pip check` passes. Unit tests, Ruff, and PowerShell parsing are checked
@@ -56,6 +60,37 @@ review skipped entries and use the manifest audit for Torch coverage.
 The Windows locks do not pin Linux-only CUDA packages. Direct developer pins
 are audited; their full resolved closure is not promised by the lock audit.
 
+## Historical Audit
+
+The isolated FP16 audit covered 26 unique historical source files, processing
+1,152,555 records without failures. All seven historical matches were retained;
+five additional matches appeared in two sources. These differences are not
+treated as proof of equivalent historical output.
+
+| Crawl | Sources | Historical matches | Candidate matches | Adoption eligible |
+| --- | --- | --- | --- | --- |
+| CC-MAIN-2013-20 | 5 | 1 | 1 | Yes |
+| CC-MAIN-2013-48 | 5 | 1 | 1 | Yes |
+| CC-MAIN-2014-10 | 5 | 2 | 3 | No: changed match set |
+| CC-MAIN-2014-15 | 5 | 2 | 2 | Yes |
+| CC-MAIN-2014-23 | 5 | 1 | 5 | No: changed match set |
+| CC-MAIN-2026-12 | 1 | 0 | 0 | No: below five-source minimum |
+
+The immutable reports are archived under `data/checkpoints/audit-evidence/`.
+This is sample-based evidence, not a full replay of all 176012 completed
+sources. No production output or historical signatures were changed. The
+changed source sets require review, and the one-source crawl cannot satisfy
+the current minimum; neither gate was weakened.
+
+An isolated control replay of the two changed sources used the original
+Python 3.10 runtime, Torch 2.1.0+cu121, Sentence Transformers 2.7.0, Transformers
+4.40.2, and legacy model loader with the current filter contract and FP16.
+It reproduced the candidate's eight normalized matches exactly, including all
+five additions. Thus the dependency update did not introduce these differences
+in the tested sources. This does not resolve why the older historical output
+differs or authorize rewriting it. See the
+[old-runtime control comparison](security-runtime-control-3080.json).
+
 ## Finish Validation
 
 Keep the candidate in a separate checkout with its own virtual environment.
@@ -72,8 +107,8 @@ git lfs pull
 Use `-Profile 5090` on that PC, and run only one workstation at a time. The
 validation helper checks the actual GPU, installed pins, and live advisories,
 then captures/compares a model snapshot, benchmarks the same five sources with
-seven workers, and exports and validates a credential-free evidence bundle. It stops on a
-failed check or historical output mismatch. FP16 is explicit for validation
+seven workers, and exports and validates a credential-free evidence bundle.
+It stops on a failed check or historical output mismatch. FP16 is explicit for validation
 because the tracked baseline is FP16; local tuning files are not modified.
 
 Do not copy credentials, caches, or the old virtual environment. A deliberate
@@ -84,14 +119,14 @@ Snapshots and workload evidence preserve the selected precision; workload
 reports list the exact source files for cross-PC comparison.
 
 The exported file is `data/evidence-outbox/profile-evidence-4090.json` (or
-`5090.json` with the same prefix). Bring that JSON back for validation and
+`profile-evidence-5090.json` in that folder). Bring that JSON back for validation and
 import; do not sync the virtual environment. Compare its source list and
 output digest with the 3080 evidence before any migration approval.
 
-Repeat the real-source benchmark using the same crawl and sources on all three
-GPUs. Historical 3080 metrics do not establish performance or output identity
-for this new candidate. Finish the guided human-label and blind-holdout
-campaign, and verify historical filter signatures using the isolated audit
+Run the same real-source benchmark on the 4090 and 5090 and compare it with
+the fresh 3080 evidence. Historical metrics do not establish performance or
+output identity for this new candidate. Finish the guided human-label and
+blind-holdout campaign, and verify historical filter signatures using the isolated audit
 workflow in the main README. Then check the existing final gate:
 
 ```powershell
@@ -103,6 +138,12 @@ labels, 176012 unknown historical source signatures, and no 4090/5090 candidate
 snapshots or matching real-source measurements. The draft PR must not be
 merged/promoted until the required evidence is reviewed. No approval artifact
 has been written.
+
+The guided campaign has 100 queued judgments, including the blind holdout.
+Start or resume it with `.\scripts\evaluation.ps1 -Action serve -OpenBrowser` in
+the candidate environment. Human judgments are never synthesized by the
+validation helper. The helper does not adopt audit signatures, replace
+historical output, or approve the migration.
 
 ## Dependency PRs
 

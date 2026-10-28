@@ -176,8 +176,9 @@ the same versions, including transitive Windows runtime dependencies. Add
 `-Tune` for a quick hardware benchmark or `-Dev` for the test toolchain.
 
 **Migration candidate, not rollout approval:** the 3080 semantic comparison
-passed, but the human evaluation and identical real-source benchmarks on all
-three GPUs are still required. Keep this change in a separate worktree and
+and repeated real-source benchmark passed. Human evaluation, historical-audit
+resolution, and matching 4090/5090 evidence are still required. Keep this change
+in a separate worktree and
 environment until the existing migration gate passes. See
 [runtime validation and rollout](docs/security-runtime-validation.md).
 Do not upgrade the working environment just to clear GitHub alerts.
