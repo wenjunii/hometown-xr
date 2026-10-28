@@ -155,7 +155,7 @@ visible only after an entire source is successfully parsed and filtered.
 Requirements:
 
 - Windows 10 or 11
-- Python 3.10, 3.11, or 3.12
+- 64-bit Python 3.11 for the 3080/4090; Python 3.11 or 3.12 for the 5090
 - Git and Git LFS
 - NVIDIA driver compatible with the profile's PyTorch CUDA runtime
 - RTX 3080, RTX 4090, or RTX 5090 GPU
@@ -170,10 +170,27 @@ Set-ExecutionPolicy -Scope Process Bypass
 ```
 
 Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The 3080 and
-4090 retain the exact CUDA 12.1 PyTorch environment in `requirements-lock.txt`.
+4090 retain PyTorch 2.1.0 with CUDA 12.1 in `requirements-lock.txt`.
 The Blackwell-generation 5090 uses `requirements-lock-5090.txt`, which pins
 stable PyTorch 2.12.1 with its CUDA 13.0 runtime. Add `-Tune` to run a quick
 local hardware benchmark or `-Dev` to install the test toolchain.
+
+**5090 security blocker:** its retained Torch 2.12.1 requires setuptools below
+82, which has two known advisories fixed only in newer releases. The 5090 lock
+now explicitly records this previously unpinned dependency as setuptools 81.0.0.
+Its security check intentionally fails, and setup stops before changing that
+PC's environment. No setuptools exception is authorized. Resume 5090 setup
+only after the coordinated model migration in PR #45 resolves the constraint.
+
+The independent security patch pins certifi 2026.10.23, filelock 4.2.1,
+fsspec 2026.6.0, Pillow 13.0.0, and urllib3 2.8.0 in both GPU locks,
+direct installs, and tests. Filelock and Pillow require Python 3.11 or newer;
+the retained CUDA 12.1 Torch wheel requires Python 3.11, not 3.12.
+Setup refuses an incompatible existing environment before upgrading anything.
+Stop project processes and preserve an older `.venv` under an unused backup
+name before running setup. Do not copy a virtual environment between PCs.
+The setup script checks package consistency and every installed lock pin.
+The 3080/4090 lock and test environment use patched setuptools 84.2.1.
 
 PyTorch and Transformers are excluded from automatic Dependabot version bumps.
 They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay
@@ -183,9 +200,14 @@ The current model stack has upstream security advisories and is covered by the
 dated migration policy in `.github/dependency-policy.json`; it is not treated as
 silently clean. GitHub repeats the same advisories for mirrored dependency
 manifests, so the alert count is larger than the number of unique issues. CI
-runs `pip-audit` and permits only the exact reviewed vulnerability IDs in that
-policy. A new advisory, a vulnerable package outside the list, or policy expiry
-fails the build.
+runs `pip-audit` on the direct, both GPU, and test manifests, including
+transitive pins. CUDA suffixes are normalized only for advisory lookup;
+skipped or missing audit coverage fails. The proposed model-only exception
+requires owner review and expires after **2026-11-11 (UTC)**. It permits only
+the listed IDs on sentence-transformers 2.7.0, Transformers 4.40.2, and Torch
+2.1.0/2.12.1. A new advisory, a different version, a vulnerable package outside
+the list, or expiry fails the build. A passing policy check is not a clean
+security audit: critical/high model vulnerabilities remain.
 
 Runtime exposure is narrowed to the configured sentence-transformer model at a
 pinned commit. Remote model code is disabled, the pinned snapshot uses
@@ -194,6 +216,10 @@ checkpoints, tokenizers, or training configurations. These controls reduce
 exposure but do not make the vulnerable libraries clean. Complete the tracked
 model comparison, human evaluation minimums, and identical 3080, 4090, and 5090
 benchmarks before upgrading the shared CUDA and model locks.
+Independent non-model fixes can be reviewed separately; they do not approve
+the model migration or waive those validation requirements. See
+[independent security fixes](docs/independent-security-fixes.md) for evidence,
+remaining risks, and the separate [model migration PR #45](https://github.com/wenjunii/hometown-xr/pull/45).
 
 Verify the environment and checkpoint:
 

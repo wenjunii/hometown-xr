@@ -1,20 +1,29 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "status": "migration_required",
-  "review_by": "2026-08-31",
+  "reviewed_on": "2026-10-28",
+  "review_by": "2026-11-11",
+  "owner": "wenjunii",
+  "remediation": "https://github.com/wenjunii/hometown-xr/pull/45",
+  "exception_versions": {
+    "sentence-transformers": ["2.7.0"],
+    "torch": ["2.1.0", "2.12.1"],
+    "transformers": ["4.40.2"]
+  },
   "temporarily_allowed_vulnerabilities": {
+    "sentence-transformers": ["PYSEC-2026-4164"],
     "torch": [
-      "CVE-2025-2148",
-      "CVE-2025-2149",
-      "CVE-2025-2998",
-      "CVE-2025-2999",
-      "CVE-2025-3001",
       "PYSEC-2024-250",
       "PYSEC-2024-251",
       "PYSEC-2024-252",
       "PYSEC-2024-259",
+      "PYSEC-2025-189",
+      "PYSEC-2025-190",
       "PYSEC-2025-191",
+      "PYSEC-2025-192",
+      "PYSEC-2025-193",
       "PYSEC-2025-194",
+      "PYSEC-2025-195",
       "PYSEC-2025-198",
       "PYSEC-2025-203",
       "PYSEC-2025-204",
@@ -53,10 +62,11 @@
       "PYSEC-2026-1988",
       "PYSEC-2026-2288",
       "PYSEC-2026-2289",
-      "PYSEC-2026-2290"
+      "PYSEC-2026-2290",
+      "PYSEC-2026-3929"
     ]
   },
-  "reason": "The model stack and CUDA profiles require a coordinated, regression-tested upgrade.",
+  "reason": "Proposed short-lived risk acceptance for owner review, not a vulnerability fix. Ship independent security patches while PR #45 completes model migration validation. Critical/high model advisories remain; controls reduce exposure but do not prove these versions safe. No automatic renewal.",
   "operational_controls": [
     "Load only the configured sentence-transformer model at its pinned commit revision.",
     "Keep trust_remote_code disabled and use the pinned model's safetensors weights.",
@@ -66,6 +76,7 @@
     "Capture and compare the tracked model-regression baseline.",
     "Meet the human-labeled evaluation and holdout minimums.",
     "Run identical real-source benchmarks on the 3080, 4090, and 5090.",
-    "Confirm output digests and filter decisions before changing the shared locks."
+    "Confirm output digests and filter decisions before changing model-stack pins.",
+    "Remove all temporary exceptions when the validated model migration is merged."
   ]
 }

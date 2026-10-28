@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "validated_at": "2026-10-28",
+  "base_commit": "93ef0947dd462d209ce020ac020bf799e0553960",
+  "source_state": "Working tree changes in the accompanying PR; not the unmodified base commit.",
+  "platform": "Windows, Python 3.11.9, NVIDIA GeForce RTX 3080 Ti Laptop GPU",
+  "production_checkout_modified": false,
+  "credentials_published": false,
+  "model_migration_approved": false,
+  "tests": {
+    "pytest_passed": 243,
+    "ruff": "passed",
+    "compileall": "passed",
+    "powershell_parse": "passed",
+    "pip_check": "passed"
+  },
+  "patched_pins": {
+    "certifi": "2026.10.23",
+    "filelock": "4.2.1",
+    "fsspec": "2026.6.0",
+    "pillow": "13.0.0",
+    "urllib3": "2.8.0",
+    "setuptools_3080_4090": "84.2.1"
+  },
+  "model": {
+    "precision": "fp16",
+    "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "sample_count": 400,
+    "sample_digest": "dfc2c416b71dd6fc3448a5b1f3802498f8bfcdea9103d514cb602419628d7559",
+    "max_absolute_score_drift": 0,
+    "concept_agreement": 1,
+    "threshold_decision_agreement": 1,
+    "baseline_changed": false
+  },
+  "workload": {
+    "crawl": "CC-MAIN-2014-15",
+    "audit_id": "20261028T192041Z-a57ef64c",
+    "workers": 7,
+    "active_sources_peak": 5,
+    "precision": "fp16",
+    "encoding_batch_size": 128,
+    "cache_enabled": false,
+    "completed_sources": 5,
+    "failed_sources": 0,
+    "records_processed": 244996,
+    "elapsed_seconds": 159.359,
+    "historical_matches": 2,
+    "audit_matches": 2,
+    "added_matches": 0,
+    "removed_matches": 0,
+    "output_digest": "59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c",
+    "historical_state_changed": false
+  },
+  "security": {
+    "valid": false,
+    "security_clean": false,
+    "exception_review_by": "2026-11-11",
+    "exception_approval": "proposed for owner review",
+    "setuptools_5090_exception": "explicitly not authorized",
+    "manifests": {
+      "requirements.txt": {
+        "audited_pins": 16,
+        "valid": true,
+        "security_clean": false,
+        "vulnerable_packages": [
+          {
+            "package": "sentence-transformers",
+            "version": "2.7.0",
+            "vulnerability_ids": [
+              "PYSEC-2026-4164"
+            ]
+          },
+          {
+            "package": "torch",
+            "version": "2.1.0",
+            "vulnerability_ids": [
+              "PYSEC-2024-250",
+              "PYSEC-2024-251",
+              "PYSEC-2024-252",
+              "PYSEC-2024-259",
+              "PYSEC-2025-189",
+              "PYSEC-2025-190",
+              "PYSEC-2025-191",
+              "PYSEC-2025-192",
+              "PYSEC-2025-193",
+              "PYSEC-2025-194",
+              "PYSEC-2025-195",
+              "PYSEC-2025-198",
+              "PYSEC-2025-203",
+              "PYSEC-2025-204",
+              "PYSEC-2025-205",
+              "PYSEC-2025-206",
+              "PYSEC-2025-207",
+              "PYSEC-2025-208",
+              "PYSEC-2025-209",
+              "PYSEC-2025-41",
+              "PYSEC-2026-139",
+              "PYSEC-2026-1970",
+              "PYSEC-2026-2286"
+            ]
+          },
+          {
+            "package": "transformers",
+            "version": "4.40.2",
+            "vulnerability_ids": [
+              "PYSEC-2024-227",
+              "PYSEC-2024-228",
+              "PYSEC-2024-229",
+              "PYSEC-2025-211",
+              "PYSEC-2025-212",
+              "PYSEC-2025-213",
+              "PYSEC-2025-214",
+              "PYSEC-2025-215",
+              "PYSEC-2025-216",
+              "PYSEC-2025-217",
+              "PYSEC-2025-218",
+              "PYSEC-2025-40",
+              "PYSEC-2026-1977",
+              "PYSEC-2026-1980",
+              "PYSEC-2026-1981",
+              "PYSEC-2026-1982",
+              "PYSEC-2026-1983",
+              "PYSEC-2026-1984",
+              "PYSEC-2026-1985",
+              "PYSEC-2026-1986",
+              "PYSEC-2026-1987",
+              "PYSEC-2026-1988",
+              "PYSEC-2026-2288",
+              "PYSEC-2026-2289",
+              "PYSEC-2026-2290",
+              "PYSEC-2026-3929"
+            ]
+          }
+        ],
+        "unexpected_vulnerabilities": [],
+        "errors": []
+      },
+      "requirements-lock.txt": {
+        "audited_pins": 43,
+        "valid": true,
+        "security_clean": false,
+        "vulnerable_packages": [
+          {
+            "package": "sentence-transformers",
+            "version": "2.7.0",
+            "vulnerability_ids": [
+              "PYSEC-2026-4164"
+            ]
+          },
+          {
+            "package": "torch",
+            "version": "2.1.0",
+            "vulnerability_ids": [
+              "PYSEC-2024-250",
+              "PYSEC-2024-251",
+              "PYSEC-2024-252",
+              "PYSEC-2024-259",
+              "PYSEC-2025-189",
+              "PYSEC-2025-190",
+              "PYSEC-2025-191",
+              "PYSEC-2025-192",
+              "PYSEC-2025-193",
+              "PYSEC-2025-194",
+              "PYSEC-2025-195",
+              "PYSEC-2025-198",
+              "PYSEC-2025-203",
+              "PYSEC-2025-204",
+              "PYSEC-2025-205",
+              "PYSEC-2025-206",
+              "PYSEC-2025-207",
+              "PYSEC-2025-208",
+              "PYSEC-2025-209",
+              "PYSEC-2025-41",
+              "PYSEC-2026-139",
+              "PYSEC-2026-1970",
+              "PYSEC-2026-2286"
+            ]
+          },
+          {
+            "package": "transformers",
+            "version": "4.40.2",
+            "vulnerability_ids": [
+              "PYSEC-2024-227",
+              "PYSEC-2024-228",
+              "PYSEC-2024-229",
+              "PYSEC-2025-211",
+              "PYSEC-2025-212",
+              "PYSEC-2025-213",
+              "PYSEC-2025-214",
+              "PYSEC-2025-215",
+              "PYSEC-2025-216",
+              "PYSEC-2025-217",
+              "PYSEC-2025-218",
+              "PYSEC-2025-40",
+              "PYSEC-2026-1977",
+              "PYSEC-2026-1980",
+              "PYSEC-2026-1981",
+              "PYSEC-2026-1982",
+              "PYSEC-2026-1983",
+              "PYSEC-2026-1984",
+              "PYSEC-2026-1985",
+              "PYSEC-2026-1986",
+              "PYSEC-2026-1987",
+              "PYSEC-2026-1988",
+              "PYSEC-2026-2288",
+              "PYSEC-2026-2289",
+              "PYSEC-2026-2290",
+              "PYSEC-2026-3929"
+            ]
+          }
+        ],
+        "unexpected_vulnerabilities": [],
+        "errors": []
+      },
+      "requirements-lock-5090.txt": {
+        "audited_pins": 43,
+        "valid": false,
+        "security_clean": false,
+        "vulnerable_packages": [
+          {
+            "package": "sentence-transformers",
+            "version": "2.7.0",
+            "vulnerability_ids": [
+              "PYSEC-2026-4164"
+            ]
+          },
+          {
+            "package": "setuptools",
+            "version": "81.0.0",
+            "vulnerability_ids": [
+              "GHSA-xmj3-9gf7-h52w",
+              "PYSEC-2026-3447"
+            ]
+          },
+          {
+            "package": "torch",
+            "version": "2.12.1",
+            "vulnerability_ids": [
+              "PYSEC-2025-194"
+            ]
+          },
+          {
+            "package": "transformers",
+            "version": "4.40.2",
+            "vulnerability_ids": [
+              "PYSEC-2024-227",
+              "PYSEC-2024-228",
+              "PYSEC-2024-229",
+              "PYSEC-2025-211",
+              "PYSEC-2025-212",
+              "PYSEC-2025-213",
+              "PYSEC-2025-214",
+              "PYSEC-2025-215",
+              "PYSEC-2025-216",
+              "PYSEC-2025-217",
+              "PYSEC-2025-218",
+              "PYSEC-2025-40",
+              "PYSEC-2026-1977",
+              "PYSEC-2026-1980",
+              "PYSEC-2026-1981",
+              "PYSEC-2026-1982",
+              "PYSEC-2026-1983",
+              "PYSEC-2026-1984",
+              "PYSEC-2026-1985",
+              "PYSEC-2026-1986",
+              "PYSEC-2026-1987",
+              "PYSEC-2026-1988",
+              "PYSEC-2026-2288",
+              "PYSEC-2026-2289",
+              "PYSEC-2026-2290",
+              "PYSEC-2026-3929"
+            ]
+          }
+        ],
+        "unexpected_vulnerabilities": [
+          {
+            "package": "setuptools",
+            "version": "81.0.0",
+            "vulnerability_ids": [
+              "GHSA-xmj3-9gf7-h52w",
+              "PYSEC-2026-3447"
+            ]
+          }
+        ],
+        "errors": [
+          "unreviewed vulnerabilities: setuptools:GHSA-xmj3-9gf7-h52w, setuptools:PYSEC-2026-3447"
+        ]
+      },
+      "requirements-test.txt": {
+        "audited_pins": 16,
+        "valid": true,
+        "security_clean": true,
+        "vulnerable_packages": [],
+        "unexpected_vulnerabilities": [],
+        "errors": []
+      }
+    }
+  },
+  "cross_pc": {
+    "real_gpu_validation": {
+      "3080": "passed",
+      "4090": "not performed",
+      "5090": "not performed; setup and audit remain blocked"
+    },
+    "resolver_only": {
+      "5090_py311": "dependencies resolve but setuptools 81.0.0 is vulnerable",
+      "5090_py312": "dependencies resolve but setuptools 81.0.0 is vulnerable"
+    }
+  },
+  "hashes": {
+    "format": "SHA-256 of UTF-8 file contents with CRLF normalized to LF",
+    "files": {
+      "requirements-lock.txt": "f6f161435c8cdf0cb090b7ff2124f5c3c8c2f88fcfa2c2c84a09a4f7fa91319e",
+      "requirements-lock-5090.txt": "97054a6b2db8cbf59b7d564f8fc77dd77b7045102ca5a15465ee3efd2eea912f",
+      "requirements.txt": "63da4450216bb1632a7d56372bef98bc2ecdb7e4924c153cc30580aea1c5750c",
+      "requirements-test.txt": "ba7e06b1edeaf41ec3babc1aa52396de76908660653de2435ea016c00edaad81",
+      "pyproject.toml": "1f4541d903a5dde6c6f9ae188095d7e64167d45abce176caf5f32c7d48d35acf",
+      "matcher.py": "07b7c1ea02412126c8cb360dc819fc7440cedd6ebbce53dd24bf0c9ce135f803",
+      "config.py": "ffc41352ea5555777593f72cfc0f8b663be574e205be74f4cd8e4b0594c7c20b",
+      "data/evaluation/model-baseline.json": "75980ef049c3c37506856a327a67f71f94bd4c06e5ee52368381c027857e5c0f",
+      "data/evaluation/annotations.jsonl": "816470bf53d389ed2913d74d4e6d66c4f45d603280a9e5be648f9d80567047bf"
+    }
+  }
+}

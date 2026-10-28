@@ -160,6 +160,70 @@ def validate_dependabot_policy(path: str | Path) -> dict:
     }
 
 
+def validate_security_policy(payload: dict, today: date) -> dict:
+    """Restrict temporary exceptions to the unchanged model pins for at most 14 days."""
+    if not isinstance(payload, dict):
+        raise ValueError("dependency security policy must be an object")
+    errors: list[str] = []
+    allowances = payload.get("temporarily_allowed_vulnerabilities", {})
+    versions = payload.get("exception_versions", {})
+    if not isinstance(allowances, dict):
+        errors.append("dependency exceptions must be a package-to-advisory mapping")
+        allowances = {}
+    if payload.get("temporarily_allowed_packages"):
+        errors.append("broad package-wide vulnerability exceptions are not permitted")
+    if any(
+        not isinstance(package, str) or package not in EXPECTED_PINS["project"]
+        or not isinstance(identifiers, list) or not identifiers
+        or any(not isinstance(identifier, str) or not identifier or "*" in identifier
+               for identifier in identifiers)
+        for package, identifiers in allowances.items()
+    ):
+        errors.append("exceptions must list exact advisory IDs for model-stack packages only")
+    review_by = None
+    expired = False
+    if payload.get("status") == "no_exceptions":
+        if allowances or versions:
+            errors.append("no_exceptions policy cannot contain allowances or exception versions")
+    elif not allowances or payload.get("status") != "migration_required":
+        errors.append("an empty exception policy must declare no_exceptions")
+    if allowances:
+        if payload.get("schema_version") != 3:
+            errors.append("temporary exceptions require policy schema 3")
+        if not isinstance(versions, dict) or set(versions) != set(allowances):
+            errors.append("each exception requires its exact model package versions")
+            versions = {}
+        for package, approved in versions.items():
+            expected = {
+                pins[package].split("+", 1)[0]
+                for pins in EXPECTED_PINS.values() if package in pins
+            }
+            if (
+                not isinstance(approved, list) or not approved
+                or any(not isinstance(value, str) for value in approved)
+                or set(approved) != expected
+            ):
+                errors.append(f"exception versions for {package} must match unchanged model pins")
+        try:
+            reviewed_on = date.fromisoformat(str(payload["reviewed_on"]))
+            review_by = date.fromisoformat(str(payload["review_by"]))
+            if not 0 < (review_by - reviewed_on).days <= 14:
+                errors.append("dependency exceptions must expire within 14 days of review")
+            if reviewed_on > today:
+                errors.append("dependency exception review date is in the future")
+            expired = today > review_by
+            if expired:
+                errors.append(f"dependency security policy expired on {review_by.isoformat()}")
+        except (KeyError, ValueError):
+            errors.append("dependency exceptions require valid reviewed_on and review_by dates")
+    return {
+        **payload,
+        "expired": expired,
+        "days_until_review": (review_by - today).days if review_by else None,
+        "errors": errors,
+    }
+
+
 def _load_policy(path: Path, today: date) -> dict:
     if not path.exists():
         return {
@@ -167,19 +231,11 @@ def _load_policy(path: Path, today: date) -> dict:
             "expired": True,
             "errors": [f"dependency security policy is missing: {path}"],
         }
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    review_by = date.fromisoformat(str(payload["review_by"]))
-    return {
-        **payload,
-        "present": True,
-        "expired": today > review_by,
-        "days_until_review": (review_by - today).days,
-        "errors": (
-            [f"dependency security policy expired on {review_by.isoformat()}"]
-            if today > review_by
-            else []
-        ),
-    }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return {**validate_security_policy(payload, today), "present": True}
+    except (OSError, ValueError) as exc:
+        return {"present": True, "expired": True, "errors": [str(exc)]}
 
 
 def validate_dependency_profiles(
@@ -256,7 +312,7 @@ def validate_dependency_profiles(
                 "broad package-wide vulnerability exceptions are not permitted"
             )
         warnings.append(
-            "Torch and Transformers have exact, temporary advisory exceptions; "
+            "Model libraries still have known vulnerabilities under temporary exceptions; "
             f"review in {policy['days_until_review']} day(s)"
         )
 
@@ -296,7 +352,7 @@ def validate_dependency_profiles(
 def installed_dependency_status(profile: str) -> dict:
     lock_name = "requirements-lock-5090.txt" if profile == "5090" else "requirements-lock.txt"
     expected, _options = read_requirements(PROJECT_ROOT / lock_name)
-    packages = ("sentence-transformers", "torch", "transformers")
+    packages = sorted(expected)
     installed: dict[str, str | None] = {}
     errors = []
     for package in packages:

@@ -20,7 +20,7 @@ jobs:
           lfs: false
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           cache: pip
       - name: Install test dependencies
         run: |
@@ -30,9 +30,6 @@ jobs:
         run: python credential_guard.py --scope tracked
       - name: Dependency profile contract
         run: python dependency_profiles.py --check
-      - name: Dependency vulnerability policy
-        if: runner.os == 'Linux'
-        run: python dependency_audit.py --requirements requirements.txt
       - name: Lint
         run: ruff check .
       - name: Test
@@ -80,3 +77,8 @@ jobs:
               throw "PowerShell parse failed: $($_.FullName)"
             }
           }
+      # Keep the required Linux job red for unapproved vulnerabilities, but
+      # still run its unit tests and smoke checks before reporting the blocker.
+      - name: Dependency vulnerability policy
+        if: runner.os == 'Linux'
+        run: python dependency_audit.py

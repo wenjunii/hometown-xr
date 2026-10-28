@@ -4,6 +4,12 @@ The extractor now has one shared implementation in the repository root. Files
 in this directory only preserve the older commands while selecting the `4090`
 hardware profile.
 
+Use 64-bit Python 3.11 and `.\scripts\setup.ps1 -Profile 4090 -Dev`.
+The compatibility requirements file includes the full CUDA 12.1 lock,
+including the independent security patches. Python 3.10 is no longer
+supported by the patched Pillow/filelock versions, and Torch 2.1 has no
+Python 3.12 wheel. Preserve an incompatible old environment before setup.
+
 ```powershell
 python 4090/main.py status
 python 4090/main.py run --all

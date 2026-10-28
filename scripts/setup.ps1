@@ -14,7 +14,7 @@ $VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
 function New-CompatibleVirtualEnvironment {
     $Candidates = @()
     if (Get-Command py -ErrorAction SilentlyContinue) {
-        foreach ($Version in @("3.10", "3.11", "3.12")) {
+        foreach ($Version in $SupportedPythonVersions) {
             $Candidates += @{
                 Command = "py"
                 Arguments = @("-$Version")
@@ -33,9 +33,7 @@ function New-CompatibleVirtualEnvironment {
         $PrefixArguments = @($Candidate.Arguments)
         $Compatible = $false
         try {
-            & $Command @PrefixArguments -c (
-                "import sys; raise SystemExit(0 if (3, 10) <= sys.version_info[:2] <= (3, 12) else 1)"
-            ) 2>$null
+            & $Command @PrefixArguments -c $PythonCompatibilityCheck 2>$null
             $Compatible = $LASTEXITCODE -eq 0
         }
         catch {
@@ -50,7 +48,7 @@ function New-CompatibleVirtualEnvironment {
         }
     }
 
-    throw "Unable to create .venv. Install 64-bit Python 3.10, 3.11, or 3.12 and try again."
+    throw "Unable to create .venv. Install 64-bit Python $($SupportedPythonVersions -join ' or ') for this profile."
 }
 
 function Resolve-InstallProfile {
@@ -72,6 +70,31 @@ function Resolve-InstallProfile {
 
 Push-Location $Root
 try {
+    $InstallProfile = Resolve-InstallProfile
+    if ($InstallProfile -eq "5090") {
+        throw (
+            "5090 setup is security-blocked: retained Torch 2.12.1 requires setuptools<82, " +
+            "but patched setuptools requires >=84.1.0. Complete the coordinated model migration " +
+            "(PR #45) first. No exception was granted; the existing environment is unchanged."
+        )
+    }
+    # Torch 2.1 on the 3080/4090 has no Python 3.12 wheel.
+    $SupportedPythonVersions = if ($InstallProfile -eq "5090") { @("3.11", "3.12") } else { @("3.11") }
+    $MaximumMinor = if ($InstallProfile -eq "5090") { 12 } else { 11 }
+    $PythonCompatibilityCheck = (
+        "import struct, sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] <= (3, $MaximumMinor) " +
+        "and struct.calcsize('P') == 8 else 1)"
+    )
+    if (Test-Path -LiteralPath $VenvPython) {
+        & $VenvPython -c $PythonCompatibilityCheck
+        if ($LASTEXITCODE -ne 0) {
+            throw (
+                "The existing .venv uses an unsupported Python. Stop project processes, preserve .venv " +
+                "under a backup name, then rerun setup with 64-bit Python " +
+                "$($SupportedPythonVersions -join ' or ') installed. Nothing was deleted or upgraded."
+            )
+        }
+    }
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         throw "Git is required. Install Git and Git LFS before setup."
     }
@@ -87,19 +110,9 @@ try {
     if (-not (Test-Path -LiteralPath $VenvPython)) {
         New-CompatibleVirtualEnvironment
     }
-    & $VenvPython -c (
-        "import sys; raise SystemExit(0 if (3, 10) <= sys.version_info[:2] <= (3, 12) else 1)"
-    )
-    if ($LASTEXITCODE -ne 0) {
-        throw (
-            "The existing .venv uses an unsupported Python. " +
-            "Recreate it with 64-bit Python 3.10, 3.11, or 3.12."
-        )
-    }
 
-    & $VenvPython -m pip install --upgrade pip
+    & $VenvPython -m pip install --upgrade pip "setuptools==84.2.1"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    $InstallProfile = Resolve-InstallProfile
     $RequirementsLock = if ($InstallProfile -eq "5090") {
         Join-Path $Root "requirements-lock-5090.txt"
     }
@@ -112,6 +125,11 @@ try {
         & $VenvPython -m pip install -r (Join-Path $Root "requirements-test.txt")
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    & $VenvPython -m pip check
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $ValidationProfile = if ($InstallProfile -eq "legacy") { "3080" } else { $InstallProfile }
+    & $VenvPython (Join-Path $Root "dependency_profiles.py") --check --installed --profile $ValidationProfile
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     $Archive = Join-Path $Root "data\checkpoints\progress.db.gz"
     $Database = Join-Path $Root "data\progress.db"

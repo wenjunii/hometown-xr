@@ -1,5 +1,11 @@
 # RTX 5090 Compatibility Launchers
 
+**Security blocked:** do not run setup on this profile yet. The unchanged
+Torch 2.12.1 requires setuptools below 82; the compatible 81.0.0 pin has two
+known advisories and no approved exception. Setup stops before modifying the
+environment and the dependency audit fails. The coordinated migration in
+[PR #45](https://github.com/wenjunii/hometown-xr/pull/45) must resolve this first.
+
 The extractor has one shared implementation in the repository root. Files in
 this directory provide visible compatibility commands while selecting the
 `5090` hardware profile.
@@ -21,6 +27,9 @@ restores the same compressed Git LFS database archive used by the 3080 and 4090
 PCs. Never run more than one workstation at a time.
 
 First create the Blackwell-compatible environment:
+
+Use 64-bit Python 3.11 or 3.12. Preserve any existing Python 3.10 environment
+before setup; the patched Pillow/filelock versions require at least 3.11.
 
 ```powershell
 .\scripts\setup.ps1 -Profile 5090 -Tune
