@@ -8,3 +8,9 @@ warcio==1.8.1
 requests==2.34.2
 boto3==1.43.67
 pyarrow==25.0.0
+certifi==2026.10.23
+filelock==4.2.1
+fsspec==2026.6.0
+pillow==13.0.0
+setuptools==84.2.1
+urllib3==2.8.0

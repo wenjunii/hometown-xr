@@ -5,6 +5,62 @@ hometown, childhood, roots, migration, and belonging in Common Crawl data.
 
 Canonical repository: [wenjunii/hometown-xr](https://github.com/wenjunii/hometown-xr)
 
+This branch is the combined security/runtime and local-handoff candidate. Keep
+it in an isolated checkout until the existing model-migration gate passes.
+Green CI is not approval to replace a production environment or merge the
+candidate without the required human evaluation and 4090/5090 measurements.
+
+## Local-First Quick Start
+
+GitHub is optional for workstation handoffs. Use a shared folder or external
+SSD for verified snapshots; keep GitHub as an optional code mirror. Stop all
+project/review writers before transferring, and use only one PC at a time.
+In folder mode, `checkpoint.ps1` writes to the configured store, not GitHub.
+GitHub may therefore have current code but older research data; receive the
+latest verified USB/shared-folder snapshot when moving to another PC.
+
+```powershell
+# Current PC: preview, then export code and durable research state.
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store -Apply
+
+# Other PC: use the receiver shipped on the drive; restore into a NEW directory.
+$Snapshot = (Get-Content E:\HometownXR-store\control.json -Raw | ConvertFrom-Json).snapshot_id
+& "E:\HometownXR-store\tools\$Snapshot\scripts\transfer.ps1" -Action import -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -Apply
+```
+
+Existing destinations are never overwritten. Credentials, environments, models,
+and machine settings stay local. Restored projects select folder ownership and
+skip Git/Git LFS during setup. The existing Git-based workflow below remains
+available for checkouts that have not opted in. Review the complete
+[local handoff guide](LOCAL_HANDOFF.md), including bootstrap, backups, excluded
+files, old Git ownership, and offline coordination limits, before switching.
+No security exceptions or model-migration gates are relaxed by this mode.
+
+## Optional Code Sync
+
+USB/shared-folder handoffs and GitHub publishing are separate operations.
+For an intentional code-only update, work on a `codex/` branch and stage an
+explicit list of changed source, test, script, and documentation paths. For
+example, for a change limited to these two files:
+
+```powershell
+git switch -c codex/my-code-update
+git add -- README.md scripts/transfer.ps1
+.\scripts\security-check.ps1 -Scope staged
+git diff --cached --stat
+git commit -m "docs: clarify local transfer workflow"
+git push --set-upstream origin HEAD
+```
+
+Adjust that list to include every related code/test file. Never use `git add -A`
+for a code-only sync: the legacy repository still tracks research products.
+Do not stage `data/`, snapshot archives, credentials, local handoff settings,
+virtual environments, or model caches. Inspect the commit before pushing and
+open a pull request; do not bypass branch protection or required security checks.
+Changing code after a local handoff requires a fresh verified snapshot before
+resuming. Git commits themselves do not update the USB store.
+
 ## Models
 
 The extractor uses two local machine-learning models:
@@ -29,7 +85,8 @@ cannot cross a model change. `data/cache/` remains local to each workstation.
 
 ## Workstation Safety
 
-The RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
+The rest of this section describes the original Git mode, not USB mode.
+In Git mode, the RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
 story enrichment acquire an atomic repository-wide workstation lease, renew it
 during long work, and retain ownership until a verified checkpoint is pushed.
 The checkpoint script releases ownership after confirming the remote commit.
@@ -52,7 +109,7 @@ Git LFS stores `data/checkpoints/progress.db.gz`, a deterministic compressed
 checkpoint. `data/progress.db` is restored locally by setup/handoff and is
 never copied while live.
 
-The Git repository contains all durable state needed to recreate or resume the
+The original Git checkpoint contains committed durable state needed to resume the
 project on another PC: source, tests, documentation, the compressed database
 checkpoint, committed output and manifests, deterministic source-context story
 packs and exports, human story reviews, bounded evaluation replay, annotations,
@@ -73,10 +130,10 @@ Run the same guard at any time:
 The default scans tracked and non-ignored worktree files without printing
 secret values. Use `-Scope staged` to inspect exactly what is staged or
 `-Scope tracked` to inspect repository files. GitHub Actions repeats the tracked
-scan on every push and pull request. Keep credentials outside this repository;
+scan on main pushes and pull requests. Keep credentials outside this repository;
 the scanner is a final guard, not a password manager.
 
-Before switching machines:
+Before switching machines in the original Git mode:
 
 1. Press `Ctrl+C` once and wait for the final summary.
 2. Confirm `data/.crawler.lock` is gone.

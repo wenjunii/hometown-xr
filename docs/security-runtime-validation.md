@@ -2,6 +2,10 @@
 
 Status: **draft candidate, not approved for rollout**. Validation date: 2026-10-28.
 
+The 2026-10-30 [consolidation recheck](security-consolidation.md) adds the
+local-first handoff work and current advisory coverage. The original evidence
+below is preserved with its original dates; it is not rewritten as a new run.
+
 This change consolidates the outstanding dependency updates and removes the
 expired advisory allowances. It does not change the production environment,
 model revision, concept anchors, filtering thresholds, source stories, or
