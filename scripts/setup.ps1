@@ -72,16 +72,26 @@ function Resolve-InstallProfile {
 
 Push-Location $Root
 try {
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        throw "Git is required. Install Git and Git LFS before setup."
+    $LocalSnapshot = Test-Path -LiteralPath (Join-Path $Root "data\handoff.local.json")
+    if ($LocalSnapshot) {
+        $Handoff = Get-Content -LiteralPath (Join-Path $Root "data\handoff.local.json") -Raw | ConvertFrom-Json
+        if ($Handoff.schema_version -ne 1 -or $Handoff.mode -ne "folder") {
+            throw "Invalid local handoff configuration. Restore a verified snapshot first."
+        }
+        Write-Host "Verified local snapshot mode: skipping Git/Git LFS network operations."
     }
-    git lfs version | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        throw "Git LFS is required. Install it, then run 'git lfs install' and 'git lfs pull'."
-    }
-    git lfs pull
-    if ($LASTEXITCODE -ne 0) {
-        throw "Git LFS pull failed with exit code $LASTEXITCODE."
+    else {
+        if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+            throw "Git is required. Install Git and Git LFS before setup."
+        }
+        git lfs version | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Git LFS is required. Install it, then run 'git lfs install' and 'git lfs pull'."
+        }
+        git lfs pull
+        if ($LASTEXITCODE -ne 0) {
+            throw "Git LFS pull failed with exit code $LASTEXITCODE."
+        }
     }
 
     if (-not (Test-Path -LiteralPath $VenvPython)) {

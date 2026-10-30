@@ -197,9 +197,9 @@ def run(
 
     ownership_context = nullcontext(None)
     if workstation_guard:
-        from workstation_guard import WorkstationLease
+        from workstation_guard import get_workstation_lease
 
-        ownership_context = WorkstationLease(settings.profile_name)
+        ownership_context = get_workstation_lease(settings.profile_name)
 
     try:
         with CrawlerRunLock(settings.profile_name), ownership_context as ownership:
@@ -820,6 +820,9 @@ def main() -> None:
             )
             owner_parser.add_argument("--force-recovery", action="store_true")
 
+    from portable_transfer import register_parser as register_transfer_parser
+
+    register_transfer_parser(subparsers)
     checkpoint_parser = subparsers.add_parser(
         "checkpoint",
         help="verify and compact durable state for handoff",
@@ -1347,14 +1350,18 @@ def main() -> None:
                     indent=2,
                 )
             )
+    elif args.command == "transfer":
+        from portable_transfer import execute
+
+        print(json.dumps(execute(args, DATA_DIR.parent), indent=2))
     elif args.command == "workstation":
-        from workstation_guard import WorkstationLease
+        from workstation_guard import get_workstation_lease
 
         profile = get_hardware_profile(args.profile)
         lease_hours = getattr(args, "lease_hours", WORKSTATION_LEASE_HOURS)
         if lease_hours <= 0:
             parser.error("--lease-hours must be positive")
-        lease = WorkstationLease(profile.name, lease_hours=lease_hours)
+        lease = get_workstation_lease(profile.name, lease_hours=lease_hours)
         if args.workstation_command == "status":
             result = lease.status(include_preflight=args.preflight)
         elif args.workstation_command == "preflight":
@@ -1591,9 +1598,9 @@ def main() -> None:
             try:
                 ownership_context = nullcontext(None)
                 if not args.no_workstation_guard:
-                    from workstation_guard import WorkstationLease
+                    from workstation_guard import get_workstation_lease
 
-                    ownership_context = WorkstationLease(
+                    ownership_context = get_workstation_lease(
                         get_hardware_profile("auto").name
                     )
                 with CrawlerRunLock("story-enrichment"), ownership_context as ownership:
@@ -1637,9 +1644,9 @@ def main() -> None:
                 parser.error("--limit must be positive")
             ownership_context = nullcontext(None)
             if not args.no_workstation_guard:
-                from workstation_guard import WorkstationLease
+                from workstation_guard import get_workstation_lease
 
-                ownership_context = WorkstationLease(get_hardware_profile("auto").name)
+                ownership_context = get_workstation_lease(get_hardware_profile("auto").name)
             _shutdown_event = threading.Event()
             _shutdown_signal_count = 0
             try:

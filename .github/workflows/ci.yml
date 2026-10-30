@@ -2,7 +2,13 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -30,9 +36,6 @@ jobs:
         run: python credential_guard.py --scope tracked
       - name: Dependency profile contract
         run: python dependency_profiles.py --check
-      - name: Dependency vulnerability policy
-        if: runner.os == 'Linux'
-        run: python dependency_audit.py --requirements requirements.txt
       - name: Lint
         run: ruff check .
       - name: Test
@@ -48,6 +51,8 @@ jobs:
           python main.py audit evidence --help
           python main.py health --help
           python main.py workstation --help
+          python main.py transfer --help
+          python portable_transfer.py transfer --help
           python main.py stories --help
           python main.py stories enrich --help
           python main.py stories export --help
@@ -80,3 +85,6 @@ jobs:
               throw "PowerShell parse failed: $($_.FullName)"
             }
           }
+      - name: Dependency vulnerability policy
+        if: runner.os == 'Linux'
+        run: python dependency_audit.py --requirements requirements.txt

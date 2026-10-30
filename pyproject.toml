@@ -59,6 +59,7 @@ py-modules = [
     "operations_dashboard",
     "parquet_export",
     "pipeline",
+    "portable_transfer",
     "processor",
     "progress",
     "project_health",
