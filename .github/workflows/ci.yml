@@ -34,8 +34,6 @@ jobs:
           python -m pip install --no-deps -e .
       - name: Credential scan
         run: python credential_guard.py --scope tracked
-      - name: Dependency profile contract
-        run: python dependency_profiles.py --check
       - name: Lint
         run: ruff check .
       - name: Test
@@ -85,6 +83,8 @@ jobs:
               throw "PowerShell parse failed: $($_.FullName)"
             }
           }
+      - name: Dependency profile contract
+        run: python dependency_profiles.py --check
       - name: Dependency vulnerability policy
-        if: runner.os == 'Linux'
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: python dependency_audit.py --requirements requirements.txt
