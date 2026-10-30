@@ -5,6 +5,62 @@ hometown, childhood, roots, migration, and belonging in Common Crawl data.
 
 Canonical repository: [wenjunii/hometown-xr](https://github.com/wenjunii/hometown-xr)
 
+This branch is the combined security/runtime and local-handoff candidate. Keep
+it in an isolated checkout until the existing model-migration gate passes.
+Green CI is not approval to replace a production environment or merge the
+candidate without the required human evaluation and 4090/5090 measurements.
+
+## Local-First Quick Start
+
+GitHub is optional for workstation handoffs. Use a shared folder or external
+SSD for verified snapshots; keep GitHub as an optional code mirror. Stop all
+project/review writers before transferring, and use only one PC at a time.
+In folder mode, `checkpoint.ps1` writes to the configured store, not GitHub.
+GitHub may therefore have current code but older research data; receive the
+latest verified USB/shared-folder snapshot when moving to another PC.
+
+```powershell
+# Current PC: preview, then export code and durable research state.
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store -Apply
+
+# Other PC: use the receiver shipped on the drive; restore into a NEW directory.
+$Snapshot = (Get-Content E:\HometownXR-store\control.json -Raw | ConvertFrom-Json).snapshot_id
+& "E:\HometownXR-store\tools\$Snapshot\scripts\transfer.ps1" -Action import -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -Apply
+```
+
+Existing destinations are never overwritten. Credentials, environments, models,
+and machine settings stay local. Restored projects select folder ownership and
+skip Git/Git LFS during setup. The existing Git-based workflow below remains
+available for checkouts that have not opted in. Review the complete
+[local handoff guide](LOCAL_HANDOFF.md), including bootstrap, backups, excluded
+files, old Git ownership, and offline coordination limits, before switching.
+No security exceptions or model-migration gates are relaxed by this mode.
+
+## Optional Code Sync
+
+USB/shared-folder handoffs and GitHub publishing are separate operations.
+For an intentional code-only update, work on a `codex/` branch and stage an
+explicit list of changed source, test, script, and documentation paths. For
+example, for a change limited to these two files:
+
+```powershell
+git switch -c codex/my-code-update
+git add -- README.md scripts/transfer.ps1
+.\scripts\security-check.ps1 -Scope staged
+git diff --cached --stat
+git commit -m "docs: clarify local transfer workflow"
+git push --set-upstream origin HEAD
+```
+
+Adjust that list to include every related code/test file. Never use `git add -A`
+for a code-only sync: the legacy repository still tracks research products.
+Do not stage `data/`, snapshot archives, credentials, local handoff settings,
+virtual environments, or model caches. Inspect the commit before pushing and
+open a pull request; do not bypass branch protection or required security checks.
+Changing code after a local handoff requires a fresh verified snapshot before
+resuming. Git commits themselves do not update the USB store.
+
 ## Models
 
 The extractor uses two local machine-learning models:
@@ -29,7 +85,8 @@ cannot cross a model change. `data/cache/` remains local to each workstation.
 
 ## Workstation Safety
 
-The RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
+The rest of this section describes the original Git mode, not USB mode.
+In Git mode, the RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
 story enrichment acquire an atomic repository-wide workstation lease, renew it
 during long work, and retain ownership until a verified checkpoint is pushed.
 The checkpoint script releases ownership after confirming the remote commit.
@@ -52,7 +109,7 @@ Git LFS stores `data/checkpoints/progress.db.gz`, a deterministic compressed
 checkpoint. `data/progress.db` is restored locally by setup/handoff and is
 never copied while live.
 
-The Git repository contains all durable state needed to recreate or resume the
+The original Git checkpoint contains committed durable state needed to resume the
 project on another PC: source, tests, documentation, the compressed database
 checkpoint, committed output and manifests, deterministic source-context story
 packs and exports, human story reviews, bounded evaluation replay, annotations,
@@ -73,10 +130,10 @@ Run the same guard at any time:
 The default scans tracked and non-ignored worktree files without printing
 secret values. Use `-Scope staged` to inspect exactly what is staged or
 `-Scope tracked` to inspect repository files. GitHub Actions repeats the tracked
-scan on every push and pull request. Keep credentials outside this repository;
+scan on main pushes and pull requests. Keep credentials outside this repository;
 the scanner is a final guard, not a password manager.
 
-Before switching machines:
+Before switching machines in the original Git mode:
 
 1. Press `Ctrl+C` once and wait for the final summary.
 2. Confirm `data/.crawler.lock` is gone.
@@ -155,7 +212,7 @@ visible only after an entire source is successfully parsed and filtered.
 Requirements:
 
 - Windows 10 or 11
-- Python 3.10, 3.11, or 3.12
+- 64-bit Python 3.11 or 3.12 (setup prefers 3.11)
 - Git and Git LFS
 - NVIDIA driver compatible with the profile's PyTorch CUDA runtime
 - RTX 3080, RTX 4090, or RTX 5090 GPU
@@ -169,31 +226,41 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup.ps1 -Profile 3080
 ```
 
-Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The 3080 and
-4090 retain the exact CUDA 12.1 PyTorch environment in `requirements-lock.txt`.
-The Blackwell-generation 5090 uses `requirements-lock-5090.txt`, which pins
-stable PyTorch 2.12.1 with its CUDA 13.0 runtime. Add `-Tune` to run a quick
-local hardware benchmark or `-Dev` to install the test toolchain.
+Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The proposed
+Windows runtime uses PyTorch `2.13.0+cu130`, Sentence Transformers `5.6.1`, and
+Transformers `5.10.4` on all three GPUs. Both GPU lock files intentionally pin
+the same versions, including transitive Windows runtime dependencies. Add
+`-Tune` for a quick hardware benchmark or `-Dev` for the test toolchain.
 
-PyTorch and Transformers are excluded from automatic Dependabot version bumps.
-They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay
-separate, and the pinned sentence-transformer constrains compatible
-Transformers releases. CI tests these profile relationships on every change.
-The current model stack has upstream security advisories and is covered by the
-dated migration policy in `.github/dependency-policy.json`; it is not treated as
-silently clean. GitHub repeats the same advisories for mirrored dependency
-manifests, so the alert count is larger than the number of unique issues. CI
-runs `pip-audit` and permits only the exact reviewed vulnerability IDs in that
-policy. A new advisory, a vulnerable package outside the list, or policy expiry
-fails the build.
+**Migration candidate, not rollout approval:** the 3080 semantic comparison
+and repeated real-source benchmark passed. Human evaluation, historical-audit
+resolution, and matching 4090/5090 evidence are still required. Keep this change
+in a separate worktree and
+environment until the existing migration gate passes. See
+[runtime validation and rollout](docs/security-runtime-validation.md).
+Do not upgrade the working environment just to clear GitHub alerts.
 
-Runtime exposure is narrowed to the configured sentence-transformer model at a
-pinned commit. Remote model code is disabled, the pinned snapshot uses
-Safetensors weights, and operators must not supply arbitrary models,
-checkpoints, tokenizers, or training configurations. These controls reduce
-exposure but do not make the vulnerable libraries clean. Complete the tracked
-model comparison, human evaluation minimums, and identical 3080, 4090, and 5090
-benchmarks before upgrading the shared CUDA and model locks.
+Python 3.10 is no longer supported because patched Pillow and filelock require
+Python 3.11 or newer. Setup refuses an incompatible existing environment and
+does not delete it. Stop project processes and preserve the old `.venv` under
+a backup name before an approved migration; never copy a virtual environment
+between PCs. Use an NVIDIA driver compatible with CUDA 13.0.
+
+Result-sensitive model packages remain excluded from automatic Dependabot
+updates. CI checks the profile contract on Python 3.11 and 3.12 on Windows and
+Linux. The advisory gate audits `requirements.txt`, both GPU locks, and
+`requirements-test.txt`, not just direct model dependencies. The policy in
+`.github/dependency-policy.json` has **no vulnerability exceptions**. A new
+advisory or missing/skipped package coverage fails the build. Any future
+exception must identify exact advisories and have an enforced review deadline;
+an exception-free policy does not need an arbitrary expiry date.
+
+The MiniLM model revision, concept anchors, thresholds, and raw-story extraction
+are unchanged. Remote model code is disabled, Safetensors weights are required,
+and eager attention preserves the previous scoring path. Operators must not
+supply arbitrary models, checkpoints, tokenizers, or training configurations.
+No generative LLM is introduced. GitHub alerts on the default branch remain
+open until the validated changes are merged and GitHub rescans them.
 
 Verify the environment and checkpoint:
 
@@ -372,7 +439,8 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
 | `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
-| `.\scripts\dependency-audit.ps1` | Validate profile pins and the dated vulnerability policy |
+| `.\scripts\dependency-audit.ps1` | Validate profile pins and audit all four pinned manifests |
+| `.\scripts\validate-runtime.ps1 -Profile 3080` | Validate the candidate on the actual GPU and export portable evidence without changing tuning |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 
@@ -1038,8 +1106,22 @@ Run the dependency contract and advisory gate with:
 .\scripts\dependency-audit.ps1
 ```
 
-The exception review date is a deadline for migration work, not a claim that the
-listed advisories are harmless.
+The default audit checks every pinned entry in both Windows runtime locks,
+including dependencies such as Pillow, filelock, and urllib3. CUDA wheel
+versions are checked against their upstream Torch release (for example,
+`2.13.0+cu130` against `2.13.0`); this is an advisory lookup, not a GPU install
+or compatibility test. It does not resolve unpinned Linux-only CUDA packages
+or transitive developer-tool dependencies. Use `python -m pip_audit` as an
+additional installed-environment check. No audit guarantees absence of unknown
+vulnerabilities. To select specific manifests:
+
+```powershell
+.\scripts\dependency-audit.ps1 -Requirements requirements-lock.txt,requirements-lock-5090.txt
+```
+
+If a future advisory needs a temporary exception, its review date is a deadline,
+not a claim that the advisory is harmless. Missing audit coverage is never
+silently allowed.
 
 ## Evaluation
 
@@ -1185,7 +1267,7 @@ metrics.py              funnel, failures, resources, rates, history, and ETA
 failure_analysis.py     stable operational failure categories
 benchmark.py            synthetic precision and isolated real-source benchmarks
 dependency_profiles.py  cross-profile lock and installed-package contract
-dependency_audit.py     pip-audit policy enforcement with an expiry date
+dependency_audit.py     all-manifest vulnerability audit with fail-closed coverage
 model_regression.py     semantic score/concept/threshold snapshots and comparison
 model_migration.py      labels/audit/benchmark/candidate approval gate
 evidence_bundle.py      credential-free cross-PC GPU evidence export/import

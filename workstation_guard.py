@@ -30,6 +30,20 @@ LOCAL_REMOTE_LEASE_REF = "refs/remotes/origin/hometown-xr-workstation-owner"
 logger = logging.getLogger(__name__)
 
 
+def get_workstation_lease(profile: str, *, root: str | Path = PROJECT_ROOT, **kwargs):
+    """Select the explicitly configured transport; never fall back after a failure."""
+    project = Path(root).resolve()
+    configuration = project / "data/handoff.local.json"
+    if configuration.exists():
+        from portable_transfer import FolderWorkstationLease
+
+        payload = json.loads(configuration.read_text(encoding="utf-8"))
+        if payload.get("schema_version") != 1 or payload.get("mode") != "folder":
+            raise WorkstationGuardError("invalid local handoff configuration")
+        return FolderWorkstationLease(profile, root=project, **kwargs)
+    return WorkstationLease(profile, root=project, **kwargs)
+
+
 class WorkstationGuardError(RuntimeError):
     """Raised when workstation ownership or freshness cannot be proven."""
 
