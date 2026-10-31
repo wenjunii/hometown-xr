@@ -53,6 +53,12 @@ git commit -m "docs: clarify local transfer workflow"
 git push --set-upstream origin HEAD
 ```
 
+The credential-check script uses the checkout's existing virtual environment,
+or installed Python 3.10+ when no environment exists. A code-only checkout does
+not need GPU setup or dependency installation just to run this check. The scan
+is read-only and fails when findings are reported; do not continue
+to commit or push after a failed scan.
+
 Adjust that list to include every related code/test file. Never use `git add -A`
 for a code-only sync: the legacy repository still tracks research products.
 Do not stage `data/`, snapshot archives, credentials, local handoff settings,
@@ -1297,3 +1303,4 @@ MIT. See [LICENSE](LICENSE). Common Crawl data remains subject to the
 - [wenjunii/td-imagefx-library](https://github.com/wenjunii/td-imagefx-library)
 - [wenjunii/flexgpu-touchdesigner](https://github.com/wenjunii/flexgpu-touchdesigner)
 - [wenjunii/voice-to-visual-sdtd](https://github.com/wenjunii/voice-to-visual-sdtd)
+- [wenjunii/colab-sd](https://github.com/wenjunii/colab-sd)

@@ -171,6 +171,9 @@ migration separately. That keeps the existing Git handoff compatible meanwhile.
 Optional GitHub publishing is code-only and separate from `checkpoint.ps1` in
 folder mode. Follow [Optional Code Sync](README.md#optional-code-sync), stage
 only explicit source/test/documentation paths, and inspect the outgoing commit.
+The credential-check script can use installed Python 3.10+ in a code-only Git
+checkout with no virtual environment; it does not install GPU dependencies,
+stage files, export data, or contact GitHub. Git is still required for that scan.
 This repository still contains historical tracked data; do not use `git add -A`
 or include new database archives, story packs, or USB settings in a code PR.
 After changing working code, refresh the local snapshot before resuming.
