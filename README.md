@@ -1139,6 +1139,36 @@ Actions validates dependency-profile pins and the dated vulnerability policy,
 then runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing on
 both Windows and Ubuntu without downloading GPU models or Git LFS data.
 
+### Task Cleanup
+
+After a task has passed verification, coding agents automatically clean up its
+known disposable artifacts under [AGENTS.md](AGENTS.md). Exact targets and shared
+dependencies must be checked first; old timestamps alone are not enough.
+This is a task-completion policy, not a background deletion schedule.
+
+Preview the narrow project-cache helper, then apply only after verification and
+after stopping project writers:
+
+```powershell
+.\scripts\cleanup.ps1
+.\scripts\cleanup.ps1 -Apply -Verified
+```
+
+The helper handles only allowlisted Python, pytest, and Ruff cache directories
+with recognized contents. It rejects tracked files, linked paths, unexpected
+contents, and a crawler lock. Preview is read-only. Apply requests the Windows
+Recycle Bin and has no permanent-delete fallback; Windows configuration controls
+retention. The helper never empties the bin, and recycled files may still occupy
+disk space until removed separately. Unsupported systems refuse apply.
+
+Production and pending-validation environments, models, stories, checkpoints,
+human labels, reference inputs, backups, all `data/` contents, and shared pip or
+Hugging Face caches are outside this helper's scope. Broader cleanup, including
+one-off scripts, completed installers, partial downloads, redundant task copies,
+and exclusively retired models, requires per-target agent verification.
+Keep active/shared dependencies and pending evidence. Code-only GitHub publishing
+must stage explicit source/test/documentation paths, not data or credentials.
+
 ### Dependency Updates
 
 Dependabot keeps AWS, HTTP, and developer-tool families in separate pull
