@@ -8,6 +8,12 @@ param(
 
     [string]$Message = "chore: checkpoint extractor state",
 
+    [string]$Store,
+
+    [string]$Destination,
+
+    [switch]$Apply,
+
     [switch]$ForceVacuum,
 
     [switch]$SkipVerify,
@@ -21,6 +27,23 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Lock = Join-Path $Root "data\.crawler.lock"
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
+
+if ($Store -or (Test-Path -LiteralPath (Join-Path $Root "data\handoff.local.json"))) {
+    if ($SkipVerify -or $RefreshResults -or $SkipStoryRefresh -or $ForceVacuum) {
+        throw "Git-only switches are not supported for local snapshots. Snapshots are always verified."
+    }
+    $TransferArguments = @{ Action = $(if ($Direction -eq "push") { "export" } else { "import" }) }
+    if ($Store) { $TransferArguments.Store = $Store }
+    if ($Destination) { $TransferArguments.Destination = $Destination }
+    if ($Direction -eq "pull" -and -not $Store) {
+        $TransferArguments.Store = (Get-Content -LiteralPath (Join-Path $Root "data\handoff.local.json") -Raw | ConvertFrom-Json).store
+    }
+    & (Join-Path $PSScriptRoot "transfer.ps1") @TransferArguments -Apply:$Apply
+    exit $LASTEXITCODE
+}
+if ($Apply -or $Destination) {
+    throw "Apply and Destination are valid only for local-folder handoffs (-Store)."
+}
 
 if (Test-Path -LiteralPath $Lock) {
     throw "The crawler lock exists. Stop the crawler cleanly before a workstation handoff."

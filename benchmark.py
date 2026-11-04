@@ -293,11 +293,16 @@ def run_workload_benchmark(
     worker_counts: list[int] | None = None,
     write: bool = False,
     audit_dir: str | Path = AUDIT_DIR / "workload-benchmarks",
+    precision: str | None = None,
 ) -> dict:
     """Compare worker counts on the same real sources without touching crawl state."""
     if source_count <= 0:
         raise ValueError("source_count must be positive")
+    if precision not in (None, "fp32", "fp16"):
+        raise ValueError("precision must be fp32 or fp16")
     profile = get_hardware_profile(profile_name)
+    if precision is not None:
+        profile = replace(profile, precision=precision)
     counts = sorted(set(worker_counts or [1, min(4, profile.workers), profile.workers]))
     if not counts or counts[0] <= 0:
         raise ValueError("worker counts must be positive")
@@ -396,6 +401,13 @@ def run_workload_benchmark(
         "profile": profile.name,
         "crawl_id": crawl_id,
         "sources_per_trial": source_count,
+        "source_files": sorted(str(source["file_path"]) for source in plan["sources"]),
+        "runtime": {
+            "precision": profile.precision,
+            "candidate_batch_size": profile.candidate_batch_size,
+            "inference_batch_size": profile.inference_batch_size,
+            "encoding_batch_size": profile.encoding_batch_size,
+        },
         "historical_state_changed": False,
         "cache_enabled": False,
         "trials": trials,
