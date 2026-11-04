@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-10-30T23:41:16.602891+00:00",
+  "checked_at": "2026-11-04T00:49:11.266258+00:00",
   "repository": "wenjunii/hometown-xr",
   "alerts_open_on_main": 325,
   "distinct_advisories": 85,
@@ -65,10 +65,11 @@
   "inputs_sha256_lf": {
     "4090/requirements.txt": "468b4e1b78bed7dd45386107ca4de3bf818dfe1e0431c102fb802d93e7c25fd4",
     "5090/requirements.txt": "5416c96e38ba8a660ec8f6bc74fa08fec8c103db13d577e7b8c129f251a76e08",
-    "pyproject.toml": "bcf67df981556257ec8df09b6a6488def359dee4b22a5cb539eda491a07dacde",
-    "requirements-lock-5090.txt": "065b2a135d3586904ba2748823c873a09f82ec7cd670395f1540190a250f5047",
-    "requirements-lock.txt": "065b2a135d3586904ba2748823c873a09f82ec7cd670395f1540190a250f5047",
-    "requirements.txt": "f80f1f9f37aeba296571cadcea21c87d04202c24a79d7eb282e2542cc91a2144"
+    "pyproject.toml": "d45a7c298484a8ad77763c03238cfc6e23b2512745db23c67eb4df2ba43896da",
+    "requirements-lock-5090.txt": "2a128129686a620b753d906737399770a227363a5647fb0f7ed0f70717cb94eb",
+    "requirements-lock.txt": "2a128129686a620b753d906737399770a227363a5647fb0f7ed0f70717cb94eb",
+    "requirements-test.txt": "29f8ff5f12daa59965bbd07194992120e881ce7e7009583c9d9acd4d91abb396",
+    "requirements.txt": "22e085cd53425f952671db2de2edf2bec7475c641d0acfa28b36bf4ce66e0589"
   },
   "coverage": [
     {

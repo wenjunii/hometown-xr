@@ -2,6 +2,10 @@
 
 Status: draft, not approved for production. Rechecked on 2026-10-30.
 
+The later [PR queue update](pr-queue-update.md) records the independent
+dependency and cleanup-policy consolidation. The evidence below retains its
+original date and is not relabeled as a new benchmark run.
+
 PR #45 now combines the patched runtime with the local-first handoff and
 code-only publishing work from #49. Production remains on its existing runtime
 and verified USB checkpoint. No environments, raw stories, review judgments,
