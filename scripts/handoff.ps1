@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+Transfer verified project state between workstations.
+.DESCRIPTION
+Uses folder snapshots when -Store or local folder configuration is present;
+otherwise uses the original Git checkpoint workflow. Folder transfers preview
+by default and need -Apply to write. Git pushes include durable research state,
+so this script is not a code-only GitHub publishing command. Stop project and
+review writers before a handoff; only one PC may write at a time.
+.EXAMPLE
+.\scripts\handoff.ps1 -Direction push -Store E:\HometownXR-store
+Preview a verified local snapshot export without publishing it.
+.EXAMPLE
+.\scripts\handoff.ps1 -Direction push -Store E:\HometownXR-store -Apply
+Publish the local snapshot to the selected store, not GitHub.
+.EXAMPLE
+.\scripts\handoff.ps1 -Direction pull -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -Apply
+Receive into a new directory; an existing destination is never overwritten.
+.NOTES
+GitHub branch publication and USB/shared-folder data handoffs are separate.
+See README.md for code-only sync and LOCAL_HANDOFF.md for snapshot operations.
+#>
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("pull", "push")]

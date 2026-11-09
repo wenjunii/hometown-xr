@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Scan Git candidates for credential-like paths and secret content.
+.DESCRIPTION
+Uses the existing virtual environment or installed Python 3.10+. The scan is
+read-only, does not install packages or stage files, and does not print secret
+values. Stop a code-only publication if this script reports a finding.
+.EXAMPLE
+.\scripts\security-check.ps1 -Scope staged
+Inspect exactly the files staged for the next commit.
+.EXAMPLE
+.\scripts\security-check.ps1 -Scope worktree
+Inspect tracked and non-ignored untracked files in this checkout.
+.EXAMPLE
+.\scripts\security-check.ps1 -Scope tracked
+Inspect tracked files, matching the GitHub credential-scan scope.
+#>
 param(
     [ValidateSet("staged", "tracked", "worktree")]
     [string]$Scope = "worktree"

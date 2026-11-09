@@ -53,6 +53,12 @@ git commit -m "docs: clarify local transfer workflow"
 git push --set-upstream origin HEAD
 ```
 
+`git push` publishes the selected branch, not the repository homepage. GitHub
+shows the `main` README by default; draft-PR changes appear there only after a
+reviewed merge. Keep the pending runtime candidate unmerged until its validation
+gates pass. A standalone README-only change can use a separate maintenance PR,
+without deploying that candidate.
+
 The credential-check script uses the checkout's existing virtual environment,
 or installed Python 3.10+ when no environment exists. A code-only checkout does
 not need GPU setup or dependency installation just to run this check. The scan
@@ -66,6 +72,10 @@ virtual environments, or model caches. Inspect the commit before pushing and
 open a pull request; do not bypass branch protection or required security checks.
 Changing code after a local handoff requires a fresh verified snapshot before
 resuming. Git commits themselves do not update the USB store.
+
+Use `Get-Help .\scripts\security-check.ps1 -Full` for scan scopes and
+`Get-Help .\scripts\handoff.ps1 -Full` for Git versus folder handoff examples.
+Do not use the full-state handoff/checkpoint workflow for a code-only publish.
 
 ## Models
 
@@ -1334,3 +1344,4 @@ MIT. See [LICENSE](LICENSE). Common Crawl data remains subject to the
 - [wenjunii/flexgpu-touchdesigner](https://github.com/wenjunii/flexgpu-touchdesigner)
 - [wenjunii/voice-to-visual-sdtd](https://github.com/wenjunii/voice-to-visual-sdtd)
 - [wenjunii/colab-sd](https://github.com/wenjunii/colab-sd)
+- [wenjunii/gpu-unlock](https://github.com/wenjunii/gpu-unlock)
