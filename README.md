@@ -1216,3 +1216,4 @@ MIT. See [LICENSE](LICENSE). Common Crawl data remains subject to the
 - [wenjunii/flexgpu-touchdesigner](https://github.com/wenjunii/flexgpu-touchdesigner)
 - [wenjunii/voice-to-visual-sdtd](https://github.com/wenjunii/voice-to-visual-sdtd)
 - [wenjunii/colab-sd](https://github.com/wenjunii/colab-sd)
+- [wenjunii/gpu-unlock](https://github.com/wenjunii/gpu-unlock)
