@@ -9,12 +9,15 @@ so this script is not a code-only GitHub publishing command. Stop project and
 review writers before a handoff; only one PC may write at a time.
 .EXAMPLE
 .\scripts\handoff.ps1 -Direction push -Store E:\HometownXR-store
+
 Preview a verified local snapshot export without publishing it.
 .EXAMPLE
 .\scripts\handoff.ps1 -Direction push -Store E:\HometownXR-store -Apply
+
 Publish the local snapshot to the selected store, not GitHub.
 .EXAMPLE
 .\scripts\handoff.ps1 -Direction pull -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -Apply
+
 Receive into a new directory; an existing destination is never overwritten.
 .NOTES
 GitHub branch publication and USB/shared-folder data handoffs are separate.
