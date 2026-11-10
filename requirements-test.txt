@@ -1,12 +1,12 @@
 pytest==9.2.0
-ruff==0.17.3
+ruff==0.17.4
 PyYAML==6.0.3
 pip-audit==2.10.1
 ftfy==6.3.1
 numpy==1.26.4
 warcio==1.8.1
 requests==2.34.2
-boto3==1.43.123
+boto3==1.43.126
 pyarrow==25.0.0
 certifi==2026.10.23
 filelock==4.2.1
