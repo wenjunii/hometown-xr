@@ -11,6 +11,33 @@ expired advisory allowances. It does not change the production environment,
 model revision, concept anchors, filtering thresholds, source stories, or
 tracked model baseline. No credentials or local environment files are included.
 
+## November 10 Pinned Handoff Recheck
+
+The current prepared validation kit pins runtime commit
+`430a82aa88a402df71b337b43ec5f68ac78921ef`, including boto3/botocore 1.43.126
+and Ruff 0.17.4. On the actual 3080, all 56 installed runtime pins match,
+`pip check` passes, and live audits of all four manifests find no known
+vulnerabilities without exceptions (17 direct runtime, 56 per GPU lock,
+16 test pins).
+
+The fresh 400-sample FP16 capture exactly matches baseline scores, concepts,
+and threshold decisions, with zero drift. Five identical real sources process
+244,996 records with seven configured workers in 131.563 seconds, no failures
+or restarts, both historical matches retained, and unchanged output digest
+`59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c`.
+The audit identifier is `20261110T190852Z-c6c5549d`. Timing is not a speedup claim.
+The sanitized bundle is exported and dry-run imported locally, not applied as
+migration approval or committed with raw source data.
+
+The USB reference is under `validation/3080-430a82aa-20261110/`; its launcher
+checks out the same pin in a new directory on each actual target GPU. The
+older `53140a01` preparation and original October evidence below retain their
+own dates and commit identities. Later documentation/help-only branch updates
+do not change the pinned runtime. The production environment and verified
+research-data archive are unchanged. Actual 4090/5090 evidence, genuine human
+and holdout judgments, historical review, cross-PC agreement, and owner
+approval remain required. Keep PR #45 draft.
+
 ## Candidate
 
 | Component | Version |

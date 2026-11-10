@@ -10,6 +10,40 @@ it in an isolated checkout until the existing model-migration gate passes.
 Green CI is not approval to replace a production environment or merge the
 candidate without the required human evaluation and 4090/5090 measurements.
 
+## Prepared GPU Validation
+
+The 2026-11-10 validation kit pins runtime commit
+[`430a82aa`](https://github.com/wenjunii/hometown-xr/commit/430a82aa88a402df71b337b43ec5f68ac78921ef),
+including boto3/botocore 1.43.126 and Ruff 0.17.4. The actual 3080 recheck
+matches all 400 FP16 baseline scores and decisions exactly. The five-source,
+seven-worker benchmark retains both historical matches with no failures or
+restarts. These are 3080 results, not 4090/5090 results or rollout approval.
+
+The prepared USB keeps the production-data snapshot separate from candidate
+validation. Read `HANDOFF-2026-11-10.md` on that drive first. Restore research
+data into a new folder; do not run the restored legacy 5090 setup or export a
+validation checkout into the production store. The older `53140a01` kit and
+evidence are retained as history, not relabeled as the new run.
+
+On the actual 5090, adjust the drive letter if needed:
+
+```powershell
+$Store = 'D:\hometown xr backup'
+& (Join-Path $Store 'validation\VALIDATE-GPU.ps1') -Profile 5090
+& (Join-Path $Store 'validation\VALIDATE-GPU.ps1') -Profile 5090 -Apply
+```
+
+Use `-Profile 4090` on that PC. Preview is the default; apply uses a new local
+checkout at the exact pin, FP16, and seven benchmark workers. It refuses the
+wrong GPU or an existing destination. Successful sanitized JSON evidence is
+copied with a hash check under the drive's `validation\returns\` directory.
+The reference is `validation\3080-430a82aa-20261110\`. A later documentation-only
+branch commit does not change this runtime pin. See the dated
+[validation notes](docs/security-runtime-validation.md) and
+[local handoff guide](LOCAL_HANDOFF.md). Genuine human/holdout and historical
+review, returned GPU evidence, cross-PC agreement, and owner approval remain
+required before merging or deploying the draft candidate.
+
 ## Local-First Quick Start
 
 GitHub is optional for workstation handoffs. Use a shared folder or external

@@ -28,13 +28,25 @@ parsing, and that test environment's `pip check` pass. Fresh live audits cover
 17 direct runtime pins, 56 pins per GPU lock, and 16 test pins, with no known
 vulnerabilities or exceptions. This is not an installed GPU-runtime check.
 
+After that queue review, the owner requested completion of the 3080 handoff.
+The isolated candidate checkout and its environment were explicitly advanced
+to `430a82aa88a402df71b337b43ec5f68ac78921ef`, preserving the previous reports.
+All 56 installed runtime pins, `pip check`, and all four live audits pass.
+The fresh actual-3080 capture exactly matches all 400 FP16 scores, concepts,
+and threshold decisions. Five real sources, 244,996 records, and seven workers
+complete in 131.563 seconds with no failures or restarts, both historical
+matches retained, and unchanged output digest
+`59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c`.
+Timing is not a speedup claim. Sanitized evidence is exported and dry-run
+imported, not applied as approval or uploaded with research data.
+
+The refreshed USB validation kit uses that exact runtime pin. The old
+`53140a01` kit and evidence remain historical copies. README and handoff
+instructions separate the unchanged production-data snapshot from isolated
+candidate validation; script help and focused tests preserve fail-closed use.
 No model libraries, weights, concepts, filters, precision, tuning, security
-exceptions, migration gates, or production data are changed. The separately
-prepared USB and existing isolated 3080 environment remain pinned to
-`53140a01b83850f063b855be16293764d85c6654`; they are not silently upgraded.
-Their dated results remain evidence for that exact candidate, not a new
-GPU validation of these dependency changes. Final rollout still needs
-consistent actual-GPU evidence and the existing human/historical reviews.
+exceptions, migration gates, or production data change. Final rollout still
+needs consistent actual-GPU evidence and the existing human/historical reviews.
 
 ## November 3 Review
 

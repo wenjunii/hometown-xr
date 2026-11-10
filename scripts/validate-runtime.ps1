@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Validate an isolated runtime candidate on the actual requested GPU.
+.DESCRIPTION
+Run setup in a separate, pinned candidate checkout first. This helper checks
+the physical GPU, all installed runtime pins, pip consistency, and live
+advisories before capturing model scores and running the five-source benchmark.
+FP16 is the default to match the tracked baseline. The benchmark uses seven
+workers. Successful sanitized evidence is exported and dry-run imported, not
+applied as migration approval. Production data, tuning, and the baseline are
+not updated. Keep evidence from older candidates separately; do not relabel it.
+.EXAMPLE
+.\scripts\validate-runtime.ps1 -Profile 3080 -Precision fp16
+
+Validate the pinned candidate on the 3080 and export its reference evidence.
+.EXAMPLE
+.\scripts\validate-runtime.ps1 -Profile 5090 -Precision fp16
+
+Run the same checks on the actual 5090 after isolated setup on that PC.
+#>
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("3080", "4090", "5090")]

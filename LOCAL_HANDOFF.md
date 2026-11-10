@@ -9,6 +9,25 @@ On this candidate branch, the receiver needs only Python 3.10+, while the
 patched runtime requires 64-bit Python 3.11 or 3.12. Do not apply the candidate
 runtime to production before the separate migration gate passes.
 
+## Keep Runtime Validation Separate
+
+A production-data snapshot preserves the source PC's as-run code, which may
+still use the legacy runtime while a newer candidate is under review. Receiving
+that snapshot does not approve the candidate or make its legacy 5090 setup safe
+to run. During migration preparation, preserve the restored data directory and
+validate the candidate in a different checkout with its own environment.
+
+Use the exact runtime commit named by the prepared validation kit, not a moving
+branch head. Evidence from another commit remains historical evidence; do not
+rename it or silently reuse it as a fresh run. The README's prepared-validation
+section identifies the current pin and the USB guide explains the receiver and
+validation steps separately.
+
+Never export the isolated validation checkout into the authoritative production
+store: its benchmark checkpoint is test data, not the latest research state.
+Return only the sanitized evidence bundles. A documentation-only GitHub update
+does not require rebuilding the unchanged production-data snapshot.
+
 ## Before Switching
 
 Stop crawlers, enrichment, recovery jobs, and both human-review workbenches on
