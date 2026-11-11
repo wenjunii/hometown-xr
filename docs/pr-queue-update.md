@@ -1,6 +1,32 @@
 # PR Queue Update
 
-Review date: 2026-11-10. Status: isolated candidate, not approved for production.
+Review date: 2026-11-11. Status: isolated candidate, not approved for production.
+
+## November 11 5090 Follow-Up
+
+The actual RTX 5090 passed the complete pinned `430a82aa` validation using
+Python 3.11.9 and driver 617.42. All 56 installed pins, `pip check`, and the
+four live manifest audits pass with zero exceptions. The 400-sample FP16
+comparison with the prepared 3080 has 100% threshold agreement, 99.75%
+concept agreement, and maximum score drift 0.00097656 within the unchanged
+0.005 limit. The same five sources and seven configured workers process
+244,996 records in 72.922 seconds, keep both matches and the same normalized
+digest, and have zero failures or pool restarts. Timings do not establish an
+isolated GPU speedup. See the [dated validation details](security-runtime-validation.md).
+
+This update adds a maintained preview-first launcher and integration tests for
+the PowerShell native-query exit-status fix. It preserves the original USB kit,
+the numerical runtime pin, FP16, all checks/limits, and the existing environments.
+The successful portable bundle and comparison report remain on the USB; no raw
+captures, bundles, research checkpoints, credentials, or machine settings enter
+this code-only update.
+
+Keep #45 draft: actual 4090 validation, genuine human judgments (0/100, including
+0/20 holdout), historical review/adoption (176,012 unknown signatures), reviewed
+consolidation of fresh three-GPU evidence, and owner rollout approval still
+remain. The 5090 validation is complete; neither the combined migration gate
+nor production is approved. Earlier dated measurements below retain their
+original commit and preparation context.
 
 ## November 10 Queue Review
 

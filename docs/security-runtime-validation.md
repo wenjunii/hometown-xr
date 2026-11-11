@@ -11,6 +11,60 @@ expired advisory allowances. It does not change the production environment,
 model revision, concept anchors, filtering thresholds, source stories, or
 tracked model baseline. No credentials or local environment files are included.
 
+## November 11 Actual 5090 Validation
+
+The physical RTX 5090 passed validation at exact runtime commit
+`430a82aa88a402df71b337b43ec5f68ac78921ef`, using 64-bit Python 3.11.9,
+driver 617.42, Torch 2.13.0+cu130, and CUDA capability 12.0. All 56 installed
+runtime pins and `pip check` pass. Live audits of all four manifests pass with
+zero known vulnerabilities and no exceptions.
+
+The 400-sample FP16 capture passes both the tracked baseline comparison and
+the direct comparison with the prepared November 10 3080 evidence. Mean score
+drift is 0.00012166, maximum drift is 0.00097656, concept agreement is 399/400
+(99.75%), and threshold-decision agreement is 400/400. The unchanged limits
+are 0.005 maximum drift, at least 99% concept agreement, and 100% threshold
+agreement. Scores differ on 185 samples; the result is not bit-identical and
+the one changed concept label is retained in the private comparison report.
+
+The identical five sources, seven configured workers, FP16, and disabled cache
+process 244,996 records in 72.922 seconds (246.839 files/hour, 6.862 MB/s).
+Both historical matches are retained, with no failures or pool restarts and
+unchanged normalized output digest
+`59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c`.
+Peak allocated VRAM is 667.3 MB and peak worker RSS is 94.3 MB. The 3080
+reference took 131.563 seconds with 632.8 MB VRAM and 79.7 MB worker RSS.
+The profiles use different batch sizes and network conditions vary; these
+single runs do not isolate a GPU speedup. No tuning recommendation was applied.
+
+The corrected local launcher copied the successful bundle into a new USB
+`validation/returns/` folder. Local and returned bundles are byte-identical,
+and the reference receipt, bundle payload hashes, runtime, libraries, filter
+signature, exact source list, and output digest were checked directly.
+Raw captures and bundles remain private; this code update records only the
+summary. Original USB kit files and the production archive are unchanged.
+The original failed launch log and corrected run reports are retained.
+
+The original USB launcher rejected a matching GPU because its native query
+was piped through `Select-Object -First 1`, leaving `$LASTEXITCODE` unset in a
+fresh PowerShell session. The maintained `scripts/validate-gpu.ps1` captures
+the complete native output and exit status first, then selects the GPU. It
+still refuses failed or unset status, empty output, wrong GPUs, existing
+destinations, and destinations inside the USB store. Its store path is explicit
+and its runtime pin and downstream validation commands are fixed. The original
+USB launcher is preserved. The local fix passed guard tests under PowerShell
+7.6.9 and Windows PowerShell 5.1; repository integration tests cover the guard
+without a GPU, clone, environment installation, or network access.
+
+PR #45 remains draft. Actual 4090 evidence is still missing. Human evaluation
+has 0/100 judgments and 0/20 labeled blind holdout examples (both classes are
+required); 176,012 completed source signatures remain unknown with no recorded
+adoptions. Fresh 3080/5090 bundles still need reviewed consolidation with the
+4090 result; the gate's registered 3080 evidence is older. No approval artifact
+was written. After all gates and owner approval, reconcile the preserved 3080
+source edits and prepare an FP16 production environment with a passing preflight.
+The isolated benchmark checkout is test state, not the next production snapshot.
+
 ## November 10 Pinned Handoff Recheck
 
 The current prepared validation kit pins runtime commit
@@ -128,13 +182,13 @@ differs or authorize rewriting it. See the
 
 Keep the candidate in a separate checkout with its own virtual environment.
 Install Python 3.11 or 3.12 and a compatible NVIDIA driver, then run these
-commands from that checkout, substituting the actual profile. While the PR
-is a draft, use `codex/security-runtime-refresh`, not `main`:
+commands from the current code checkout, substituting the actual profile and
+prepared USB path. The maintained launcher uses the branch only to fetch the
+repository, then verifies the exact runtime pin before setup:
 
 ```powershell
-git lfs pull
-.\scripts\setup.ps1 -Profile 4090 -Dev
-.\scripts\validate-runtime.ps1 -Profile 4090
+.\scripts\validate-gpu.ps1 -Store E:\HometownXR-store -Profile 4090
+.\scripts\validate-gpu.ps1 -Store E:\HometownXR-store -Profile 4090 -Apply
 ```
 
 Use `-Profile 5090` on that PC, and run only one workstation at a time. The
@@ -156,8 +210,9 @@ The exported file is `data/evidence-outbox/profile-evidence-4090.json` (or
 import; do not sync the virtual environment. Compare its source list and
 output digest with the 3080 evidence before any migration approval.
 
-Run the same real-source benchmark on the 4090 and 5090 and compare it with
-the fresh 3080 evidence. Historical metrics do not establish performance or
+The 5090 run above is complete. Run the same real-source benchmark on the
+actual 4090 and compare all three fresh bundles. Historical metrics do not
+establish performance or
 output identity for this new candidate. Finish the guided human-label and
 blind-holdout campaign, and verify historical filter signatures using the isolated audit
 workflow in the main README. Then check the existing final gate:
@@ -166,9 +221,11 @@ workflow in the main README. Then check the existing final gate:
 .\scripts\model-migration.ps1 -Action validate
 ```
 
-At local validation the gate is correctly blocked: no human labels or holdout
-labels, 176012 unknown historical source signatures, and no 4090/5090 candidate
-snapshots or matching real-source measurements. The draft PR must not be
+At the November 11 gate inspection it remains blocked: no human labels or holdout
+labels, 176012 unknown historical source signatures, and no 4090 candidate
+snapshot or matching real-source measurement. The 3080/5090 measurements pass,
+but evidence registration and three-PC consistency are not complete. The draft
+PR must not be
 merged/promoted until the required evidence is reviewed. No approval artifact
 has been written.
 

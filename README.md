@@ -17,7 +17,18 @@ The 2026-11-10 validation kit pins runtime commit
 including boto3/botocore 1.43.126 and Ruff 0.17.4. The actual 3080 recheck
 matches all 400 FP16 baseline scores and decisions exactly. The five-source,
 seven-worker benchmark retains both historical matches with no failures or
-restarts. These are 3080 results, not 4090/5090 results or rollout approval.
+restarts. Those November 10 measurements are the 3080 reference.
+
+Actual RTX 5090 validation completed on November 11 at the same runtime pin,
+with Python 3.11.9, driver 617.42, and all 56 installed pins matching. All four
+live manifest audits pass without exceptions. The 400-sample FP16 comparison
+against the 3080 passes the unchanged limits: all threshold decisions agree,
+399/400 concept labels agree, and maximum score drift is 0.00097656 (limit
+0.005). The same five sources and seven configured workers process 244,996
+records in 72.922 seconds, retain both matches and the identical output digest,
+and have no failures or pool restarts. The 3080 reference took 131.563 seconds;
+single runs with different profiles and network conditions are not an isolated
+GPU speedup measurement. These results do not approve production rollout.
 
 The prepared USB keeps the production-data snapshot separate from candidate
 validation. Read `HANDOFF-2026-11-10.md` on that drive first. Restore research
@@ -25,15 +36,21 @@ data into a new folder; do not run the restored legacy 5090 setup or export a
 validation checkout into the production store. The older `53140a01` kit and
 evidence are retained as history, not relabeled as the new run.
 
-On the actual 5090, adjust the drive letter if needed:
+The maintained launcher fixes the original USB launcher's PowerShell GPU-query
+exit-status bug. It waits for the native query and saves its exit code before
+selecting a GPU name; failed, missing, empty, or mismatched results still stop
+the run. Keep the original USB kit unchanged. From this code checkout, use the
+maintained copy on the remaining actual 4090, adjusting the store path:
 
 ```powershell
-$Store = 'D:\hometown xr backup'
-& (Join-Path $Store 'validation\VALIDATE-GPU.ps1') -Profile 5090
-& (Join-Path $Store 'validation\VALIDATE-GPU.ps1') -Profile 5090 -Apply
+$Store = 'E:\HometownXR-store'
+.\scripts\validate-gpu.ps1 -Store $Store -Profile 4090
+.\scripts\validate-gpu.ps1 -Store $Store -Profile 4090 -Apply
 ```
 
-Use `-Profile 4090` on that PC. Preview is the default; apply uses a new local
+Use `-Profile 5090` only on the actual 5090; repeat validation requires a new
+`-Destination` rather than replacing its completed checkout. Preview is the
+default; apply uses a new local
 checkout at the exact pin, FP16, and seven benchmark workers. It refuses the
 wrong GPU or an existing destination. Successful sanitized JSON evidence is
 copied with a hash check under the drive's `validation\returns\` directory.
@@ -41,8 +58,13 @@ The reference is `validation\3080-430a82aa-20261110\`. A later documentation-onl
 branch commit does not change this runtime pin. See the dated
 [validation notes](docs/security-runtime-validation.md) and
 [local handoff guide](LOCAL_HANDOFF.md). Genuine human/holdout and historical
-review, returned GPU evidence, cross-PC agreement, and owner approval remain
-required before merging or deploying the draft candidate.
+review, actual 4090 evidence, reviewed consolidation of the fresh three-GPU
+bundles, and owner approval remain required before merging or deploying the
+draft candidate. There are still 0/100 human judgments, 0/20 labeled holdout
+examples, and 176,012 unknown historical source signatures. The 5090 result
+clears that PC's validation step, not the combined migration gate. Code-only
+GitHub updates contain scripts, tests, and these summary measurements; raw
+captures, evidence bundles, environments, and research data stay private.
 
 ## Local-First Quick Start
 
@@ -491,6 +513,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
 | `.\scripts\dependency-audit.ps1` | Validate profile pins and audit all four pinned manifests |
 | `.\scripts\validate-runtime.ps1 -Profile 3080` | Validate the candidate on the actual GPU and export portable evidence without changing tuning |
+| `.\scripts\validate-gpu.ps1 -Store E:\HometownXR-store -Profile 4090` | Preview a new checkout at runtime 430a82aa; add `-Apply` to validate and return evidence |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 
