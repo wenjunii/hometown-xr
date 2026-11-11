@@ -1,5 +1,15 @@
 # Workstation Handoff Guide
 
+For GitHub-independent snapshots through a NAS or external SSD, use
+[Local-First Workstation Handoffs](LOCAL_HANDOFF.md). That mode restores into a
+new directory, preserves existing work, and replaces Git ownership with a
+shared-store lock. The instructions below describe the original Git mode.
+
+In folder mode, `checkpoint.ps1` and handoff pushes write to the local store;
+they do not publish to GitHub. Use the separate
+[code-only publishing procedure](README.md#optional-code-sync) for reviewed code
+changes. A GitHub pull is not a replacement for the newest research snapshot.
+
 Use this procedure to move Hometown XR among the RTX 3080, RTX 4090, and
 RTX 5090 PCs. The crawler enforces one active workstation with an atomic lease
 stored in the remote Git notes ref `refs/notes/hometown-xr-workstation-owner`.

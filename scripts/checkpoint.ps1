@@ -10,6 +10,14 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $Lock = Join-Path $Root "data\.crawler.lock"
 
+if (Test-Path -LiteralPath (Join-Path $Root "data\handoff.local.json")) {
+    if ($NoPush -or $ForceVacuum -or $SkipStoryRefresh) {
+        throw "Git checkpoint switches do not apply in local-folder mode. Use transfer.ps1 for a dry run."
+    }
+    & (Join-Path $PSScriptRoot "transfer.ps1") -Action export -Apply
+    exit $LASTEXITCODE
+}
+
 function Update-OriginBranch {
     param([Parameter(Mandatory = $true)][string]$Branch)
 

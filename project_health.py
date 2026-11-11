@@ -41,6 +41,26 @@ def _git(*arguments: str, root: Path = PROJECT_ROOT) -> str:
 
 def git_health(root: str | Path = PROJECT_ROOT) -> dict:
     project_root = Path(root)
+    if (project_root / "data/handoff.local.json").exists():
+        from workstation_guard import get_workstation_lease
+
+        try:
+            preflight = get_workstation_lease("auto", root=project_root).preflight()
+        except (OSError, ValueError, RuntimeError, KeyError) as exc:
+            preflight = {"ready": False, "errors": [str(exc)]}
+        return {
+            "transport": "folder",
+            "branch": "local-snapshot",
+            "commit": preflight.get("head"),
+            "upstream": None,
+            "ahead": None,
+            "behind": None,
+            "dirty": False,
+            "changed_paths": [],
+            "checkpoint_commit_at": None,
+            "checkpoint_age_hours": None,
+            "local_handoff": preflight,
+        }
     branch = _git("branch", "--show-current", root=project_root) or "detached"
     commit = _git("rev-parse", "HEAD", root=project_root) or "unknown"
     upstream = _git("rev-parse", "--abbrev-ref", "@{upstream}", root=project_root)
@@ -144,16 +164,30 @@ def build_health_checks(payload: dict, full: bool = False) -> list[dict]:
         checks.append(row)
 
     git = payload["git"]
+    worktree_summary = "worktree has local changes" if git["dirty"] else "worktree is clean"
+    upstream_summary = f"ahead={git.get('ahead')}, behind={git.get('behind')}"
+    if git.get("transport") == "folder":
+        local = git["local_handoff"]
+        add(
+            "local_handoff",
+            "pass" if local.get("ready") else "fail",
+            "local snapshot matches shared state" if local.get("ready")
+            else "; ".join(local.get("errors", [])),
+            None if local.get("ready")
+            else "Export local work or receive the latest snapshot into a new directory",
+        )
+        worktree_summary = "Git not required in folder mode"
+        upstream_summary = "Git upstream not required in folder mode"
     add(
         "git_worktree",
         "warning" if git["dirty"] else "pass",
-        "worktree has local changes" if git["dirty"] else "worktree is clean",
+        worktree_summary,
         "Commit or resolve local changes before a workstation handoff" if git["dirty"] else None,
     )
     add(
         "git_upstream",
         "fail" if (git.get("behind") or 0) > 0 else "pass",
-        f"ahead={git.get('ahead')}, behind={git.get('behind')}",
+        upstream_summary,
         "Pull the matching remote branch before continuing" if (git.get("behind") or 0) > 0 else None,
     )
     add(

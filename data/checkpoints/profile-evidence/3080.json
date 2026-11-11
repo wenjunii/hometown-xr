@@ -1,21 +1,21 @@
 {
   "component_created_at": {
-    "model_snapshot": "2026-07-21T23:44:21.833452+00:00",
-    "workload_benchmark": null
+    "model_snapshot": "2026-10-28T18:40:46.091700+00:00",
+    "workload_benchmark": "2026-10-28T18:42:55.276728+00:00"
   },
   "contains_credentials": false,
   "contains_source_text": false,
-  "content_sha256": "2cf8c9489705c6a00977f61fc2f36a6656ef3683657eb4465592a4d7aa30fa7a",
+  "content_sha256": "35153095ba797129954eacb07af63c3564b59971c0fbb139bec469ac8d62ddc2",
   "filter_signature": "6f84f73077a2d934c1e3b60e8d4310ebc8b9f1e0d8be5843922120065a2eb0c2",
   "generated_text": false,
-  "git_commit": "fee4b50eb57ef610ae306a9ad62c0166443e75cd",
+  "git_commit": "dfdc5aa26e097af7e874f6d92e7cbacbe3ed2802",
   "model_snapshot": {
-    "created_at": "2026-07-21T23:44:21.833452+00:00",
-    "git_commit": "4dff9b7a65fa42f23a49df06354353db5dee61ff",
+    "created_at": "2026-10-28T18:40:46.091700+00:00",
+    "git_commit": "dfdc5aa26e097af7e874f6d92e7cbacbe3ed2802",
     "libraries": {
-      "sentence-transformers": "2.7.0",
-      "torch": "2.1.0+cu121",
-      "transformers": "4.40.2"
+      "sentence-transformers": "5.6.1",
+      "torch": "2.13.0+cu130",
+      "transformers": "5.10.4"
     },
     "model": {
       "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
@@ -23,6 +23,11 @@
       "semantic_threshold": 0.45
     },
     "profile": "3080",
+    "runtime": {
+      "device": "cuda",
+      "encoding_batch_size": 128,
+      "precision": "fp16"
+    },
     "sample_count": 400,
     "sample_digest": "dfc2c416b71dd6fc3448a5b1f3802498f8bfcdea9103d514cb602419628d7559",
     "samples": [
@@ -2431,5 +2436,50 @@
   },
   "profile": "3080",
   "schema_version": 1,
-  "workload_benchmark": null
+  "workload_benchmark": {
+    "cache_enabled": false,
+    "crawl_id": "CC-MAIN-2014-15",
+    "filter_signature": "6f84f73077a2d934c1e3b60e8d4310ebc8b9f1e0d8be5843922120065a2eb0c2",
+    "generated_at": "2026-10-28T18:42:55.276728+00:00",
+    "git_commit": "dfdc5aa26e097af7e874f6d92e7cbacbe3ed2802",
+    "historical_state_changed": false,
+    "mode": "isolated_real_sources",
+    "profile": "3080",
+    "recommended_workers": 7,
+    "runtime": {
+      "candidate_batch_size": 100,
+      "encoding_batch_size": 128,
+      "inference_batch_size": 800,
+      "precision": "fp16"
+    },
+    "schema_version": 1,
+    "source_files": [
+      "crawl-data/CC-MAIN-2014-15/segments/1397609527423.39/wet/CC-MAIN-20140416005207-00197-ip-10-147-4-33.ec2.internal.warc.wet.gz",
+      "crawl-data/CC-MAIN-2014-15/segments/1397609532374.24/wet/CC-MAIN-20140416005212-00058-ip-10-147-4-33.ec2.internal.warc.wet.gz",
+      "crawl-data/CC-MAIN-2014-15/segments/1397609532480.36/wet/CC-MAIN-20140416005212-00094-ip-10-147-4-33.ec2.internal.warc.wet.gz",
+      "crawl-data/CC-MAIN-2014-15/segments/1397609537186.46/wet/CC-MAIN-20140416005217-00630-ip-10-147-4-33.ec2.internal.warc.wet.gz",
+      "crawl-data/CC-MAIN-2014-15/segments/1397609538824.34/wet/CC-MAIN-20140416005218-00244-ip-10-147-4-33.ec2.internal.warc.wet.gz"
+    ],
+    "sources_per_trial": 5,
+    "trial_outputs_agree": true,
+    "trials": [
+      {
+        "audit_id": "20261028T184048Z-c6489935",
+        "audit_matches": 2,
+        "completed": 5,
+        "elapsed_seconds": 123.906,
+        "equivalent_output": true,
+        "failed": 0,
+        "failure_categories": {},
+        "files_per_hour": 145.271,
+        "megabytes_per_second": 4.039,
+        "output_digest": "59fa2022fb1c97423259873417cc290306138ed836075d1bd009589f1d168a0c",
+        "peak_vram_mb": 632.8,
+        "peak_worker_rss_mb": 79.7,
+        "process_pool_restarts": 0,
+        "workers": 7
+      }
+    ],
+    "warning": null
+  }
 }
