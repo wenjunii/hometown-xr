@@ -66,6 +66,34 @@ source story text stays byte-for-byte unchanged. Stored LFS pointer files are
 not mistaken for actual research data. Progress logs cover long database scans.
 Source changes detected during export stop publication. Keep writers stopped.
 
+## Prepare Without Transferring
+
+If a folder handoff is already configured, use the maintained script in the
+production checkout or pass `-Source` from a separate code checkout. This
+avoids changing the code fingerprint of the existing production snapshot:
+
+```powershell
+.\scripts\transfer.ps1 -Action prepare -Source C:\Projects\hometown-3080 -Store E:\HometownXR-store
+```
+
+Stop writers before the check. Preparation reports source inventory and
+integrity separately from snapshot readiness. `ready: true` means the store
+is idle, agrees with the source's folder configuration, and its existing
+archive passed verification. The report includes a snapshot ID, store ID,
+file count, required precision, and SHA-256. A missing store, different
+snapshot, or uncheckpointed change does not produce a ready receipt. The
+command exits with code 1 when preparation is blocked. It does not write a
+snapshot or change store ownership. Recheck immediately before the handoff;
+the report is not a reservation or a deployment approval.
+
+If the source has uncheckpointed changes, review and export from that source
+into the original store only when authorized. Preview the import into a new
+destination and pass the expected hash from `snapshot.sha256` to both preview
+and apply with `-ExpectedSha256`. If the exact archive is no longer current,
+import stops before publishing a destination. The hash covers the archive,
+including its store, snapshot ID, and precision metadata. Use the maintained
+script for this option; do not overwrite the original USB receiver.
+
 ## Receive On Another PC
 
 The store includes a receiver tool. On the destination PC, it needs only

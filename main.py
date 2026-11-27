@@ -1395,7 +1395,10 @@ def main() -> None:
     elif args.command == "transfer":
         from portable_transfer import execute
 
-        print(json.dumps(execute(args, DATA_DIR.parent), indent=2))
+        result = execute(args, DATA_DIR.parent)
+        print(json.dumps(result, indent=2))
+        if result.get("ready") is False:
+            raise SystemExit(1)
     elif args.command == "workstation":
         from workstation_guard import get_workstation_lease
 

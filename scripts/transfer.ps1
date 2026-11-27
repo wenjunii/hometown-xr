@@ -1,20 +1,46 @@
+<#
+.SYNOPSIS
+Prepare, verify, export, or restore a local workstation snapshot.
+.EXAMPLE
+.\scripts\transfer.ps1 -Action prepare -Source C:\Projects\hometown-3080 -Store E:\HometownXR-store
+
+Scan the source and verify its current snapshot without publishing it. Exit
+code 1 means the handoff is not ready, for example if the original store is
+disconnected. Preparation never starts a transfer.
+.EXAMPLE
+.\scripts\transfer.ps1 -Action import -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -ExpectedSha256 $Receipt.snapshot.sha256
+
+Preview restoration of the exact archive verified in the preparation receipt.
+Only repeat with -Apply after confirming the preview and approving the restore.
+#>
 param(
-    [ValidateSet("export", "import", "verify", "status", "check")]
+    [ValidateSet("prepare", "export", "import", "verify", "status", "check")]
     [string]$Action = "status",
     [string]$Store,
     [string]$Destination,
     [string]$Path,
+    [string]$Source,
+    [string]$ExpectedSha256,
     [switch]$Apply
 )
 
 $ErrorActionPreference = "Stop"
-foreach ($Name in @("Store", "Destination", "Path")) {
+foreach ($Name in @("Store", "Destination", "Path", "Source", "ExpectedSha256")) {
     if ($PSBoundParameters.ContainsKey($Name) -and [string]::IsNullOrWhiteSpace($PSBoundParameters[$Name])) {
         throw "$Name must not be blank."
     }
 }
-if ($Store -and $Action -notin @("export", "import", "status")) {
-    throw "Store is valid only with export, import, or status."
+if ($Store -and $Action -notin @("prepare", "export", "import", "status")) {
+    throw "Store is valid only with prepare, export, import, or status."
+}
+if ($Source -and $Action -ne "prepare") {
+    throw "Source is valid only with prepare."
+}
+if ($ExpectedSha256 -and $Action -ne "import") {
+    throw "ExpectedSha256 is valid only with import."
+}
+if ($ExpectedSha256 -and $ExpectedSha256 -cnotmatch '^[a-fA-F0-9]{64}$') {
+    throw "ExpectedSha256 must contain exactly 64 hexadecimal digits."
 }
 if ($Destination -and $Action -ne "import") {
     throw "Destination is valid only with import."
@@ -46,10 +72,12 @@ if (-not (Test-Path -LiteralPath $Python)) {
         throw "Install Python 3.10+ to transfer snapshots. No GPU environment is required."
     }
 }
-$Arguments = @((Join-Path $Root "portable_transfer.py"), "transfer", $Action)
+$Arguments = @("-B", (Join-Path $Root "portable_transfer.py"), "transfer", $Action)
 if ($Store) { $Arguments += @("--store", $Store) }
 if ($Destination) { $Arguments += @("--destination", $Destination) }
 if ($Path) { $Arguments += @("--path", $Path) }
+if ($Source) { $Arguments += @("--source", $Source) }
+if ($ExpectedSha256) { $Arguments += @("--expected-sha256", $ExpectedSha256) }
 if ($Apply) { $Arguments += "--yes" }
 Push-Location $Root
 try {

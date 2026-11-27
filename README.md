@@ -66,6 +66,43 @@ clears that PC's validation step, not the combined migration gate. Code-only
 GitHub updates contain scripts, tests, and these summary measurements; raw
 captures, evidence bundles, environments, and research data stay private.
 
+## Prepare a 5090 Handoff
+
+Before moving anything, run the following from a separate code checkout with
+the maintained transfer script. Point it at the **production source**, not
+the isolated GPU validation checkout:
+
+```powershell
+$Source = 'C:\Projects\hometown-3080'
+$Store = 'E:\HometownXR-store'
+.\scripts\transfer.ps1 -Action prepare -Source $Source -Store $Store
+```
+
+This checks portable source files and SQLite, then verifies the current
+archive against the source's recorded store and snapshot. It never exports,
+restores, or takes ownership. If the original drive is disconnected, the
+report can show a healthy source with `ready: false` (exit code 1). Reconnect
+the original store; do not initialize a replacement at the same path.
+
+When ready, use the verified `snapshot.sha256` from that report on the 5090.
+Use the maintained script in a separate code checkout if the original
+USB-shipped receiver predates the hash option:
+
+```powershell
+$Store = 'E:\HometownXR-store' # Original drive on the 5090
+$Destination = 'C:\Projects\hometown-5090-resume' # New directory
+$Hash = '<verified snapshot.sha256>'
+.\scripts\transfer.ps1 -Action import -Store $Store -Destination $Destination -ExpectedSha256 $Hash
+# After confirming the preview and approving the restore, repeat with -Apply.
+```
+
+Adjust `$Store` for the original drive's letter on the 5090. Keep its existing
+validated runtime at `430a82aa`; data restore and code review do not approve
+runtime replacement. Do not run legacy setup from the restored data snapshot
+or use [draft #66](https://github.com/wenjunii/hometown-xr/pull/66) as an update
+to the validated environment. See the [handoff guide](LOCAL_HANDOFF.md#prepare-without-transferring)
+for readiness and ownership checks.
+
 ## Local-First Quick Start
 
 GitHub is optional for workstation handoffs. Use a shared folder or external
@@ -467,6 +504,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 -WorkerCount 1,4,7` | Compare worker counts on identical isolated real sources |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
+| `.\scripts\transfer.ps1 -Action prepare -Source PATH -Store PATH` | Check source and existing snapshot without transferring or taking ownership |
 | `.\scripts\security-check.ps1` | Scan local Git candidates for credential paths and content |
 | `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\audit.ps1` | Plan a deterministic, isolated historical-source audit |
