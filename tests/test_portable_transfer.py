@@ -48,6 +48,165 @@ def test_dry_run_does_not_create_store_or_change_project(project, tmp_path):
     assert transfer.inventory(project) == before
 
 
+def test_prepare_verifies_existing_snapshot_without_writing(project, published, monkeypatch):
+    store, exported = published
+    config = (project / transfer.CONFIG).read_bytes()
+    control = (store / "control.json").read_bytes()
+    before = transfer.inventory(project)
+
+    def reject(*args, **kwargs):
+        pytest.fail("Prepare must not take a store lock")
+
+    monkeypatch.setattr(transfer, "_store_lock", reject)
+    report = transfer.prepare_handoff(project)
+
+    assert report["ready"] and not report["applied"]
+    assert report["source"]["valid"]
+    assert report["snapshot"] == transfer.verify_snapshot(exported["path"])
+    assert transfer.inventory(project) == before
+    assert (project / transfer.CONFIG).read_bytes() == config
+    assert (store / "control.json").read_bytes() == control
+    assert not (store / ".transfer-lock").exists()
+
+
+def test_prepare_missing_store_keeps_source_report_and_never_creates_store(project, published):
+    store, _ = published
+    config = (project / transfer.CONFIG).read_bytes()
+    store.rename(store.with_name("disconnected"))
+
+    report = transfer.prepare_handoff(project)
+
+    assert report["source"]["valid"]
+    assert not report["ready"] and not report["applied"]
+    assert report["snapshot"] is None
+    assert "unavailable" in report["blocker"]
+    assert not store.exists()
+    assert (project / transfer.CONFIG).read_bytes() == config
+
+
+def test_prepare_requires_folder_configuration(project, tmp_path):
+    store = tmp_path / "unused"
+    report = transfer.prepare_handoff(project, store)
+    assert not report["ready"]
+    assert "no configured folder snapshot" in report["blocker"]
+    assert not store.exists()
+
+
+@pytest.mark.parametrize("field", ["store_id", "snapshot_id"])
+def test_prepare_refuses_different_store_or_snapshot(project, published, field):
+    store, _ = published
+    control_path = store / "control.json"
+    control = json.loads(control_path.read_text(encoding="utf-8"))
+    control[field] = "f" * 32
+    control_path.write_text(json.dumps(control), encoding="utf-8")
+    report = transfer.prepare_handoff(project)
+    assert not report["ready"]
+    assert report["snapshot"] is None
+    assert "identity differs" in report["blocker"]
+
+
+@pytest.mark.parametrize("name", ["main.py", "data/output/en.jsonl"])
+def test_prepare_does_not_verify_stale_archive_when_source_has_changes(project, published, name):
+    (project / name).write_text("changed since handoff", encoding="utf-8")
+    report = transfer.prepare_handoff(project)
+    assert not report["ready"]
+    assert "uncheckpointed" in report["blocker"]
+
+
+def test_prepare_refuses_live_source_lock(project, published):
+    lock = project / "data/.crawler.lock"
+    lock.write_text("writer lock", encoding="utf-8")
+    with pytest.raises(ValueError, match="stop local writers"):
+        transfer.prepare_handoff(project)
+    assert lock.read_text(encoding="utf-8") == "writer lock"
+
+
+def test_prepare_refuses_busy_store(project, published):
+    store, _ = published
+    with transfer._store_lock(store):
+        report = transfer.prepare_handoff(project)
+        assert not report["ready"]
+        assert "owned or busy" in report["blocker"]
+        assert (store / ".transfer-lock").exists()
+
+
+def test_prepare_refuses_active_ownership(project, published):
+    lease = get_workstation_lease("3080", root=project)
+    lease.claim()
+    report = transfer.prepare_handoff(project)
+    assert not report["ready"]
+    assert "owned or busy" in report["blocker"]
+    assert lease.status()["active"]
+
+
+def test_prepare_refuses_corrupt_archive(project, published):
+    store, exported = published
+    archive = store / "snapshots" / f"{exported['snapshot_id']}.zip"
+    archive.write_bytes(b"not a zip")
+    with pytest.raises(zipfile.BadZipFile):
+        transfer.prepare_handoff(project)
+
+
+def test_prepare_detects_changes_during_verification(project, published, monkeypatch):
+    verify = transfer.verify_snapshot
+
+    def change_source(path):
+        snapshot = verify(path)
+        (project / "main.py").write_text("# changed during verification\n", encoding="utf-8")
+        return snapshot
+
+    monkeypatch.setattr(transfer, "verify_snapshot", change_source)
+    with pytest.raises(ValueError, match="changed during preparation"):
+        transfer.prepare_handoff(project)
+
+
+def test_hash_pins_preview_and_restore(project, published, tmp_path):
+    store, _ = published
+    expected = transfer.prepare_handoff(project)["snapshot"]["sha256"].upper()
+    target = tmp_path / "restored"
+    preview = transfer.import_snapshot(project, store, target, expected_sha256=expected)
+    assert preview["sha256"] == expected.lower()
+    assert not preview["applied"] and not target.exists()
+    result = transfer.import_snapshot(project, store, target, apply=True, expected_sha256=expected)
+    assert result["applied"] and result["sha256"] == preview["sha256"]
+    assert (target / transfer.CONFIG).exists()
+
+
+def test_hash_prevents_applying_a_different_snapshot_after_preview(project, published, tmp_path):
+    store, _ = published
+    target = tmp_path / "restored"
+    preview = transfer.import_snapshot(project, store, target)
+    transfer.export_snapshot(project, store, apply=True)
+
+    with pytest.raises(ValueError, match="expected handoff receipt"):
+        transfer.import_snapshot(project, store, target, apply=True, expected_sha256=preview["sha256"])
+    assert not target.exists()
+    assert not (store / ".transfer-lock").exists()
+
+
+@pytest.mark.parametrize("cli", ["main.py", "portable_transfer.py"])
+@pytest.mark.parametrize("connected", [True, False])
+def test_prepare_cli_reports_readiness_for_explicit_source(project, published, cli, connected):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    store, _ = published
+    if not connected:
+        store.rename(store.with_name("disconnected"))
+    run = subprocess.run(
+        [sys.executable, "-B", str(Path(transfer.__file__).with_name(cli)),
+         "transfer", "prepare", "--source", str(project)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert run.returncode == int(not connected), run.stderr
+    report = json.loads(run.stdout)
+    assert report["ready"] is connected
+    assert report["source"]["valid"]
+
+
 def test_roundtrip_preserves_source_and_labels_but_excludes_machine_state(project, tmp_path):
     (project / "data/evaluation").mkdir()
     labels = b'{"label":"accepted","notes":"human judgment"}\n'
@@ -133,8 +292,12 @@ def test_shipped_receiver_can_inspect_its_parent_store(published, tmp_path):
     [
         ("status", ["-Destination", "unused"], "Destination is valid only with import"),
         ("export", ["-Path", "unused"], "Path is valid only with verify"),
-        ("check", ["-Store", "unused"], "Store is valid only with export, import, or status"),
+        ("check", ["-Store", "unused"], "Store is valid only with prepare, export, import, or status"),
         ("status", ["-Store", " "], "Store must not be blank"),
+        ("export", ["-Source", "unused"], "Source is valid only with prepare"),
+        ("prepare", ["-Apply"], "Apply is valid only with export or import"),
+        ("prepare", ["-ExpectedSha256", "f" * 64], "ExpectedSha256 is valid only with import"),
+        ("import", ["-ExpectedSha256", "oops"], "exactly 64 hexadecimal digits"),
     ],
 )
 def test_powershell_transfer_rejects_inapplicable_options(action, arguments, message, tmp_path):
@@ -155,6 +318,30 @@ def test_powershell_transfer_rejects_inapplicable_options(action, arguments, mes
     )
     assert run.returncode != 0
     assert message in run.stdout + run.stderr
+
+
+def test_powershell_import_enforces_expected_hash(published, tmp_path):
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    powershell = shutil.which("pwsh")
+    if not powershell:
+        pytest.skip("PowerShell is not installed")
+    store, _ = published
+    target = tmp_path / "wrong receipt"
+    script = Path(transfer.__file__).parent / "scripts/transfer.ps1"
+    run = subprocess.run(
+        [powershell, "-NoProfile", "-File", str(script), "-Action", "import",
+         "-Store", str(store), "-Destination", str(target), "-ExpectedSha256", "0" * 64, "-Apply"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert run.returncode == 1
+    assert "expected handoff receipt" in run.stderr
+    assert not target.exists()
 
 
 def test_wal_changes_are_detected_before_claim(project, published):

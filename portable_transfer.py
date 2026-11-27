@@ -568,8 +568,17 @@ def verify_snapshot(path: str | Path) -> dict:
 
 
 def import_snapshot(
-    root: Path, store: str | Path, destination: str | Path, *, apply: bool = False
+    root: Path,
+    store: str | Path,
+    destination: str | Path,
+    *,
+    apply: bool = False,
+    expected_sha256: str | None = None,
 ) -> dict:
+    if expected_sha256 is not None:
+        if not re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256):
+            raise ValueError("expected SHA-256 must contain exactly 64 hexadecimal digits")
+        expected_sha256 = expected_sha256.lower()
     root = root.resolve()
     source = Path(store).expanduser().resolve()
     target = Path(destination).resolve()
@@ -586,6 +595,8 @@ def import_snapshot(
             raise ValueError("finish/export the owning workstation's work before receiving")
         if apply and not target.parent.is_dir():
             raise ValueError("destination parent must already exist")
+        if expected_sha256 is not None and _hash(archive_path) != expected_sha256:
+            raise ValueError("snapshot SHA-256 does not match the expected handoff receipt")
         # Only a newly created sibling is ever removed on failure. Existing projects are never replaced.
         staging = Path(
             tempfile.mkdtemp(prefix=".hometown-import-", dir=target.parent if apply else None)
@@ -599,6 +610,9 @@ def import_snapshot(
                 raise ValueError("snapshot/store identity mismatch")
             if manifest.get("required_precision") != control.get("required_precision"):
                 raise ValueError("snapshot/store precision mismatch")
+            sha256 = _hash(archive_path)
+            if expected_sha256 is not None and sha256 != expected_sha256:
+                raise ValueError("snapshot SHA-256 changed during verification")
             result = {
                 "action": "import",
                 "applied": apply,
@@ -608,7 +622,7 @@ def import_snapshot(
                 "store_id": manifest["store_id"],
                 "files": len(manifest["files"]),
                 "required_precision": manifest.get("required_precision"),
-                "sha256": _hash(archive_path),
+                "sha256": sha256,
             }
             if apply:
                 _config(staging, source, control, inventory(staging))
@@ -725,8 +739,7 @@ def store_status(root: Path, store: str | Path | None = None) -> dict:
     }
 
 
-def check_local_files(root: Path) -> dict:
-    files = inventory(root.resolve())
+def _check_local_inventory(root: Path, files: dict) -> dict:
     for name in files:
         _scan(root / name, name)
     if "data/progress.db" in files:
@@ -739,6 +752,81 @@ def check_local_files(root: Path) -> dict:
     }
 
 
+def check_local_files(root: Path) -> dict:
+    root = root.resolve()
+    return _check_local_inventory(root, inventory(root))
+
+
+def _require_idle_source(root: Path) -> None:
+    if (root / "data/.crawler.lock").exists():
+        raise ValueError("crawler lock exists; stop local writers before preparing the handoff")
+    if (root / "data/.workstation-owner.local.json").exists():
+        raise ValueError("release the existing Git workstation lease before preparing the handoff")
+
+
+def prepare_handoff(root: Path, store: str | Path | None = None) -> dict:
+    """Verify an existing handoff without publishing, restoring, or taking ownership."""
+    root = root.resolve()
+    _require_idle_source(root)
+    if not (root / "data/progress.db").is_file():
+        raise ValueError("the source project must have a local progress database")
+    config_path = root / CONFIG
+    config = _json(config_path) if config_path.exists() else {}
+    target = _store_path(root, store) if store is not None or config else None
+    files = inventory(root)
+    logger.info("Checking %s portable source files before verifying the existing handoff", len(files))
+    result = {
+        "action": "prepare",
+        "applied": False,
+        "ready": False,
+        "source": {
+            **_check_local_inventory(root, files),
+            "bytes": sum(row["size"] for row in files.values()),
+        },
+        "store": str(target) if target is not None else None,
+        "snapshot": None,
+        "blocker": None,
+    }
+    _require_idle_source(root)
+    if target is None or config.get("mode") != "folder" or config.get("schema_version") != 1:
+        result["blocker"] = "source has no configured folder snapshot to verify"
+        return result
+    if not (target / "control.json").is_file():
+        result["blocker"] = "original snapshot store unavailable; reconnect it without initializing a new one"
+        return result
+    lock = target / ".transfer-lock"
+    control = _control(target)
+    if lock.exists() or (control.get("lease") or {}).get("state") == "active":
+        result["blocker"] = "snapshot store is owned or busy; finish the existing handoff first"
+        return result
+    if (
+        config.get("store_id") != control["store_id"]
+        or config.get("snapshot_id") != control.get("snapshot_id")
+    ):
+        result["blocker"] = "store or snapshot identity differs from the source handoff"
+        return result
+    if _digest(files) != config.get("fingerprint"):
+        result["blocker"] = "source has uncheckpointed changes; review and export before transferring"
+        return result
+    logger.info("Verifying the existing snapshot archive")
+    snapshot = verify_snapshot(_snapshot_path(target, control.get("snapshot_id") or ""))
+    if any(
+        snapshot[key] != control.get(key)
+        for key in ("store_id", "snapshot_id", "required_precision")
+    ) or snapshot["required_precision"] != config.get("required_precision"):
+        raise ValueError("verified archive does not match the store identity or precision")
+    if (
+        lock.exists()
+        or _control(target) != control
+        or _json(config_path) != config
+        or inventory(root) != files
+    ):
+        raise ValueError("source or store changed during preparation; stop all writers and retry")
+    _require_idle_source(root)
+    result.update(ready=True, snapshot=snapshot)
+    return result
+
+
 def register_parser(subparsers):
     parser = subparsers.add_parser("transfer", help=__doc__)
     commands = parser.add_subparsers(dest="transfer_command", required=True)
@@ -749,6 +837,10 @@ def register_parser(subparsers):
             command.add_argument("--yes", action="store_true")
         if action == "import":
             command.add_argument("--destination", type=Path, required=True)
+            command.add_argument("--expected-sha256", help="Require the verified archive hash.")
+    prepare = commands.add_parser("prepare", help="verify source and existing snapshot without writes")
+    prepare.add_argument("--source", type=Path, help="Use an existing source checkout without changing it.")
+    prepare.add_argument("--store", type=Path)
     verify = commands.add_parser("verify")
     verify.add_argument("--path", type=Path, required=True)
     commands.add_parser("check", help="scan portable files locally without Git or a network")
@@ -758,7 +850,11 @@ def execute(args, root: Path) -> dict:
     if args.transfer_command == "export":
         return export_snapshot(root, args.store, apply=args.yes)
     if args.transfer_command == "import":
-        return import_snapshot(root, args.store, args.destination, apply=args.yes)
+        return import_snapshot(
+            root, args.store, args.destination, apply=args.yes, expected_sha256=args.expected_sha256
+        )
+    if args.transfer_command == "prepare":
+        return prepare_handoff(args.source or root, args.store)
     if args.transfer_command == "verify":
         return verify_snapshot(args.path)
     if args.transfer_command == "check":
@@ -775,6 +871,8 @@ def main() -> None:
     except (ValueError, OSError, sqlite3.Error, zipfile.BadZipFile, RuntimeError, KeyError) as exc:
         parser.exit(1, f"Transfer stopped: {exc}\n")
     print(json.dumps(result, indent=2))
+    if result.get("ready") is False:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

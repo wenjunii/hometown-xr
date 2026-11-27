@@ -7,6 +7,9 @@ otherwise uses the original Git checkpoint workflow. Folder transfers preview
 by default and need -Apply to write. Git pushes include durable research state,
 so this script is not a code-only GitHub publishing command. Stop project and
 review writers before a handoff; only one PC may write at a time.
+For read-only preparation, use transfer.ps1 -Action prepare. For preview and
+restore of the same verified archive, use transfer.ps1 -Action import with
+-ExpectedSha256 from the preparation receipt.
 .EXAMPLE
 .\scripts\handoff.ps1 -Direction push -Store E:\HometownXR-store
 

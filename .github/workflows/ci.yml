@@ -52,6 +52,7 @@ jobs:
           python main.py workstation --help
           python main.py transfer --help
           python portable_transfer.py transfer --help
+          python portable_transfer.py transfer prepare --help
           python main.py stories --help
           python main.py stories enrich --help
           python main.py stories export --help
