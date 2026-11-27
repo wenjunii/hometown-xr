@@ -367,7 +367,6 @@ def collect_project_health(profile_name: str = "auto", full: bool = False) -> di
     payload["model_migration"] = build_model_migration_plan(
         evaluation=evaluation,
         filters=filters,
-        metrics=metrics,
         dependencies=dependency_profiles,
     )
     if full:

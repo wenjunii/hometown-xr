@@ -690,6 +690,27 @@ def _audit_command(args) -> None:
         _shutdown_signal_count = 0
 
 
+def _add_gpu_evidence_arguments(parser: argparse.ArgumentParser, *, require_commit=False) -> None:
+    parser.add_argument(
+        "--expected-commit",
+        required=require_commit,
+        help="exact 40-character runtime commit from the handoff, not the current branch head",
+    )
+    for profile in HARDWARE_PROFILES:
+        parser.add_argument(
+            f"--evidence-{profile}",
+            help=f"path to the {profile} bundle (default: its local checkpoint bundle)",
+        )
+
+
+def _gpu_evidence_paths(args: argparse.Namespace) -> dict[str, str]:
+    return {
+        profile: path
+        for profile in HARDWARE_PROFILES
+        if (path := getattr(args, f"evidence_{profile}"))
+    }
+
+
 def main() -> None:
     global _shutdown_event, _shutdown_signal_count
     parser = argparse.ArgumentParser(
@@ -938,6 +959,11 @@ def main() -> None:
     evidence_import = evidence_subparsers.add_parser("import")
     evidence_import.add_argument("--path", required=True)
     evidence_import.add_argument("--yes", action="store_true")
+    evidence_compare = evidence_subparsers.add_parser(
+        "compare", help="compare three pinned GPU bundles without importing or approving them"
+    )
+    _add_gpu_evidence_arguments(evidence_compare, require_commit=True)
+    evidence_compare.add_argument("--baseline", default=str(MODEL_BASELINE_PATH))
 
     model_parser = subparsers.add_parser(
         "model-validation",
@@ -973,6 +999,7 @@ def main() -> None:
     )
     for migration_action in ("plan", "validate", "approve"):
         migration_action_parser = migration_subparsers.add_parser(migration_action)
+        _add_gpu_evidence_arguments(migration_action_parser)
         migration_action_parser.add_argument(
             "--baseline",
             default=str(MODEL_BASELINE_PATH),
@@ -985,6 +1012,7 @@ def main() -> None:
                     / "evaluation"
                     / f"model-candidate-{migration_profile}.json"
                 ),
+                help="raw snapshot for diagnostics when comparable bundle evidence is missing",
             )
         if migration_action == "approve":
             migration_action_parser.add_argument(
@@ -1064,6 +1092,18 @@ def main() -> None:
         "report",
         help="write the story research-quality report",
     )
+    stories_quality_parser = stories_subparsers.add_parser(
+        "quality", help="read a flagged review queue from existing story exports"
+    )
+    stories_quality_parser.add_argument("--export", help="primary structured .jsonl.gz export")
+    stories_quality_parser.add_argument(
+        "--short-export", help="short excerpts (default: stories_short.jsonl.gz beside the export)"
+    )
+    stories_quality_parser.add_argument("--reviews", help="existing human story reviews")
+    stories_quality_parser.add_argument("--language", default="")
+    stories_quality_parser.add_argument("--issue", default="")
+    stories_quality_parser.add_argument("--offset", type=int, default=0)
+    stories_quality_parser.add_argument("--limit", type=int, default=20)
     stories_subparsers.add_parser(
         "verify",
         help="build and verify the story-fragment integrity catalog",
@@ -1436,9 +1476,19 @@ def main() -> None:
                 candidate_path=args.candidate,
                 workload_path=args.workload,
             )
+        elif args.evidence_command == "compare":
+            from gpu_evidence import compare_gpu_evidence
+
+            result = compare_gpu_evidence(
+                args.expected_commit,
+                _gpu_evidence_paths(args),
+                baseline_path=args.baseline,
+            )
         else:
             result = import_evidence_bundle(args.path, apply=args.yes)
         print(json.dumps(result, indent=2))
+        if args.evidence_command == "compare" and not result["valid"]:
+            raise SystemExit(1)
     elif args.command == "model-validation":
         from model_regression import capture_model_snapshot, compare_model_snapshots
 
@@ -1486,6 +1536,8 @@ def main() -> None:
         result = build_model_migration_plan(
             baseline_path=args.baseline,
             candidate_paths=candidate_paths,
+            expected_commit=args.expected_commit,
+            evidence_paths=_gpu_evidence_paths(args),
         )
         if args.model_migration_command == "approve":
             if not args.yes:
@@ -1523,6 +1575,26 @@ def main() -> None:
         if port is not None and not 1 <= port <= 65535:
             parser.error("--port must be between 1 and 65535")
         _evaluation_command(args)
+    elif args.command == "stories" and args.stories_command == "quality":
+        from story_review import (
+            DEFAULT_STORY_EXPORT,
+            DEFAULT_STORY_REVIEWS,
+            build_quality_review_report,
+        )
+
+        try:
+            result = build_quality_review_report(
+                args.export or DEFAULT_STORY_EXPORT,
+                short_export_path=args.short_export,
+                reviews_path=args.reviews or DEFAULT_STORY_REVIEWS,
+                language=args.language,
+                issue=args.issue,
+                offset=args.offset,
+                limit=args.limit,
+            )
+        except (OSError, ValueError, EOFError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2))
     elif args.command == "stories":
         from full_source_recovery import (
             export_full_sources,

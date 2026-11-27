@@ -499,6 +499,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action report` | Rebuild the story research-quality report |
 | `.\scripts\stories.ps1 -Action verify` | Build and verify the story-fragment checksum catalog |
 | `.\scripts\stories.ps1 -Action serve -OpenBrowser` | Search, inspect, and human-review complete source stories locally |
+| `.\scripts\stories.ps1 -Action quality -Limit 20` | Read the flagged review queue for saved complete and short excerpts without rebuilding them |
 | `.\scripts\stories.ps1 -Action review-export` | Export only stories marked Selected without rewriting source text |
 | `.\scripts\stories.ps1 -Action curate` | Rank and cluster exact-source stories without dropping or rewriting them |
 | `.\scripts\stories.ps1 -Action pack-status` | Compare local source fragments with the synchronized story packs |
@@ -589,11 +590,12 @@ The underlying Python CLI remains available directly:
 | `python main.py evaluation undo --sample-id ID` | Restore the previous label and annotation metadata |
 | `python main.py evaluation report` | Compute precision, recall, F1, and tuning |
 | `python main.py model-migration plan` | Show every blocker to a shared model-stack upgrade |
-| `python main.py model-migration validate` | Exit nonzero until all migration evidence passes |
+| `python main.py model-migration validate --expected-commit COMMIT` | Exit nonzero until all migration evidence passes for the prepared runtime pin |
 | `python main.py evaluation replay` | Compact local decisions into the shared replay reservoir |
 | `python main.py model-validation capture --profile 3080` | Capture the tracked semantic-output baseline |
 | `python main.py model-validation compare --candidate PATH` | Enforce model-output regression limits |
 | `python main.py evidence status` | Inspect synchronized profile evidence completeness |
+| `python main.py evidence compare --expected-commit COMMIT` | Compare the three pinned bundles without importing them or writing approval |
 | `python main.py evidence import --path PATH --yes` | Validate and install one portable profile bundle |
 | `python main.py reset` | Delete output, derivatives, and progress |
 
@@ -626,11 +628,43 @@ enters the synchronized checkpoint:
 .\scripts\evidence.ps1 -Action status
 ```
 
-Repeat that workflow on the 4090 and 5090 PCs. Imported bundles live in
+Imported bundles live in
 `data/checkpoints/profile-evidence/`, so normal checkpoint and Git handoff
 brings the validated evidence to every PC. Content digests, model sample
 digests, GPU profile, real-source mode, and output equivalence are checked on
-import. Local outbox files stay ignored.
+import. Local outbox files stay ignored. These per-file checks and routine
+run metrics do not establish that all three GPUs ran the same validation.
+
+For migration evidence, run the prepared pinned validation on each actual
+GPU and compare the returned JSON files before any import. Use the full
+runtime commit in the handoff receipt, not the branch head. Set each evidence
+path to the exact returned bundle or the verified 3080 reference:
+
+```powershell
+$Receipt = Get-Content -LiteralPath 'D:\hometown xr backup\PREPARATION-2026-11-10.json' -Raw | ConvertFrom-Json
+$Bundles = @{
+    ExpectedCommit = $Receipt.candidate.git_commit
+    Evidence3080 = 'C:\HometownXR\evidence\profile-evidence-3080.json'
+    Evidence4090 = 'C:\HometownXR\evidence\profile-evidence-4090.json'
+    Evidence5090 = 'C:\HometownXR\evidence\profile-evidence-5090.json'
+}
+.\scripts\evidence.ps1 -Action compare @Bundles
+```
+
+Omit an evidence path only to use that profile's local checkpoint bundle.
+In a code-only checkout without a local `.venv`, add
+`-PythonExecutable $CandidatePython` to the compare command, where
+`$CandidatePython` is the full path to the Python executable in an existing
+Python 3.11/3.12 project environment with the required dependencies. Neither
+compare nor story quality needs a new GPU install.
+
+Comparison verifies every bundle and component pin, the filter signature,
+model identity and library versions, the 400-sample CUDA FP16 comparisons,
+and the same five source files and output digest from one successful
+seven-worker benchmark per GPU. A missing or mismatched bundle makes the
+command exit nonzero, with per-profile reasons. Small score differences are
+allowed within the existing limits; output digests must agree. This command
+does not write checkpoints, evidence imports, or approval.
 
 Use a recovery campaign before manually resetting recurring source failures:
 
@@ -867,8 +901,10 @@ Open the local Story Explorer after export:
 ```
 
 The workbench searches all complete stories by text, language, domain, keyword,
-and review state. It displays the accepted filter paragraph, semantic reference,
-exact role-labeled source paragraphs, and explicit omission boundaries. Mark a
+review state, and quality flag. Use **Quality > Needs review** with
+**Review > Unreviewed**, or choose a specific issue. It displays the accepted
+filter paragraph, semantic reference, exact role-labeled source paragraphs,
+and explicit omission boundaries. Mark a
 story `Selected`, `Rejected`, or `Unsure`; those human decisions are stored in
 `data/stories/reviews.jsonl`. No model assigns review decisions. Export the
 selected corpus with:
@@ -879,6 +915,26 @@ selected corpus with:
 
 `stories_reviewed.jsonl.gz` and `stories_reviewed.md` retain the exact extracted
 story text plus review metadata. They never paraphrase or generate a story.
+
+For an offline queue that also includes shorter excerpts, use:
+
+```powershell
+.\scripts\stories.ps1 -Action quality -Limit 20
+.\scripts\stories.ps1 -Action quality -Language en -Issue insufficient_context -Limit 20 -Offset 20
+```
+
+The report reads `stories_complete.jsonl.gz`, the sibling
+`stories_short.jsonl.gz` when present, and existing review decisions. Point
+`-Export`, `-ShortExport`, and `-Reviews` at saved files to inspect a different
+copy. In a code-only checkout, add `-PythonExecutable $CandidatePython` to
+reuse an existing environment, as with evidence compare. The queue includes
+flagged unreviewed and unsure stories, and shows the
+accepted match alongside the verbatim source paragraph. It checks the
+contiguous context around the match against the existing length and sentence
+minimums, flags gaps of five or more omitted paragraphs, and surfaces likely
+boilerplate, non-story content, and unconfirmed match correspondence. Flags
+are triage, not judgments. The command never re-extracts, rewrites, removes,
+or labels anything. The report can contain original source text; keep it local.
 
 Build the deterministic review ranking with:
 
@@ -1164,14 +1220,18 @@ baseline after an approved migration, use:
 
 Review the diff and rerun all comparisons.
 
-`model-migration plan` is the final gate. It remains blocked until the human
-baseline and blind holdout are complete, historical filter signatures have
-audit evidence, identical real-source metrics exist for all three GPUs, all
-candidate snapshots pass score/concept/threshold limits, and candidate library
-versions agree. `-Action validate` exits nonzero while any requirement is
-missing. Only a fully passing plan can write portable approval evidence with
-`-Action approve -Apply`; updating shared lock files remains a separate reviewed
-code change.
+`model-migration plan` is the final gate. Pass the same `@Bundles` arguments
+shown above to `-Action plan` or `-Action validate`; no explicit runtime pin
+means the plan remains blocked. The gate requires the matching three-GPU
+bundle comparison for the checkout's current filter signature. Raw model
+snapshots and ordinary run metrics are diagnostic only. Genuine human labels
+and blind holdout readiness, historical filter evidence, and the dependency
+profile contract are still required. Use the existing annotation workbench
+(`.\scripts\evaluation.ps1 -Action serve -OpenBrowser`) for human evaluation;
+story-quality flags do not count as labels. Validation exits nonzero while
+any requirement is missing. Only a fully passing plan can write portable
+approval evidence with `-Action approve -Apply` after owner review. Updating
+the shared locks remains a separate reviewed code change.
 
 Run the dependency contract and advisory gate with:
 

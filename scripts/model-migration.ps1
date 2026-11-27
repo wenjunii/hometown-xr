@@ -10,6 +10,14 @@ param(
 
     [string]$Candidate5090,
 
+    [string]$ExpectedCommit,
+
+    [string]$Evidence3080,
+
+    [string]$Evidence4090,
+
+    [string]$Evidence5090,
+
     [string]$Output,
 
     [switch]$Apply
@@ -37,6 +45,10 @@ foreach ($Value in @{
     "candidate-3080" = $Candidate3080
     "candidate-4090" = $Candidate4090
     "candidate-5090" = $Candidate5090
+    "expected-commit" = $ExpectedCommit
+    "evidence-3080" = $Evidence3080
+    "evidence-4090" = $Evidence4090
+    "evidence-5090" = $Evidence5090
     output = $Output
 }.GetEnumerator()) {
     if (-not [string]::IsNullOrWhiteSpace($Value.Value)) {

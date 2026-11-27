@@ -206,9 +206,11 @@ Snapshots and workload evidence preserve the selected precision; workload
 reports list the exact source files for cross-PC comparison.
 
 The exported file is `data/evidence-outbox/profile-evidence-4090.json` (or
-`profile-evidence-5090.json` in that folder). Bring that JSON back for validation and
-import; do not sync the virtual environment. Compare its source list and
-output digest with the 3080 evidence before any migration approval.
+`profile-evidence-5090.json` in that folder). Bring that JSON back; do not
+sync the virtual environment. Use the
+[read-only bundle comparison](../README.md#operations-and-portable-evidence)
+with the prepared 3080 reference, both returned paths, and the exact runtime
+pin. Do not choose an older bundle merely because its GPU profile matches.
 
 The 5090 run above is complete. Run the same real-source benchmark on the
 actual 4090 and compare all three fresh bundles. Historical metrics do not
@@ -218,7 +220,7 @@ blind-holdout campaign, and verify historical filter signatures using the isolat
 workflow in the main README. Then check the existing final gate:
 
 ```powershell
-.\scripts\model-migration.ps1 -Action validate
+.\scripts\model-migration.ps1 -Action validate @Bundles
 ```
 
 At the November 11 gate inspection it remains blocked: no human labels or holdout

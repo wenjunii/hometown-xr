@@ -1,7 +1,12 @@
 import gzip
 import json
 
-from story_curation import assess_story, curate_story_rows, write_story_curation
+from story_curation import (
+    assess_story,
+    curate_story_rows,
+    inspect_story_quality,
+    write_story_curation,
+)
 
 
 def _story(story_id, text, *, semantic=0.8, ready=True, segments=1):
@@ -85,3 +90,59 @@ def test_curation_export_is_deterministic_and_keeps_full_story_rows(tmp_path):
         exported = json.loads(next(handle))
     assert exported["story"]["text"] == row["story"]["text"]
     assert exported["curation"]["generated_text"] is False
+
+
+def test_distant_paragraphs_do_not_supply_contiguous_context():
+    seed = "My grandmother told me about home."
+    raw = "My grandmother told me about home.  "
+    distant = "I heard the stories many years before I returned. " * 10
+    row = _story("gap", distant + "\n\n" + raw)
+    row["seed"]["paragraph"] = seed
+    row["story"]["paragraphs"] = [
+        {"paragraph_index": 0, "role": "referenced_event", "text": distant},
+        {"paragraph_index": 35, "role": "seed", "text": raw},
+    ]
+    before = json.dumps(row, sort_keys=True)
+
+    quality = inspect_story_quality(row)
+
+    assert quality["largest_gap_paragraphs"] == 34
+    assert quality["contiguous_paragraphs"] == 1
+    assert {"large_gap", "insufficient_context"} <= quality["issues"].keys()
+    assert quality["seed_correspondence"] == "normalized"
+    assert quality["source_seed_paragraph"] == raw
+    assert json.dumps(row, sort_keys=True) == before
+
+
+def test_contiguous_paragraphs_keep_a_good_source_window_off_the_queue():
+    seed = "I always recognized the sound of my grandparents opening their front door."
+    context = (
+        "We stayed in their upstairs room on Sundays, after cooking dinner together "
+        "and hearing about the small village where they grew up. "
+        "One afternoon my brother asked why there were marks on the kitchen wall. "
+        "I watched them show him how each mark recorded our height after another summer, "
+        "then climbed the stairs to bring back the old photographs that went with each date."
+    )
+    row = _story("continuous", seed + "\n\n" + context)
+    row["seed"]["paragraph"] = seed
+    row["story"]["paragraphs"] = [
+        {"paragraph_index": 5, "role": "seed", "text": seed},
+        {"paragraph_index": 6, "role": "context_after", "text": context},
+    ]
+
+    quality = inspect_story_quality(row)
+
+    assert quality["seed_correspondence"] == "exact"
+    assert quality["contiguous_paragraphs"] == 2
+    assert not quality["issues"]
+
+
+def test_quality_reports_boilerplate_and_unconfirmed_match_separately():
+    raw = "Skip to content. Main menu. Privacy policy. Buy now."
+    row = _story("template", raw)
+    row["seed"]["paragraph"] = "I went home last autumn."
+    quality = inspect_story_quality(row)
+
+    assert quality["seed_correspondence"] == "unconfirmed"
+    assert {"seed_unconfirmed", "likely_boilerplate"} <= quality["issues"].keys()
+    assert quality["source_seed_paragraph"] == raw

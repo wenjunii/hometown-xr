@@ -11,12 +11,11 @@ from pathlib import Path
 from config import DATA_DIR, MODEL_BASELINE_PATH
 from dependency_profiles import validate_dependency_profiles
 from evaluation import evaluation_status
-from metrics import compare_profiles
-from model_regression import compare_model_payloads, compare_model_snapshots
+from gpu_evidence import REQUIRED_PROFILES, compare_gpu_evidence
+from model_regression import compare_model_snapshots
 from progress import ProgressTracker
 from signatures import build_filter_signature
 
-REQUIRED_PROFILES = ("3080", "4090", "5090")
 DEFAULT_EVIDENCE_PATH = DATA_DIR / "checkpoints" / "model-migration-evidence.json"
 
 
@@ -46,9 +45,10 @@ def build_model_migration_plan(
     *,
     baseline_path: str | Path = MODEL_BASELINE_PATH,
     candidate_paths: dict[str, str | Path] | None = None,
+    expected_commit: str | None = None,
+    evidence_paths: dict[str, str | Path] | None = None,
     evaluation: dict | None = None,
     filters: dict | None = None,
-    metrics: dict | None = None,
     dependencies: dict | None = None,
 ) -> dict:
     """Combine every required migration artifact into one strict decision."""
@@ -58,11 +58,11 @@ def build_model_migration_plan(
         for profile, path in (candidate_paths or default_candidate_paths()).items()
     }
     evaluation = evaluation or evaluation_status()
+    signature = build_filter_signature()
     if filters is None:
-        signature = build_filter_signature()
         filters = ProgressTracker().get_filter_signature_summary(signature)
-    metrics = metrics or compare_profiles()
     dependencies = dependencies or validate_dependency_profiles()
+    evidence = compare_gpu_evidence(expected_commit, evidence_paths, baseline_path=baseline)
     requirements = []
 
     def requirement(name: str, passed: bool, detail: str, action: str) -> None:
@@ -106,70 +106,57 @@ def build_model_migration_plan(
         ),
         "Run the isolated audit and adopt only validated crawl signatures.",
     )
-    measured = set((metrics.get("profiles") or {}).keys())
-    missing_metrics = sorted(set(REQUIRED_PROFILES) - measured)
+    evidence_errors = list(evidence["errors"])
+    invalid_profiles = [profile for profile, row in evidence["profiles"].items() if not row["valid"]]
+    if invalid_profiles:
+        evidence_errors.append(f"unverified profiles: {', '.join(invalid_profiles)}")
+    if evidence["filter_signature"] and evidence["filter_signature"] != signature:
+        evidence_errors.append("evidence does not match this checkout's filter signature")
     requirement(
         "real_workload_benchmarks",
-        not missing_metrics,
-        "missing=" + (", ".join(missing_metrics) if missing_metrics else "none"),
-        "Run the identical real-source benchmark on every GPU profile.",
+        evidence["valid"] and not evidence_errors,
+        "; ".join(evidence_errors) or "all three pinned model and benchmark bundles agree",
+        "Run evidence compare with the intended runtime commit and the three profile bundles.",
     )
 
     comparisons = {}
     candidate_libraries = {}
-    baseline_payload = json.loads(baseline.read_text(encoding="utf-8")) if baseline.exists() else None
     for profile in REQUIRED_PROFILES:
-        candidate = candidates.get(profile)
-        portable = None
-        if candidate is None or not candidate.exists():
-            try:
-                from evidence_bundle import load_profile_evidence
-
-                portable = load_profile_evidence(profile)
-            except (OSError, ValueError, json.JSONDecodeError):
-                portable = None
-        portable_snapshot = (portable or {}).get("model_snapshot")
-        if (
-            (
-                (candidate is None or not candidate.exists())
-                and portable_snapshot is None
-            )
-            or not baseline.exists()
-        ):
+        bundle = evidence["profiles"][profile]
+        comparison = bundle.get("baseline_comparison")
+        if comparison is not None:
+            candidate_libraries[profile] = bundle["libraries"]
             comparisons[profile] = {
-                "present": bool((candidate and candidate.exists()) or portable_snapshot),
-                "safe": False,
-                "path": str(candidate) if candidate else None,
+                "present": True,
+                "safe": comparison["safe"],
+                "path": bundle["path"],
+                "sha256": bundle["content_sha256"],
+                "portable": True,
+                "libraries": bundle["libraries"],
+                "metrics": comparison["metrics"],
             }
             continue
-        snapshot = (
-            json.loads(candidate.read_text(encoding="utf-8"))
-            if candidate is not None and candidate.exists()
-            else portable_snapshot
-        )
-        candidate_libraries[profile] = snapshot.get("libraries") or {}
-        if candidate is not None and candidate.exists():
-            comparison = compare_model_snapshots(baseline, candidate)
-            path_label = str(candidate)
-            digest = _sha256(candidate)
-        else:
-            comparison = compare_model_payloads(
-                baseline_payload,
-                snapshot,
-                baseline_label=str(baseline),
-                candidate_label=f"portable profile evidence: {profile}",
-            )
-            path_label = "portable profile evidence"
-            digest = portable.get("content_sha256")
-        comparisons[profile] = {
-            "present": True,
-            "safe": bool(comparison["safe"]),
-            "path": path_label,
-            "sha256": digest,
-            "portable": candidate is None or not candidate.exists(),
-            "libraries": snapshot.get("libraries") or {},
-            "metrics": comparison["metrics"],
+
+        # Raw captures remain useful diagnostics, but cannot satisfy the bundle requirement.
+        candidate = candidates.get(profile)
+        row = {
+            "present": bool(candidate and candidate.is_file()),
+            "safe": False,
+            "path": str(candidate) if candidate else None,
+            "portable": False,
         }
+        comparisons[profile] = row
+        if candidate is not None and row["present"] and baseline.is_file():
+            try:
+                comparison = compare_model_snapshots(baseline, candidate)
+                row.update(
+                    safe=comparison["safe"],
+                    sha256=_sha256(candidate),
+                    libraries=comparison["candidate"]["libraries"],
+                    metrics=comparison["metrics"],
+                )
+            except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+                row["error"] = f"cannot compare raw snapshot: {exc}"
     missing_candidates = [
         profile for profile in REQUIRED_PROFILES if not comparisons[profile]["present"]
     ]
@@ -213,6 +200,7 @@ def build_model_migration_plan(
             "sha256": _sha256(baseline) if baseline.exists() else None,
         },
         "comparisons": comparisons,
+        "gpu_evidence": evidence,
         "requirements": requirements,
         "blockers": [item for item in requirements if not item["passed"]],
         "approval_policy": (

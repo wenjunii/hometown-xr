@@ -169,8 +169,15 @@ switching modes and can continue consuming storage.
 .\scripts\transfer.ps1 -Action check
 .\scripts\test.ps1
 .\scripts\dependency-audit.ps1
-.\scripts\model-migration.ps1 -Action validate
+.\scripts\evidence.ps1 -Action compare -ExpectedCommit $RuntimePin
+.\scripts\model-migration.ps1 -Action validate -ExpectedCommit $RuntimePin
 ```
+
+For the last two commands, use the full runtime pin from the handoff receipt
+for `$RuntimePin` and the three exact returned bundles, either via
+`-Evidence3080`, `-Evidence4090`, and `-Evidence5090` or the correct local
+checkpoint bundles. See the [bundle comparison example](README.md#operations-and-portable-evidence).
+The compare action never writes to the store or installs evidence.
 
 Local checks do not trigger Actions. Live vulnerability auditing still needs
 the advisory service; failure/offline status is not evidence of cleanliness.
