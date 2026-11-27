@@ -1,11 +1,17 @@
 import gzip
 import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
 from story_review import (
     StoryReviewIndex,
+    build_quality_review_report,
     export_reviewed_stories,
+    load_story_export,
     load_story_reviews,
 )
 
@@ -124,3 +130,112 @@ def test_story_review_rejects_unknown_story_and_supports_unreview(tmp_path):
     index.review("story-one", "unreviewed")
 
     assert load_story_reviews(reviews_path) == {}
+
+
+def test_quality_queue_includes_short_excerpts_and_preserves_existing_reviews(tmp_path):
+    source = tmp_path / "stories_complete.jsonl.gz"
+    short = tmp_path / "stories_short.jsonl.gz"
+    reviews = tmp_path / "reviews.jsonl"
+    _write_export(source)
+    primary = load_story_export(source)
+    short_row = {
+        **primary[0],
+        "story_id": "short-story",
+        "match_numbers": [3],
+        "seed": {"paragraph": "I remembered home."},
+        "story": {
+            "story_length_ready": False,
+            "paragraphs": [{"paragraph_index": 4, "role": "seed", "text": "I remembered home."}],
+        },
+    }
+    with gzip.open(short, "wt", encoding="utf-8") as handle:
+        handle.write(json.dumps(short_row) + "\n")
+        handle.write(json.dumps(primary[0]) + "\n")
+    index = StoryReviewIndex(source, reviews)
+    index.review("story-one", "selected")
+    index.review("story-two", "unsure")
+    before = {path: path.read_bytes() for path in tmp_path.iterdir()}
+
+    result = build_quality_review_report(source, reviews_path=reviews, limit=1)
+
+    assert result["read_only"] and result["contains_source_text"]
+    assert result["inputs"]["short_export"] == str(short)
+    assert result["stories"] == result["flagged"] == 3
+    assert result["queue_total"] == 2
+    assert result["queue"][0]["story_id"] == "story-two"
+    assert result["queue"][0]["decision"] == "unsure"
+    last = build_quality_review_report(source, reviews_path=reviews, offset=1, limit=1)["queue"][0]
+    assert last["story_id"] == "short-story"
+    assert last["accepted_match_paragraph"] == last["source_seed_paragraph"] == "I remembered home."
+    assert {"insufficient_context"} == last["issues"].keys()
+    filtered = build_quality_review_report(
+        source, reviews_path=reviews, language="en", issue="seed_unconfirmed"
+    )
+    assert filtered["queue_total"] == 0
+    assert filtered["issue_counts"]["insufficient_context"] == 2
+    assert {path: path.read_bytes() for path in tmp_path.iterdir()} == before
+
+
+def test_quality_report_tolerates_no_short_export_but_not_a_missing_explicit_input(tmp_path):
+    source = tmp_path / "stories_complete.jsonl.gz"
+    _write_export(source)
+    result = build_quality_review_report(source, reviews_path=tmp_path / "missing-reviews.jsonl")
+    assert result["inputs"]["short_export"] is None
+    assert result["queue_total"] == 2
+    with pytest.raises(FileNotFoundError, match="Story export is missing"):
+        build_quality_review_report(source, short_export_path=tmp_path / "missing-short.gz")
+
+
+def test_quality_cli_does_not_access_story_packs(tmp_path, monkeypatch, capsys):
+    import story_packing
+    from main import main
+
+    def unexpected():
+        pytest.fail("quality report must not inspect or restore story packs")
+
+    source = tmp_path / "stories_complete.jsonl.gz"
+    _write_export(source)
+    monkeypatch.setattr(story_packing, "story_pack_catalog_path", unexpected)
+    monkeypatch.setattr(
+        sys, "argv", ["main.py", "stories", "quality", "--export", str(source), "--limit", "1"]
+    )
+
+    main()
+
+    result = json.loads(capsys.readouterr().out)
+    assert result["read_only"] and result["queue_total"] == 2
+    assert len(result["queue"]) == 1
+    assert list(tmp_path.iterdir()) == [source]
+
+
+def test_quality_wrapper_reuses_python_without_changing_input(tmp_path):
+    pwsh = shutil.which("pwsh")
+    if not pwsh:
+        pytest.skip("PowerShell is not installed")
+    root = Path(__file__).resolve().parents[1]
+    script = root / "scripts" / "stories.ps1"
+    source = tmp_path / "saved excerpts.jsonl.gz"
+    reviews = tmp_path / "review decisions.jsonl"
+    _write_export(source)
+    before = source.read_bytes()
+
+    args = [pwsh, "-NoProfile", "-File", str(script), "-PythonExecutable", sys.executable]
+    run = subprocess.run(
+        [*args, "-Action", "quality", "-Export", str(source), "-Reviews", str(reviews), "-Limit", "1"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert run.returncode == 0, run.stderr
+    result = json.loads(run.stdout)
+    assert result["read_only"] and result["queue_total"] == 2
+    assert len(result["queue"]) == 1
+    assert source.read_bytes() == before and not reviews.exists()
+
+    rejected = subprocess.run(
+        [*args, "-Action", "export"], cwd=tmp_path, capture_output=True, text=True, timeout=30
+    )
+    assert rejected.returncode != 0
+    assert "PythonExecutable is valid only with -Action quality" in rejected.stderr

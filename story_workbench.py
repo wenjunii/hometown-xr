@@ -44,6 +44,10 @@ _HTML = """<!doctype html>
       <option value="rejected">Rejected</option>
       <option value="unsure">Unsure</option>
     </select></label>
+    <label>Quality<select id="quality_issue">
+      <option value="">All stories</option>
+      <option value="flagged">Needs review</option>
+    </select></label>
     <label>Sort<select id="sort">
       <option value="match">Match order</option>
       <option value="quality">Story quality</option>
@@ -77,6 +81,7 @@ _HTML = """<!doctype html>
           <a id="sourceLink" target="_blank" rel="noreferrer">Open source</a>
         </div>
         <dl id="metadata" class="metadata"></dl>
+        <ul id="qualityFlags" class="quality-flags" aria-label="Story quality flags" hidden></ul>
         <section class="evidence">
           <h3>Accepted filter paragraph</h3>
           <p id="seed"></p>
@@ -116,6 +121,8 @@ main{height:calc(100vh - 148px);display:grid;grid-template-columns:370px minmax(
 .detail{min-width:0;overflow:auto;padding:28px 38px 60px}.empty{padding:80px 0;color:var(--muted)}.empty h2{font-size:20px}.detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:22px}.detail-head h2{font:600 25px/1.3 Georgia,serif;margin:10px 0 0;max-width:900px}.detail-head a{color:var(--blue);white-space:nowrap}.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{border:1px solid var(--line);border-radius:4px;padding:3px 7px;color:#4e5a55;background:#fafbfa;font-size:11px;font-weight:700}.metadata{margin:22px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.metadata div{padding:11px 12px;border-right:1px solid var(--line)}.metadata div:last-child{border-right:0}.metadata dt{font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:750}.metadata dd{margin:2px 0 0;font-weight:650;overflow-wrap:anywhere}.evidence{margin:24px 0;border-left:3px solid var(--blue);padding:4px 0 4px 16px}.evidence h3,.review-panel h3{font-size:12px;margin:0 0 5px;text-transform:uppercase;color:var(--muted)}.evidence p{margin:0 0 14px;font-family:Georgia,serif;font-size:17px;line-height:1.55}.passage{max-width:900px}.source-paragraph{font:17px/1.7 Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:13px 0}.source-paragraph.seed{background:var(--green-soft);border-left:3px solid var(--green);margin:6px -14px;padding:14px}.source-paragraph.event{background:var(--amber-soft);border-left:3px solid var(--amber);margin:6px -14px;padding:14px}.role-label{display:block;font:700 10px/1.2 system-ui,sans-serif;text-transform:uppercase;color:var(--muted);margin-bottom:5px}.omission{margin:10px 0;padding:8px 0;border-top:1px dashed #aeb9b4;border-bottom:1px dashed #aeb9b4;color:var(--muted);font-size:12px;text-align:center}.review-panel{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(360px,1fr) 180px;gap:14px;align-items:end}.segments{display:flex;gap:6px}.segments button{background:var(--white);border-color:#b9c4bf}.segments button.active[data-decision=selected]{background:var(--green-soft);border-color:var(--green);color:var(--green)}.segments button.active[data-decision=rejected]{background:var(--red-soft);border-color:var(--red);color:var(--red)}.segments button.active[data-decision=unsure]{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}.segments button.active[data-decision=unreviewed]{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}.notes{grid-column:1/-1}.review-panel .primary{justify-self:start}.review-panel #message{margin:0;color:var(--muted)}
 @media(max-width:1050px){body{overflow:auto}.toolbar{height:auto;grid-template-columns:repeat(3,minmax(0,1fr))}.toolbar .search{grid-column:1/-1}main{height:auto;min-height:calc(100vh - 190px);grid-template-columns:320px minmax(0,1fr)}.metadata{grid-template-columns:1fr 1fr}.metadata div:nth-child(2){border-right:0}.detail{padding:24px}.review-panel{grid-template-columns:1fr}}
 @media(max-width:720px){body{overflow-x:hidden}header{height:auto;padding:12px 15px;align-items:flex-start;gap:10px}.brand{min-width:0}.brand h1{font-size:20px}.header-status{min-width:0;max-width:150px;align-items:stretch;flex-direction:column;gap:5px}.header-status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:11px}.header-status button{padding-left:8px;padding-right:8px}.toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:10px}.toolbar .search{grid-column:1/-1}main{display:block;width:100%;border:0}.results{width:100%;height:52vh;border-right:0;border-bottom:1px solid var(--line)}.story-row,.row-seed,.row-meta span{min-width:0;overflow-wrap:anywhere}.detail{width:100%;padding:20px 16px}.detail-head{display:block}.detail-head a{display:inline-block;margin-top:10px}.metadata{grid-template-columns:1fr}.metadata div{border-right:0;border-bottom:1px solid var(--line)}.segments{display:grid;grid-template-columns:1fr 1fr}.review-panel{display:block}.review-panel>*{margin-bottom:12px}.source-paragraph.seed,.source-paragraph.event{margin-left:0;margin-right:0}}
+@media(min-width:1051px){.toolbar{grid-template-columns:minmax(185px,2fr) repeat(6,minmax(0,1fr))}}
+.quality-flags{margin:16px 0;padding:8px 12px 8px 28px;border-left:3px solid var(--amber);background:var(--amber-soft);color:var(--amber);overflow-wrap:anywhere}
 """
 
 _JS = """
@@ -124,7 +131,7 @@ const $=id=>document.getElementById(id);
 async function api(path,options={}){const response=await fetch(path,{headers:{"Content-Type":"application/json"},...options});const body=await response.json();if(!response.ok)throw new Error(body.error||response.statusText);return body}
 function option(select,value,label){const node=document.createElement("option");node.value=value;node.textContent=label;select.appendChild(node)}
 function fillOptions(id,values,allLabel){const select=$(id),current=select.value;select.replaceChildren();option(select,"",allLabel);values.forEach(value=>option(select,value,value));select.value=current}
-function filterQuery(){const query=new URLSearchParams({offset:String(state.offset),limit:String(state.limit),sort:$("sort").value});["search","language","domain","keyword","decision"].forEach(id=>{if($(id).value)query.set(id,$(id).value)});return query}
+function filterQuery(){const query=new URLSearchParams({offset:String(state.offset),limit:String(state.limit),sort:$("sort").value});["search","language","domain","keyword","decision","quality_issue"].forEach(id=>{if($(id).value)query.set(id,$(id).value)});return query}
 function decisionLabel(value){return value==="unreviewed"?"Unreviewed":value[0].toUpperCase()+value.slice(1)}
 function renderStatus(){const s=state.status;$("coverage").textContent=`${s.stories} stories | ${s.reviewed} reviewed | ${s.decisions.selected} selected`;fillOptions("language",s.languages,"All languages");fillOptions("domain",s.domains,"All domains");fillOptions("keyword",s.keywords,"All keywords")}
 function storyButton(row){const button=document.createElement("button");button.type="button";button.className="story-row"+(row.story_id===state.selectedId?" active":"");button.onclick=()=>selectStory(row.story_id);const head=document.createElement("div");head.className="row-head";const matches=document.createElement("span");matches.textContent=`Match ${(row.match_numbers||[]).join(", ")}`;const language=document.createElement("span");language.textContent=row.language;head.append(matches,language);const seed=document.createElement("div");seed.className="row-seed";seed.textContent=row.seed_paragraph||row.excerpt;const meta=document.createElement("div");meta.className="row-meta";const domain=document.createElement("span");domain.textContent=row.domain||"unknown source";const decision=document.createElement("span");decision.className=`decision ${row.decision}`;decision.textContent=decisionLabel(row.decision);meta.append(domain,decision);button.append(head,seed,meta);return button}
@@ -133,13 +140,29 @@ function addTag(text){const span=document.createElement("span");span.textContent
 function metadata(label,value){const div=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=label;dd.textContent=value;div.append(dt,dd);return div}
 function renderPassage(story){const root=$("passage");root.replaceChildren();const omissions=[...(story.omissions||[])].sort((a,b)=>a.after_paragraph_index-b.after_paragraph_index);let omissionIndex=0;(story.paragraphs||[]).forEach(paragraph=>{while(omissionIndex<omissions.length&&omissions[omissionIndex].after_paragraph_index<paragraph.paragraph_index){const omission=document.createElement("div");omission.className="omission";omission.textContent=`${omissions[omissionIndex].paragraph_count} intervening source paragraphs omitted`;root.appendChild(omission);omissionIndex++}const p=document.createElement("p");p.className="source-paragraph";if(paragraph.role==="seed")p.classList.add("seed");if(paragraph.role==="referenced_event")p.classList.add("event");if(paragraph.role==="seed"||paragraph.role==="referenced_event"){const label=document.createElement("span");label.className="role-label";label.textContent=paragraph.role==="seed"?"Accepted filter paragraph":"Referenced source event";p.appendChild(label)}p.appendChild(document.createTextNode(paragraph.text||""));root.appendChild(p)})}
 function renderDecision(){document.querySelectorAll("[data-decision]").forEach(button=>button.classList.toggle("active",button.dataset.decision===state.decision))}
-function renderDetail(){const row=state.detail;$("empty").hidden=Boolean(row);$("storyDetail").hidden=!row;if(!row)return;$("tags").replaceChildren();addTag(row.language||"unknown");(row.seed?.matched_keywords||[]).forEach(addTag);addTag(`${row.capture_count||1} capture${row.capture_count===1?"":"s"}`);$("detailTitle").textContent=row.seed?.paragraph||"Source story";$("sourceLink").href=row.url||"#";$("metadata").replaceChildren(metadata("Matches",(row.match_numbers||[]).join(", ")),metadata("Domain",row.domain||"unknown"),metadata("Semantic",String(row.seed?.semantic_score??"n/a")),metadata("Length",`${row.story?.character_count||0} characters`));$("seed").textContent=row.seed?.paragraph||"";$("concept").textContent=row.seed?.concept_match||"";renderPassage(row.story||{});state.decision=row.review?.decision||"unreviewed";$("notes").value=row.review?.notes||"";$("reviewer").value=row.review?.reviewer||localStorage.getItem("hometownReviewer")||"";renderDecision()}
-async function loadStatus(){state.status=await api("/api/status");renderStatus()}
+function renderQualityFlags(check){
+  const list=$("qualityFlags"), issues=Object.entries(check?.issues||{});
+  list.replaceChildren(...issues.map(([code,label])=>{
+    const item=document.createElement("li");
+    if(code==="large_gap") label+=": "+check.largest_gap_paragraphs+" paragraphs omitted";
+    if(code==="non_story_content") label+=": "+check.content_category.replaceAll("_"," ");
+    item.textContent=label;
+    return item;
+  }));
+  list.hidden=!issues.length;
+}
+function renderDetail(){const row=state.detail;$("empty").hidden=Boolean(row);$("storyDetail").hidden=!row;if(!row)return;$("tags").replaceChildren();addTag(row.language||"unknown");(row.seed?.matched_keywords||[]).forEach(addTag);addTag(`${row.capture_count||1} capture${row.capture_count===1?"":"s"}`);$("detailTitle").textContent=row.seed?.paragraph||"Source story";$("sourceLink").href=row.url||"#";$("metadata").replaceChildren(metadata("Matches",(row.match_numbers||[]).join(", ")),metadata("Domain",row.domain||"unknown"),metadata("Semantic",String(row.seed?.semantic_score??"n/a")),metadata("Length",`${row.story?.character_count||0} characters`));renderQualityFlags(row.quality_review);$("seed").textContent=row.seed?.paragraph||"";$("concept").textContent=row.seed?.concept_match||"";renderPassage(row.story||{});state.decision=row.review?.decision||"unreviewed";$("notes").value=row.review?.notes||"";$("reviewer").value=row.review?.reviewer||localStorage.getItem("hometownReviewer")||"";renderDecision()}
+async function loadStatus(){
+  state.status=await api("/api/status");
+  renderStatus();
+  const select=$("quality_issue");
+  if(select.options.length===2) Object.entries(state.status.quality_issues||{}).forEach(([code,label])=>option(select,code,label));
+}
 async function loadStories(reset=false){if(reset)state.offset=0;const result=await api("/api/stories?"+filterQuery());state.rows=result.stories;state.total=result.total;renderList();if(state.selectedId&&!state.rows.some(row=>row.story_id===state.selectedId)){state.selectedId=null;state.detail=null;renderDetail()}if(!state.selectedId&&state.rows.length)await selectStory(state.rows[0].story_id)}
 async function selectStory(id){state.selectedId=id;state.detail=await api("/api/stories/"+encodeURIComponent(id));renderList();renderDetail()}
 async function saveReview(){if(!state.selectedId)return;const storyId=state.selectedId,reviewer=$("reviewer").value.trim();localStorage.setItem("hometownReviewer",reviewer);try{await api("/api/review",{method:"POST",body:JSON.stringify({story_id:storyId,decision:state.decision,notes:$("notes").value,reviewer})});await Promise.all([loadStatus(),loadStories(false)]);if(state.selectedId===storyId){state.detail=await api("/api/stories/"+encodeURIComponent(storyId));renderDetail()}$("message").textContent="Review saved"}catch(error){$("message").textContent=error.message}}
 async function exportSelected(){try{const result=await api("/api/export",{method:"POST",body:"{}"});$("coverage").textContent=`Exported ${result.selected_stories} selected stories`}catch(error){$("coverage").textContent=error.message}}
-let searchTimer;["language","domain","keyword","decision","sort"].forEach(id=>$(id).onchange=()=>loadStories(true));$("search").oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadStories(true),180)};$("previous").onclick=()=>{state.offset=Math.max(0,state.offset-state.limit);loadStories()};$("next").onclick=()=>{state.offset+=state.limit;loadStories()};document.querySelectorAll("[data-decision]").forEach(button=>button.onclick=()=>{state.decision=button.dataset.decision;renderDecision()});$("saveReview").onclick=saveReview;$("export").onclick=exportSelected;
+let searchTimer;["language","domain","keyword","decision","quality_issue","sort"].forEach(id=>$(id).onchange=()=>loadStories(true));$("search").oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadStories(true),180)};$("previous").onclick=()=>{state.offset=Math.max(0,state.offset-state.limit);loadStories()};$("next").onclick=()=>{state.offset+=state.limit;loadStories()};document.querySelectorAll("[data-decision]").forEach(button=>button.onclick=()=>{state.decision=button.dataset.decision;renderDecision()});$("saveReview").onclick=saveReview;$("export").onclick=exportSelected;
 Promise.all([loadStatus(),loadStories(true)]).catch(error=>{$("coverage").textContent=error.message});
 """
 
@@ -205,6 +228,7 @@ class _StoryWorkbenchHandler(BaseHTTPRequestHandler):
                         domain=value("domain"),
                         keyword=value("keyword"),
                         decision=value("decision"),
+                        quality_issue=value("quality_issue"),
                         sort=value("sort", "match"),
                         offset=int(value("offset", "0")),
                         limit=int(value("limit", "50")),

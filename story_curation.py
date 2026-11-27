@@ -8,14 +8,25 @@ import os
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from config import DATA_DIR
+from config import DATA_DIR, STORY_MIN_CHARS, STORY_MIN_SENTENCES
 from deterministic_gzip import gzip_binary_writer
 from quality import boilerplate_features, boilerplate_score, classify_content
 from record_identity import hamming_distance, simhash64, text_fingerprint
+from story_context import sentence_count
+from text_normalization import normalize_extracted_text
 
 DEFAULT_STORY_EXPORT = DATA_DIR / "exports" / "stories_complete.jsonl.gz"
 DEFAULT_CURATED_EXPORT = DATA_DIR / "exports" / "stories_curated.jsonl.gz"
 DEFAULT_CURATION_REPORT = DATA_DIR / "exports" / "story_curation_report.json"
+LARGE_SOURCE_GAP = 5
+BOILERPLATE_REVIEW_SCORE = 4
+QUALITY_REVIEW_ISSUES = {
+    "seed_unconfirmed": "Source match unconfirmed",
+    "insufficient_context": "Insufficient context",
+    "large_gap": "Large source gap",
+    "likely_boilerplate": "Likely boilerplate",
+    "non_story_content": "Non-story content signal",
+}
 
 
 def _story_text(row: dict) -> str:
@@ -68,7 +79,7 @@ def assess_story(row: dict) -> dict:
     eligible = (
         classification.category == "personal_prose"
         and bool(story.get("story_length_ready"))
-        and boilerplate < 4
+        and boilerplate < BOILERPLATE_REVIEW_SCORE
     )
     return {
         "schema_version": 1,
@@ -85,6 +96,71 @@ def assess_story(row: dict) -> dict:
         "warnings": sorted(set(warnings)),
         "source_text_preserved": True,
         "generated_text": False,
+    }
+
+
+def _gap(left: dict, right: dict) -> int | None:
+    start = left.get("paragraph_index")
+    end = right.get("paragraph_index")
+    if type(start) is int and type(end) is int:
+        return end - start - 1
+    return None
+
+
+def inspect_story_quality(row: dict, assessment: dict | None = None) -> dict:
+    """Triage source windows without changing their text, ranking, or eligibility."""
+    if assessment is None:
+        assessment = assess_story(row)
+    story = row.get("story") or {}
+    paragraphs = story.get("paragraphs") or []
+    accepted_seed = str((row.get("seed") or {}).get("paragraph") or "")
+    seed_positions = [i for i, para in enumerate(paragraphs) if para.get("role") == "seed"]
+    contiguous = []
+    source_seed = None
+    correspondence = "unconfirmed"
+    if len(seed_positions) == 1:
+        first = last = seed_positions[0]
+        source_seed = str(paragraphs[first].get("text") or "")
+        if source_seed and source_seed == accepted_seed:
+            correspondence = "exact"
+        elif source_seed.strip() and " ".join(normalize_extracted_text(source_seed).split()) == (
+            " ".join(normalize_extracted_text(accepted_seed).split())
+        ):
+            correspondence = "normalized"
+        while first > 0 and _gap(paragraphs[first - 1], paragraphs[first]) == 0:
+            first -= 1
+        while last + 1 < len(paragraphs) and _gap(paragraphs[last], paragraphs[last + 1]) == 0:
+            last += 1
+        contiguous = paragraphs[first : last + 1]
+
+    # Distant, linked paragraphs must not inflate the length of the match's local context.
+    context = "\n\n".join(str(p.get("normalized_text", p.get("text", ""))) for p in contiguous)
+    sentences = sentence_count(context)
+    gaps = [int(item.get("paragraph_count") or 0) for item in story.get("omissions") or []]
+    largest_gap = max(
+        [0, *gaps, *(_gap(a, b) or 0 for a, b in zip(paragraphs, paragraphs[1:]))]
+    )
+    flags = {
+        "seed_unconfirmed": correspondence == "unconfirmed",
+        "insufficient_context": (
+            not story.get("story_length_ready")
+            or len(context) < STORY_MIN_CHARS
+            or sentences < STORY_MIN_SENTENCES
+        ),
+        "large_gap": largest_gap >= LARGE_SOURCE_GAP,
+        "likely_boilerplate": assessment["boilerplate_score"] >= BOILERPLATE_REVIEW_SCORE,
+        "non_story_content": assessment["content_category"] != "personal_prose",
+    }
+    return {
+        "issues": {code: label for code, label in QUALITY_REVIEW_ISSUES.items() if flags[code]},
+        "seed_correspondence": correspondence,
+        "source_seed_paragraph": source_seed,
+        "contiguous_paragraphs": len(contiguous),
+        "contiguous_characters": len(context),
+        "contiguous_sentences": sentences,
+        "largest_gap_paragraphs": largest_gap,
+        "boilerplate_score": assessment["boilerplate_score"],
+        "content_category": assessment["content_category"],
     }
 
 

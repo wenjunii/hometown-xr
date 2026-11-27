@@ -2,7 +2,10 @@ import gzip
 import json
 import threading
 from http.server import ThreadingHTTPServer
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+
+import pytest
 
 from story_review import StoryReviewIndex, load_story_reviews
 from story_workbench import _StoryWorkbenchHandler
@@ -59,6 +62,10 @@ def test_story_workbench_http_search_detail_and_review(tmp_path):
         status = _json_request(f"{base}/api/status")
         search = _json_request(f"{base}/api/stories?search=hometown")
         detail = _json_request(f"{base}/api/stories/story-one")
+        flagged = _json_request(f"{base}/api/stories?quality_issue=insufficient_context")
+        unrelated = _json_request(f"{base}/api/stories?quality_issue=large_gap")
+        with pytest.raises(HTTPError) as invalid:
+            _json_request(f"{base}/api/stories?quality_issue=unknown")
         saved = _json_request(
             f"{base}/api/review",
             {
@@ -76,5 +83,9 @@ def test_story_workbench_http_search_detail_and_review(tmp_path):
     assert status["stories"] == 1
     assert search["stories"][0]["story_id"] == "story-one"
     assert detail["story"]["text"] == "The exact source story."
+    assert "insufficient_context" in status["quality_issues"]
+    assert flagged["total"] == 1 and unrelated["total"] == 0
+    assert invalid.value.code == 400
+    assert detail["quality_review"]["source_seed_paragraph"] == "The exact source story."
     assert saved["decision"] == "selected"
     assert load_story_reviews(reviews_path)["story-one"]["notes"] == "Keep exact source"
