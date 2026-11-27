@@ -1,4 +1,6 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -35,6 +37,34 @@ def _write(writer, source, text, raw_text=""):
         [("en", 0.99)],
     )
     transaction.commit()
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="Git is required for sync checks")
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n"])
+def test_archived_audit_bytes_survive_git_line_ending_conversion(tmp_path, newline):
+    attributes = Path(__file__).resolve().parents[1] / ".gitattributes"
+    (tmp_path / ".gitattributes").write_bytes(attributes.read_bytes())
+    relative = "data/checkpoints/audit-evidence/report.json"
+    report = tmp_path / relative
+    report.parent.mkdir(parents=True)
+    original = b'{\n  "audit_id": "example"\n}\n'.replace(b"\n", newline)
+    report.write_bytes(original)
+
+    def git(*arguments):
+        return subprocess.run(
+            ["git", *arguments], cwd=tmp_path, check=True, capture_output=True,
+        ).stdout
+
+    git("init")
+    git("config", "core.autocrlf", "true")
+    git("add", ".gitattributes", relative)
+    git("diff", "--cached", "--check")
+    assert git("show", f":{relative}") == original
+    for autocrlf in ("false", "true"):
+        git("config", "core.autocrlf", autocrlf)
+        report.unlink()
+        git("checkout-index", "--", relative)
+        assert report.read_bytes() == original
 
 
 def test_audit_plan_and_comparison_preserve_historical_output(tmp_path):

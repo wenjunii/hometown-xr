@@ -19,6 +19,7 @@ def test_real_workload_benchmark_uses_repeatable_outputs_for_recommendation(
 
     def fake_run(plan, settings, audit_dir, sample_rate):
         del plan, audit_dir, sample_rate
+        assert settings.precision == "fp16"
         return {
             "audit_id": settings.run_id,
             "audit_root": str(tmp_path / settings.run_id),
@@ -53,11 +54,14 @@ def test_real_workload_benchmark_uses_repeatable_outputs_for_recommendation(
         worker_counts=[1, 3],
         write=False,
         audit_dir=tmp_path,
+        precision="fp16",
     )
 
     assert result["trial_outputs_agree"]
     assert result["recommended_workers"] == 3
     assert result["recommendation_applied"] is None
+    assert result["source_files"] == ["one.wet.gz", "two.wet.gz"]
+    assert result["runtime"]["precision"] == "fp16"
 
 
 def test_real_workload_benchmark_refuses_partial_trial_success(tmp_path, monkeypatch):

@@ -15,6 +15,9 @@ param(
 
     [Nullable[int]]$Limit = $null,
 
+    [ValidateSet("auto", "fp32", "fp16")]
+    [string]$Precision = "auto",
+
     [switch]$AsBaseline
 )
 
@@ -29,6 +32,9 @@ if ($null -ne $Limit -and $Limit -le 0) {
 }
 if ($AsBaseline -and $Action -ne "capture") {
     throw "AsBaseline is valid only with -Action capture."
+}
+if ($Precision -ne "auto" -and $Action -ne "capture") {
+    throw "Precision is only valid with -Action capture."
 }
 if ($AsBaseline -and $Profile -eq "auto") {
     throw "Select an explicit profile when capturing the tracked baseline."
@@ -69,6 +75,9 @@ if ($Action -eq "capture") {
     }
     if ($null -ne $Limit) {
         $Arguments += @("--limit", $Limit)
+    }
+    if ($Precision -ne "auto") {
+        $Arguments += @("--precision", $Precision)
     }
 }
 else {

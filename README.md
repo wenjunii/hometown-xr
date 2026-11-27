@@ -5,6 +5,171 @@ hometown, childhood, roots, migration, and belonging in Common Crawl data.
 
 Canonical repository: [wenjunii/hometown-xr](https://github.com/wenjunii/hometown-xr)
 
+This branch is the combined security/runtime and local-handoff candidate. Keep
+it in an isolated checkout until the existing model-migration gate passes.
+Green CI is not approval to replace a production environment or merge the
+candidate without the required human evaluation and 4090/5090 measurements.
+
+## Prepared GPU Validation
+
+The 2026-11-10 validation kit pins runtime commit
+[`430a82aa`](https://github.com/wenjunii/hometown-xr/commit/430a82aa88a402df71b337b43ec5f68ac78921ef),
+including boto3/botocore 1.43.126 and Ruff 0.17.4. The actual 3080 recheck
+matches all 400 FP16 baseline scores and decisions exactly. The five-source,
+seven-worker benchmark retains both historical matches with no failures or
+restarts. Those November 10 measurements are the 3080 reference.
+
+Actual RTX 5090 validation completed on November 11 at the same runtime pin,
+with Python 3.11.9, driver 617.42, and all 56 installed pins matching. All four
+live manifest audits pass without exceptions. The 400-sample FP16 comparison
+against the 3080 passes the unchanged limits: all threshold decisions agree,
+399/400 concept labels agree, and maximum score drift is 0.00097656 (limit
+0.005). The same five sources and seven configured workers process 244,996
+records in 72.922 seconds, retain both matches and the identical output digest,
+and have no failures or pool restarts. The 3080 reference took 131.563 seconds;
+single runs with different profiles and network conditions are not an isolated
+GPU speedup measurement. These results do not approve production rollout.
+
+The prepared USB keeps the production-data snapshot separate from candidate
+validation. Read `HANDOFF-2026-11-10.md` on that drive first. Restore research
+data into a new folder; do not run the restored legacy 5090 setup or export a
+validation checkout into the production store. The older `53140a01` kit and
+evidence are retained as history, not relabeled as the new run.
+
+The maintained launcher fixes the original USB launcher's PowerShell GPU-query
+exit-status bug. It waits for the native query and saves its exit code before
+selecting a GPU name; failed, missing, empty, or mismatched results still stop
+the run. Keep the original USB kit unchanged. From this code checkout, use the
+maintained copy on the remaining actual 4090, adjusting the store path:
+
+```powershell
+$Store = 'E:\HometownXR-store'
+.\scripts\validate-gpu.ps1 -Store $Store -Profile 4090
+.\scripts\validate-gpu.ps1 -Store $Store -Profile 4090 -Apply
+```
+
+Use `-Profile 5090` only on the actual 5090; repeat validation requires a new
+`-Destination` rather than replacing its completed checkout. Preview is the
+default; apply uses a new local
+checkout at the exact pin, FP16, and seven benchmark workers. It refuses the
+wrong GPU or an existing destination. Successful sanitized JSON evidence is
+copied with a hash check under the drive's `validation\returns\` directory.
+The reference is `validation\3080-430a82aa-20261110\`. A later documentation-only
+branch commit does not change this runtime pin. See the dated
+[validation notes](docs/security-runtime-validation.md) and
+[local handoff guide](LOCAL_HANDOFF.md). Genuine human/holdout and historical
+review, actual 4090 evidence, reviewed consolidation of the fresh three-GPU
+bundles, and owner approval remain required before merging or deploying the
+draft candidate. There are still 0/100 human judgments, 0/20 labeled holdout
+examples, and 176,012 unknown historical source signatures. The 5090 result
+clears that PC's validation step, not the combined migration gate. Code-only
+GitHub updates contain scripts, tests, and these summary measurements; raw
+captures, evidence bundles, environments, and research data stay private.
+
+## Prepare a 5090 Handoff
+
+Before moving anything, run the following from a separate code checkout with
+the maintained transfer script. Point it at the **production source**, not
+the isolated GPU validation checkout:
+
+```powershell
+$Source = 'C:\Projects\hometown-3080'
+$Store = 'E:\HometownXR-store'
+.\scripts\transfer.ps1 -Action prepare -Source $Source -Store $Store
+```
+
+This checks portable source files and SQLite, then verifies the current
+archive against the source's recorded store and snapshot. It never exports,
+restores, or takes ownership. If the original drive is disconnected, the
+report can show a healthy source with `ready: false` (exit code 1). Reconnect
+the original store; do not initialize a replacement at the same path.
+
+When ready, use the verified `snapshot.sha256` from that report on the 5090.
+Use the maintained script in a separate code checkout if the original
+USB-shipped receiver predates the hash option:
+
+```powershell
+$Store = 'E:\HometownXR-store' # Original drive on the 5090
+$Destination = 'C:\Projects\hometown-5090-resume' # New directory
+$Hash = '<verified snapshot.sha256>'
+.\scripts\transfer.ps1 -Action import -Store $Store -Destination $Destination -ExpectedSha256 $Hash
+# After confirming the preview and approving the restore, repeat with -Apply.
+```
+
+Adjust `$Store` for the original drive's letter on the 5090. Keep its existing
+validated runtime at `430a82aa`; data restore and code review do not approve
+runtime replacement. Do not run legacy setup from the restored data snapshot
+or use [draft #66](https://github.com/wenjunii/hometown-xr/pull/66) as an update
+to the validated environment. See the [handoff guide](LOCAL_HANDOFF.md#prepare-without-transferring)
+for readiness and ownership checks.
+
+## Local-First Quick Start
+
+GitHub is optional for workstation handoffs. Use a shared folder or external
+SSD for verified snapshots; keep GitHub as an optional code mirror. Stop all
+project/review writers before transferring, and use only one PC at a time.
+In folder mode, `checkpoint.ps1` writes to the configured store, not GitHub.
+GitHub may therefore have current code but older research data; receive the
+latest verified USB/shared-folder snapshot when moving to another PC.
+
+```powershell
+# Current PC: preview, then export code and durable research state.
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store
+.\scripts\transfer.ps1 -Action export -Store E:\HometownXR-store -Apply
+
+# Other PC: use the receiver shipped on the drive; restore into a NEW directory.
+$Snapshot = (Get-Content E:\HometownXR-store\control.json -Raw | ConvertFrom-Json).snapshot_id
+& "E:\HometownXR-store\tools\$Snapshot\scripts\transfer.ps1" -Action import -Store E:\HometownXR-store -Destination C:\Projects\hometown-resume -Apply
+```
+
+Existing destinations are never overwritten. Credentials, environments, models,
+and machine settings stay local. Restored projects select folder ownership and
+skip Git/Git LFS during setup. The existing Git-based workflow below remains
+available for checkouts that have not opted in. Review the complete
+[local handoff guide](LOCAL_HANDOFF.md), including bootstrap, backups, excluded
+files, old Git ownership, and offline coordination limits, before switching.
+No security exceptions or model-migration gates are relaxed by this mode.
+
+## Optional Code Sync
+
+USB/shared-folder handoffs and GitHub publishing are separate operations.
+For an intentional code-only update, work on a `codex/` branch and stage an
+explicit list of changed source, test, script, and documentation paths. For
+example, for a change limited to these two files:
+
+```powershell
+git switch -c codex/my-code-update
+git add -- README.md scripts/transfer.ps1
+.\scripts\security-check.ps1 -Scope staged
+git diff --cached --stat
+git commit -m "docs: clarify local transfer workflow"
+git push --set-upstream origin HEAD
+```
+
+`git push` publishes the selected branch, not the repository homepage. GitHub
+shows the `main` README by default; draft-PR changes appear there only after a
+reviewed merge. Keep the pending runtime candidate unmerged until its validation
+gates pass. A standalone README-only change can use a separate maintenance PR,
+without deploying that candidate.
+
+The credential-check script uses the checkout's existing virtual environment,
+or installed Python 3.10+ when no environment exists. A code-only checkout does
+not need GPU setup or dependency installation just to run this check. The scan
+is read-only and fails when findings are reported; do not continue
+to commit or push after a failed scan.
+
+Adjust that list to include every related code/test file. Never use `git add -A`
+for a code-only sync: the legacy repository still tracks research products.
+Do not stage `data/`, snapshot archives, credentials, local handoff settings,
+virtual environments, or model caches. Inspect the commit before pushing and
+open a pull request; do not bypass branch protection or required security checks.
+Changing code after a local handoff requires a fresh verified snapshot before
+resuming. Git commits themselves do not update the USB store.
+
+Use `Get-Help .\scripts\security-check.ps1 -Full` for scan scopes and
+`Get-Help .\scripts\handoff.ps1 -Full` for Git versus folder handoff examples.
+Do not use the full-state handoff/checkpoint workflow for a code-only publish.
+
 ## Models
 
 The extractor uses two local machine-learning models:
@@ -29,7 +194,8 @@ cannot cross a model change. `data/cache/` remains local to each workstation.
 
 ## Workstation Safety
 
-The RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
+The rest of this section describes the original Git mode, not USB mode.
+In Git mode, the RTX 3080, RTX 4090, and RTX 5090 PCs share one Git checkpoint. Crawling and
 story enrichment acquire an atomic repository-wide workstation lease, renew it
 during long work, and retain ownership until a verified checkpoint is pushed.
 The checkpoint script releases ownership after confirming the remote commit.
@@ -52,7 +218,7 @@ Git LFS stores `data/checkpoints/progress.db.gz`, a deterministic compressed
 checkpoint. `data/progress.db` is restored locally by setup/handoff and is
 never copied while live.
 
-The Git repository contains all durable state needed to recreate or resume the
+The original Git checkpoint contains committed durable state needed to resume the
 project on another PC: source, tests, documentation, the compressed database
 checkpoint, committed output and manifests, deterministic source-context story
 packs and exports, human story reviews, bounded evaluation replay, annotations,
@@ -73,10 +239,10 @@ Run the same guard at any time:
 The default scans tracked and non-ignored worktree files without printing
 secret values. Use `-Scope staged` to inspect exactly what is staged or
 `-Scope tracked` to inspect repository files. GitHub Actions repeats the tracked
-scan on every push and pull request. Keep credentials outside this repository;
+scan on main pushes and pull requests. Keep credentials outside this repository;
 the scanner is a final guard, not a password manager.
 
-Before switching machines:
+Before switching machines in the original Git mode:
 
 1. Press `Ctrl+C` once and wait for the final summary.
 2. Confirm `data/.crawler.lock` is gone.
@@ -155,7 +321,7 @@ visible only after an entire source is successfully parsed and filtered.
 Requirements:
 
 - Windows 10 or 11
-- Python 3.10, 3.11, or 3.12
+- 64-bit Python 3.11 or 3.12 (setup prefers 3.11)
 - Git and Git LFS
 - NVIDIA driver compatible with the profile's PyTorch CUDA runtime
 - RTX 3080, RTX 4090, or RTX 5090 GPU
@@ -169,31 +335,41 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup.ps1 -Profile 3080
 ```
 
-Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The 3080 and
-4090 retain the exact CUDA 12.1 PyTorch environment in `requirements-lock.txt`.
-The Blackwell-generation 5090 uses `requirements-lock-5090.txt`, which pins
-stable PyTorch 2.12.1 with its CUDA 13.0 runtime. Add `-Tune` to run a quick
-local hardware benchmark or `-Dev` to install the test toolchain.
+Use `-Profile 4090` or `-Profile 5090` on the corresponding PC. The proposed
+Windows runtime uses PyTorch `2.13.0+cu130`, Sentence Transformers `5.6.1`, and
+Transformers `5.10.4` on all three GPUs. Both GPU lock files intentionally pin
+the same versions, including transitive Windows runtime dependencies. Add
+`-Tune` for a quick hardware benchmark or `-Dev` for the test toolchain.
 
-PyTorch and Transformers are excluded from automatic Dependabot version bumps.
-They are updated manually because the CUDA 12.1 and CUDA 13.0 locks must stay
-separate, and the pinned sentence-transformer constrains compatible
-Transformers releases. CI tests these profile relationships on every change.
-The current model stack has upstream security advisories and is covered by the
-dated migration policy in `.github/dependency-policy.json`; it is not treated as
-silently clean. GitHub repeats the same advisories for mirrored dependency
-manifests, so the alert count is larger than the number of unique issues. CI
-runs `pip-audit` and permits only the exact reviewed vulnerability IDs in that
-policy. A new advisory, a vulnerable package outside the list, or policy expiry
-fails the build.
+**Migration candidate, not rollout approval:** the 3080 semantic comparison
+and repeated real-source benchmark passed. Human evaluation, historical-audit
+resolution, and matching 4090/5090 evidence are still required. Keep this change
+in a separate worktree and
+environment until the existing migration gate passes. See
+[runtime validation and rollout](docs/security-runtime-validation.md).
+Do not upgrade the working environment just to clear GitHub alerts.
 
-Runtime exposure is narrowed to the configured sentence-transformer model at a
-pinned commit. Remote model code is disabled, the pinned snapshot uses
-Safetensors weights, and operators must not supply arbitrary models,
-checkpoints, tokenizers, or training configurations. These controls reduce
-exposure but do not make the vulnerable libraries clean. Complete the tracked
-model comparison, human evaluation minimums, and identical 3080, 4090, and 5090
-benchmarks before upgrading the shared CUDA and model locks.
+Python 3.10 is no longer supported because patched Pillow and filelock require
+Python 3.11 or newer. Setup refuses an incompatible existing environment and
+does not delete it. Stop project processes and preserve the old `.venv` under
+a backup name before an approved migration; never copy a virtual environment
+between PCs. Use an NVIDIA driver compatible with CUDA 13.0.
+
+Result-sensitive model packages remain excluded from automatic Dependabot
+updates. CI checks the profile contract on Python 3.11 and 3.12 on Windows and
+Linux. The advisory gate audits `requirements.txt`, both GPU locks, and
+`requirements-test.txt`, not just direct model dependencies. The policy in
+`.github/dependency-policy.json` has **no vulnerability exceptions**. A new
+advisory or missing/skipped package coverage fails the build. Any future
+exception must identify exact advisories and have an enforced review deadline;
+an exception-free policy does not need an arbitrary expiry date.
+
+The MiniLM model revision, concept anchors, thresholds, and raw-story extraction
+are unchanged. Remote model code is disabled, Safetensors weights are required,
+and eager attention preserves the previous scoring path. Operators must not
+supply arbitrary models, checkpoints, tokenizers, or training configurations.
+No generative LLM is introduced. GitHub alerts on the default branch remain
+open until the validated changes are merged and GitHub rescans them.
 
 Verify the environment and checkpoint:
 
@@ -328,6 +504,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\benchmark.ps1 -Profile 3080` | Audit FP16 safety and write this PC's local override |
 | `.\scripts\benchmark.ps1 -Profile 3080 -Real -Sources 5 -WorkerCount 1,4,7` | Compare worker counts on identical isolated real sources |
 | `.\scripts\handoff.ps1 -Direction pull -Profile 3080` | Fast-forward, pull LFS data, and verify the received checkpoint |
+| `.\scripts\transfer.ps1 -Action prepare -Source PATH -Store PATH` | Check source and existing snapshot without transferring or taking ownership |
 | `.\scripts\security-check.ps1` | Scan local Git candidates for credential paths and content |
 | `.\scripts\filter-state.ps1` | Inspect current, stale, and unsigned completed work |
 | `.\scripts\audit.ps1` | Plan a deterministic, isolated historical-source audit |
@@ -360,6 +537,7 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\stories.ps1 -Action report` | Rebuild the story research-quality report |
 | `.\scripts\stories.ps1 -Action verify` | Build and verify the story-fragment checksum catalog |
 | `.\scripts\stories.ps1 -Action serve -OpenBrowser` | Search, inspect, and human-review complete source stories locally |
+| `.\scripts\stories.ps1 -Action quality -Limit 20` | Read the flagged review queue for saved complete and short excerpts without rebuilding them |
 | `.\scripts\stories.ps1 -Action review-export` | Export only stories marked Selected without rewriting source text |
 | `.\scripts\stories.ps1 -Action curate` | Rank and cluster exact-source stories without dropping or rewriting them |
 | `.\scripts\stories.ps1 -Action pack-status` | Compare local source fragments with the synchronized story packs |
@@ -372,7 +550,9 @@ resolve the project root regardless of the caller's current directory:
 | `.\scripts\model-validation.ps1 -Action capture -Profile 4090` | Capture an ignored model candidate on that GPU |
 | `.\scripts\model-validation.ps1 -Action compare -Profile 4090` | Compare that candidate with the tracked baseline |
 | `.\scripts\model-migration.ps1 -Action plan` | Gate model-stack changes on labels, audits, snapshots, and three-GPU benchmarks |
-| `.\scripts\dependency-audit.ps1` | Validate profile pins and the dated vulnerability policy |
+| `.\scripts\dependency-audit.ps1` | Validate profile pins and audit all four pinned manifests |
+| `.\scripts\validate-runtime.ps1 -Profile 3080` | Validate the candidate on the actual GPU and export portable evidence without changing tuning |
+| `.\scripts\validate-gpu.ps1 -Store E:\HometownXR-store -Profile 4090` | Preview a new checkout at runtime 430a82aa; add `-Apply` to validate and return evidence |
 | `.\scripts\checkpoint.ps1 -Message "checkpoint: hand off crawler state"` | Verify, compact, commit, push, and confirm a checkpoint |
 | `.\scripts\test.ps1` | Run tests, lint, and compilation checks |
 
@@ -448,11 +628,12 @@ The underlying Python CLI remains available directly:
 | `python main.py evaluation undo --sample-id ID` | Restore the previous label and annotation metadata |
 | `python main.py evaluation report` | Compute precision, recall, F1, and tuning |
 | `python main.py model-migration plan` | Show every blocker to a shared model-stack upgrade |
-| `python main.py model-migration validate` | Exit nonzero until all migration evidence passes |
+| `python main.py model-migration validate --expected-commit COMMIT` | Exit nonzero until all migration evidence passes for the prepared runtime pin |
 | `python main.py evaluation replay` | Compact local decisions into the shared replay reservoir |
 | `python main.py model-validation capture --profile 3080` | Capture the tracked semantic-output baseline |
 | `python main.py model-validation compare --candidate PATH` | Enforce model-output regression limits |
 | `python main.py evidence status` | Inspect synchronized profile evidence completeness |
+| `python main.py evidence compare --expected-commit COMMIT` | Compare the three pinned bundles without importing them or writing approval |
 | `python main.py evidence import --path PATH --yes` | Validate and install one portable profile bundle |
 | `python main.py reset` | Delete output, derivatives, and progress |
 
@@ -485,11 +666,43 @@ enters the synchronized checkpoint:
 .\scripts\evidence.ps1 -Action status
 ```
 
-Repeat that workflow on the 4090 and 5090 PCs. Imported bundles live in
+Imported bundles live in
 `data/checkpoints/profile-evidence/`, so normal checkpoint and Git handoff
 brings the validated evidence to every PC. Content digests, model sample
 digests, GPU profile, real-source mode, and output equivalence are checked on
-import. Local outbox files stay ignored.
+import. Local outbox files stay ignored. These per-file checks and routine
+run metrics do not establish that all three GPUs ran the same validation.
+
+For migration evidence, run the prepared pinned validation on each actual
+GPU and compare the returned JSON files before any import. Use the full
+runtime commit in the handoff receipt, not the branch head. Set each evidence
+path to the exact returned bundle or the verified 3080 reference:
+
+```powershell
+$Receipt = Get-Content -LiteralPath 'D:\hometown xr backup\PREPARATION-2026-11-10.json' -Raw | ConvertFrom-Json
+$Bundles = @{
+    ExpectedCommit = $Receipt.candidate.git_commit
+    Evidence3080 = 'C:\HometownXR\evidence\profile-evidence-3080.json'
+    Evidence4090 = 'C:\HometownXR\evidence\profile-evidence-4090.json'
+    Evidence5090 = 'C:\HometownXR\evidence\profile-evidence-5090.json'
+}
+.\scripts\evidence.ps1 -Action compare @Bundles
+```
+
+Omit an evidence path only to use that profile's local checkpoint bundle.
+In a code-only checkout without a local `.venv`, add
+`-PythonExecutable $CandidatePython` to the compare command, where
+`$CandidatePython` is the full path to the Python executable in an existing
+Python 3.11/3.12 project environment with the required dependencies. Neither
+compare nor story quality needs a new GPU install.
+
+Comparison verifies every bundle and component pin, the filter signature,
+model identity and library versions, the 400-sample CUDA FP16 comparisons,
+and the same five source files and output digest from one successful
+seven-worker benchmark per GPU. A missing or mismatched bundle makes the
+command exit nonzero, with per-profile reasons. Small score differences are
+allowed within the existing limits; output digests must agree. This command
+does not write checkpoints, evidence imports, or approval.
 
 Use a recovery campaign before manually resetting recurring source failures:
 
@@ -726,8 +939,10 @@ Open the local Story Explorer after export:
 ```
 
 The workbench searches all complete stories by text, language, domain, keyword,
-and review state. It displays the accepted filter paragraph, semantic reference,
-exact role-labeled source paragraphs, and explicit omission boundaries. Mark a
+review state, and quality flag. Use **Quality > Needs review** with
+**Review > Unreviewed**, or choose a specific issue. It displays the accepted
+filter paragraph, semantic reference, exact role-labeled source paragraphs,
+and explicit omission boundaries. Mark a
 story `Selected`, `Rejected`, or `Unsure`; those human decisions are stored in
 `data/stories/reviews.jsonl`. No model assigns review decisions. Export the
 selected corpus with:
@@ -738,6 +953,26 @@ selected corpus with:
 
 `stories_reviewed.jsonl.gz` and `stories_reviewed.md` retain the exact extracted
 story text plus review metadata. They never paraphrase or generate a story.
+
+For an offline queue that also includes shorter excerpts, use:
+
+```powershell
+.\scripts\stories.ps1 -Action quality -Limit 20
+.\scripts\stories.ps1 -Action quality -Language en -Issue insufficient_context -Limit 20 -Offset 20
+```
+
+The report reads `stories_complete.jsonl.gz`, the sibling
+`stories_short.jsonl.gz` when present, and existing review decisions. Point
+`-Export`, `-ShortExport`, and `-Reviews` at saved files to inspect a different
+copy. In a code-only checkout, add `-PythonExecutable $CandidatePython` to
+reuse an existing environment, as with evidence compare. The queue includes
+flagged unreviewed and unsure stories, and shows the
+accepted match alongside the verbatim source paragraph. It checks the
+contiguous context around the match against the existing length and sentence
+minimums, flags gaps of five or more omitted paragraphs, and surfaces likely
+boilerplate, non-story content, and unconfirmed match correspondence. Flags
+are triage, not judgments. The command never re-extracts, rewrites, removes,
+or labels anything. The report can contain original source text; keep it local.
 
 Build the deterministic review ranking with:
 
@@ -1023,14 +1258,18 @@ baseline after an approved migration, use:
 
 Review the diff and rerun all comparisons.
 
-`model-migration plan` is the final gate. It remains blocked until the human
-baseline and blind holdout are complete, historical filter signatures have
-audit evidence, identical real-source metrics exist for all three GPUs, all
-candidate snapshots pass score/concept/threshold limits, and candidate library
-versions agree. `-Action validate` exits nonzero while any requirement is
-missing. Only a fully passing plan can write portable approval evidence with
-`-Action approve -Apply`; updating shared lock files remains a separate reviewed
-code change.
+`model-migration plan` is the final gate. Pass the same `@Bundles` arguments
+shown above to `-Action plan` or `-Action validate`; no explicit runtime pin
+means the plan remains blocked. The gate requires the matching three-GPU
+bundle comparison for the checkout's current filter signature. Raw model
+snapshots and ordinary run metrics are diagnostic only. Genuine human labels
+and blind holdout readiness, historical filter evidence, and the dependency
+profile contract are still required. Use the existing annotation workbench
+(`.\scripts\evaluation.ps1 -Action serve -OpenBrowser`) for human evaluation;
+story-quality flags do not count as labels. Validation exits nonzero while
+any requirement is missing. Only a fully passing plan can write portable
+approval evidence with `-Action approve -Apply` after owner review. Updating
+the shared locks remains a separate reviewed code change.
 
 Run the dependency contract and advisory gate with:
 
@@ -1038,8 +1277,22 @@ Run the dependency contract and advisory gate with:
 .\scripts\dependency-audit.ps1
 ```
 
-The exception review date is a deadline for migration work, not a claim that the
-listed advisories are harmless.
+The default audit checks every pinned entry in both Windows runtime locks,
+including dependencies such as Pillow, filelock, and urllib3. CUDA wheel
+versions are checked against their upstream Torch release (for example,
+`2.13.0+cu130` against `2.13.0`); this is an advisory lookup, not a GPU install
+or compatibility test. It does not resolve unpinned Linux-only CUDA packages
+or transitive developer-tool dependencies. Use `python -m pip_audit` as an
+additional installed-environment check. No audit guarantees absence of unknown
+vulnerabilities. To select specific manifests:
+
+```powershell
+.\scripts\dependency-audit.ps1 -Requirements requirements-lock.txt,requirements-lock-5090.txt
+```
+
+If a future advisory needs a temporary exception, its review date is a deadline,
+not a claim that the advisory is harmless. Missing audit coverage is never
+silently allowed.
 
 ## Evaluation
 
@@ -1139,6 +1392,36 @@ Actions validates dependency-profile pins and the dated vulnerability policy,
 then runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing on
 both Windows and Ubuntu without downloading GPU models or Git LFS data.
 
+### Task Cleanup
+
+After a task has passed verification, coding agents automatically clean up its
+known disposable artifacts under [AGENTS.md](AGENTS.md). Exact targets and shared
+dependencies must be checked first; old timestamps alone are not enough.
+This is a task-completion policy, not a background deletion schedule.
+
+Preview the narrow project-cache helper, then apply only after verification and
+after stopping project writers:
+
+```powershell
+.\scripts\cleanup.ps1
+.\scripts\cleanup.ps1 -Apply -Verified
+```
+
+The helper handles only allowlisted Python, pytest, and Ruff cache directories
+with recognized contents. It rejects tracked files, linked paths, unexpected
+contents, and a crawler lock. Preview is read-only. Apply requests the Windows
+Recycle Bin and has no permanent-delete fallback; Windows configuration controls
+retention. The helper never empties the bin, and recycled files may still occupy
+disk space until removed separately. Unsupported systems refuse apply.
+
+Production and pending-validation environments, models, stories, checkpoints,
+human labels, reference inputs, backups, all `data/` contents, and shared pip or
+Hugging Face caches are outside this helper's scope. Broader cleanup, including
+one-off scripts, completed installers, partial downloads, redundant task copies,
+and exclusively retired models, requires per-target agent verification.
+Keep active/shared dependencies and pending evidence. Code-only GitHub publishing
+must stage explicit source/test/documentation paths, not data or credentials.
+
 ### Dependency Updates
 
 Dependabot keeps AWS, HTTP, and developer-tool families in separate pull
@@ -1185,7 +1468,7 @@ metrics.py              funnel, failures, resources, rates, history, and ETA
 failure_analysis.py     stable operational failure categories
 benchmark.py            synthetic precision and isolated real-source benchmarks
 dependency_profiles.py  cross-profile lock and installed-package contract
-dependency_audit.py     pip-audit policy enforcement with an expiry date
+dependency_audit.py     all-manifest vulnerability audit with fail-closed coverage
 model_regression.py     semantic score/concept/threshold snapshots and comparison
 model_migration.py      labels/audit/benchmark/candidate approval gate
 evidence_bundle.py      credential-free cross-PC GPU evidence export/import

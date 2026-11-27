@@ -52,6 +52,10 @@ data/progress.db.*.tmp
 data/.crawler.lock
 data/.workstation-owner.local.json
 data/.workstation-owner.local.json.tmp
+data/handoff.local.json
+data/handoff.local.json.tmp
+data/.folder-owner.local.json
+data/.folder-owner.local.json.tmp
 data/.story-stop-request.json
 data/.story-stop-request.json.*.tmp
 data/.refilter-journal.json

@@ -1,3 +1,15 @@
+<#
+.SYNOPSIS
+Inspect, enrich, export, or review stories from accepted source passages.
+.DESCRIPTION
+Quality reads existing structured exports and review decisions without
+restoring story packs, changing labels, or rewriting source text. A code-only
+checkout can use an existing project environment with -PythonExecutable.
+.EXAMPLE
+.\scripts\stories.ps1 -Action quality -Language en -Issue insufficient_context -Limit 20
+
+Show a read-only queue for English excerpts with insufficient context.
+#>
 param(
     [ValidateSet(
         "status",
@@ -8,6 +20,7 @@ param(
         "failures",
         "retry",
         "report",
+        "quality",
         "verify",
         "pack",
         "unpack",
@@ -29,6 +42,19 @@ param(
     [string[]]$Category,
 
     [string]$Month,
+
+    [string]$Export,
+
+    [string]$ShortExport,
+
+    [string]$Reviews,
+
+    [string]$Language,
+
+    [string]$Issue,
+
+    [ValidateRange(0, 2147483647)]
+    [int]$Offset = 0,
 
     [ValidateRange(1, 1000000)]
     [int]$Limit = 10,
@@ -65,7 +91,9 @@ param(
         }
         throw "Workers must be 'auto' or an integer from 1 through 16."
     })]
-    [string]$Workers = "auto"
+    [string]$Workers = "auto",
+
+    [string]$PythonExecutable
 )
 
 $ErrorActionPreference = "Stop"
@@ -73,7 +101,20 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $LockPath = Join-Path $Root "data\.crawler.lock"
 $StopPath = Join-Path $Root "data\.story-stop-request.json"
-if (-not (Test-Path -LiteralPath $Python)) {
+if ($PSBoundParameters.ContainsKey("PythonExecutable")) {
+    if ($Action -ne "quality") {
+        throw "PythonExecutable is valid only with -Action quality."
+    }
+    if ([string]::IsNullOrWhiteSpace($PythonExecutable) -or
+        -not (Test-Path -LiteralPath $PythonExecutable -PathType Leaf)) {
+        throw "PythonExecutable must point to an existing project Python executable."
+    }
+    $Python = (Resolve-Path -LiteralPath $PythonExecutable).ProviderPath
+}
+if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
+    if ($Action -eq "quality") {
+        throw "Virtual environment is missing. Pass -PythonExecutable from an existing project environment."
+    }
     throw "Virtual environment is missing. Run .\scripts\setup.ps1 first."
 }
 if ($Action -in @("enrich", "full-recover") -and -not $Apply) {
@@ -112,9 +153,16 @@ if ($Category -and $Action -ne "retry") {
 }
 if (
     $PSBoundParameters.ContainsKey("Limit") -and
-    $Action -notin @("status", "plan", "enrich", "failures", "full-plan", "full-status", "full-recover")
+    $Action -notin @("status", "plan", "enrich", "failures", "quality", "full-plan", "full-status", "full-recover")
 ) {
     throw "Limit is not valid with Action $Action."
+}
+if (
+    ($Export -or $ShortExport -or $Reviews -or $Language -or $Issue -or
+        $PSBoundParameters.ContainsKey("Offset")) -and
+    $Action -ne "quality"
+) {
+    throw "Export, ShortExport, Reviews, Language, Issue, and Offset require quality."
 }
 if ($All -and ($Crawl -or $Source)) {
     throw "All cannot be combined with Crawl or Source."
@@ -283,6 +331,20 @@ if ($Action -eq "serve") {
 }
 if ($Action -eq "curate") {
     $Arguments += @("--near-distance", $NearDistance)
+}
+if ($Action -eq "quality") {
+    $Arguments = @("-B") + $Arguments + @("--limit", $Limit, "--offset", $Offset)
+    foreach ($Item in @{
+        export = $Export
+        "short-export" = $ShortExport
+        reviews = $Reviews
+        language = $Language
+        issue = $Issue
+    }.GetEnumerator()) {
+        if (-not [string]::IsNullOrWhiteSpace($Item.Value)) {
+            $Arguments += @("--$($Item.Key)", $Item.Value)
+        }
+    }
 }
 Push-Location $Root
 $ForwarderInstalled = $false

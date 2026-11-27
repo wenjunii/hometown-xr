@@ -6,31 +6,29 @@ import argparse
 import importlib.metadata
 import json
 import re
+import tomllib
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import yaml
 
 from config import PROJECT_ROOT
 
 EXPECTED_PINS = {
     "project": {
-        "sentence-transformers": "2.7.0",
-        "torch": "2.1.0",
-        "transformers": "4.40.2",
+        "sentence-transformers": "5.6.1",
+        "torch": "2.13.0",
+        "transformers": "5.10.4",
     },
     "legacy": {
-        "sentence-transformers": "2.7.0",
-        "torch": "2.1.0+cu121",
-        "transformers": "4.40.2",
+        "sentence-transformers": "5.6.1",
+        "torch": "2.13.0+cu130",
+        "transformers": "5.10.4",
     },
     "5090": {
-        "sentence-transformers": "2.7.0",
-        "torch": "2.12.1+cu130",
-        "transformers": "4.40.2",
+        "sentence-transformers": "5.6.1",
+        "torch": "2.13.0+cu130",
+        "transformers": "5.10.4",
     },
 }
 
@@ -56,7 +54,7 @@ MIGRATION_GATED_DEPENDENCIES = frozenset(
 
 
 def _normalized_name(value: str) -> str:
-    return value.strip().lower().replace("_", "-")
+    return re.sub(r"[-_.]+", "-", value.strip().lower())
 
 
 def read_requirements(path: str | Path) -> tuple[dict[str, str], list[str]]:
@@ -123,7 +121,7 @@ def shared_pin_errors(
 
 
 def validate_dependabot_policy(path: str | Path) -> dict:
-    """Validate the small stable subset of Dependabot YAML used by this project."""
+    """Check migration exclusions within the pip update configuration."""
     source = Path(path)
     if not source.exists():
         return {
@@ -131,19 +129,26 @@ def validate_dependabot_policy(path: str | Path) -> dict:
             "ignored_dependencies": [],
             "errors": [f"Dependabot configuration is missing: {source}"],
         }
-    text = source.read_text(encoding="utf-8")
+    try:
+        payload = yaml.safe_load(source.read_text(encoding="utf-8"))
+        updates = [
+            item for item in payload["updates"]
+            if item.get("package-ecosystem") == "pip"
+        ]
+        if len(updates) != 1:
+            raise ValueError("expected exactly one pip update configuration")
+        update = updates[0]
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, yaml.YAMLError) as exc:
+        return {"valid": False, "ignored_dependencies": [], "errors": [str(exc)]}
     ignored = {
-        _normalized_name(match.group(1).strip("'\""))
-        for match in re.finditer(
-            r"^\s*-\s+dependency-name:\s*([^\s#]+)",
-            text,
-            flags=re.MULTILINE,
-        )
+        _normalized_name(item["dependency-name"])
+        for item in update.get("ignore", [])
+        if isinstance(item, dict) and isinstance(item.get("dependency-name"), str)
+        and not item.get("versions") and not item.get("update-types")
     }
     errors: list[str] = []
-    if not re.search(
-        r"^\s+group-by:\s*dependency-name\s*$", text, flags=re.MULTILINE
-    ):
+    routine = (update.get("groups") or {}).get("routine-dependencies") or {}
+    if routine.get("group-by") != "dependency-name":
         errors.append(
             "Dependabot routine updates must be grouped by dependency name"
         )
@@ -160,6 +165,48 @@ def validate_dependabot_policy(path: str | Path) -> dict:
     }
 
 
+def validate_security_policy(payload: dict, today: date) -> dict:
+    """Require a deadline for exceptions; an exception-free audit has no expiry."""
+    if not isinstance(payload, dict):
+        raise ValueError("dependency security policy must be an object")
+    errors: list[str] = []
+    allowances = payload.get("temporarily_allowed_vulnerabilities", {})
+    if not isinstance(allowances, dict):
+        errors.append("dependency exceptions must be a package-to-advisory mapping")
+        allowances = {}
+    if payload.get("temporarily_allowed_packages"):
+        errors.append("broad package-wide vulnerability exceptions are not permitted")
+    if any(
+        not isinstance(package, str) or not package or "*" in package
+        or not isinstance(identifiers, list) or not identifiers
+        or any(not isinstance(identifier, str) or not identifier or "*" in identifier
+               for identifier in identifiers)
+        for package, identifiers in allowances.items()
+    ):
+        errors.append("dependency exceptions must list exact vulnerability IDs")
+    if payload.get("status") == "no_exceptions" and allowances:
+        errors.append("no_exceptions policy cannot contain vulnerability allowances")
+    if not allowances and payload.get("status") != "no_exceptions":
+        errors.append("an empty exception policy must declare no_exceptions")
+    review_by = None
+    expired = False
+    if allowances:
+        try:
+            review_by = date.fromisoformat(str(payload["review_by"]))
+        except (KeyError, ValueError):
+            errors.append("dependency exceptions require a valid review_by date")
+        if review_by is not None:
+            expired = today > review_by
+            if expired:
+                errors.append(f"dependency security policy expired on {review_by.isoformat()}")
+    return {
+        **payload,
+        "expired": expired,
+        "days_until_review": (review_by - today).days if review_by else None,
+        "errors": errors,
+    }
+
+
 def _load_policy(path: Path, today: date) -> dict:
     if not path.exists():
         return {
@@ -167,19 +214,11 @@ def _load_policy(path: Path, today: date) -> dict:
             "expired": True,
             "errors": [f"dependency security policy is missing: {path}"],
         }
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    review_by = date.fromisoformat(str(payload["review_by"]))
-    return {
-        **payload,
-        "present": True,
-        "expired": today > review_by,
-        "days_until_review": (review_by - today).days,
-        "errors": (
-            [f"dependency security policy expired on {review_by.isoformat()}"]
-            if today > review_by
-            else []
-        ),
-    }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return {**validate_security_policy(payload, today), "present": True}
+    except (OSError, ValueError, AttributeError) as exc:
+        return {"present": True, "expired": True, "errors": [str(exc)]}
 
 
 def validate_dependency_profiles(
@@ -222,42 +261,22 @@ def validate_dependency_profiles(
                 )
 
     errors.extend(shared_pin_errors(project, runtime, legacy, blackwell, test))
-    if not any(option.endswith("/cu121") for option in legacy_options):
-        errors.append("requirements-lock.txt does not select the CUDA 12.1 index")
+    if not any(option.endswith("/cu130") for option in legacy_options):
+        errors.append("requirements-lock.txt does not select the CUDA 13.0 index")
     if not any(option.endswith("/cu130") for option in blackwell_options):
         errors.append("requirements-lock-5090.txt does not select the CUDA 13.0 index")
 
-    transformers_major = int(project["transformers"].split(".", maxsplit=1)[0])
-    if transformers_major >= 5:
-        errors.append(
-            "sentence-transformers 2.7.0 requires Transformers below major version 5"
-        )
+    if legacy != blackwell:
+        errors.append("GPU locks must use the same validated dependency versions")
 
     policy = _load_policy(
         root / ".github" / "dependency-policy.json",
         today or datetime.now(timezone.utc).date(),
     )
     errors.extend(policy.get("errors", []))
-    if policy.get("status") == "migration_required" and not policy.get("expired"):
-        allowlist = policy.get("temporarily_allowed_vulnerabilities")
-        if not isinstance(allowlist, dict) or not allowlist:
-            errors.append(
-                "dependency policy must list exact temporarily allowed vulnerability IDs"
-            )
-        elif any(
-            not isinstance(identifiers, list) or not identifiers
-            for identifiers in allowlist.values()
-        ):
-            errors.append(
-                "each temporary dependency exception must contain vulnerability IDs"
-            )
-        if policy.get("temporarily_allowed_packages"):
-            errors.append(
-                "broad package-wide vulnerability exceptions are not permitted"
-            )
+    if policy.get("temporarily_allowed_vulnerabilities") and not policy.get("errors"):
         warnings.append(
-            "Torch and Transformers have exact, temporary advisory exceptions; "
-            f"review in {policy['days_until_review']} day(s)"
+            f"Temporary advisory exceptions require review in {policy['days_until_review']} day(s)"
         )
 
     dependabot = validate_dependabot_policy(root / ".github" / "dependabot.yml")
@@ -270,12 +289,12 @@ def validate_dependency_profiles(
             "3080": {
                 "lock": "requirements-lock.txt",
                 "torch": legacy.get("torch"),
-                "cuda_index": "cu121",
+                "cuda_index": "cu130",
             },
             "4090": {
                 "lock": "requirements-lock.txt",
                 "torch": legacy.get("torch"),
-                "cuda_index": "cu121",
+                "cuda_index": "cu130",
             },
             "5090": {
                 "lock": "requirements-lock-5090.txt",
@@ -296,7 +315,7 @@ def validate_dependency_profiles(
 def installed_dependency_status(profile: str) -> dict:
     lock_name = "requirements-lock-5090.txt" if profile == "5090" else "requirements-lock.txt"
     expected, _options = read_requirements(PROJECT_ROOT / lock_name)
-    packages = ("sentence-transformers", "torch", "transformers")
+    packages = tuple(sorted(expected))
     installed: dict[str, str | None] = {}
     errors = []
     for package in packages:

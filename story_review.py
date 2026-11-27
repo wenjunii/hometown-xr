@@ -7,13 +7,14 @@ import io
 import json
 import os
 import threading
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
 from config import DATA_DIR, STORIES_DIR
 from deterministic_gzip import gzip_binary_writer
-from story_curation import curate_story_rows
+from story_curation import QUALITY_REVIEW_ISSUES, curate_story_rows, inspect_story_quality
 
 STORY_REVIEW_SCHEMA_VERSION = 1
 STORY_REVIEW_DECISIONS = {"selected", "rejected", "unsure"}
@@ -94,6 +95,107 @@ def load_story_reviews(path: str | Path = DEFAULT_STORY_REVIEWS) -> dict[str, di
             if story_id:
                 rows[story_id] = row
     return rows
+
+
+def _validate_quality_issue(issue: str) -> None:
+    if issue not in ("", "flagged", *QUALITY_REVIEW_ISSUES):
+        raise ValueError("invalid story quality issue")
+
+
+def build_quality_review_report(
+    export_path: str | Path = DEFAULT_STORY_EXPORT,
+    *,
+    short_export_path: str | Path | None = None,
+    reviews_path: str | Path = DEFAULT_STORY_REVIEWS,
+    language: str = "",
+    issue: str = "",
+    offset: int = 0,
+    limit: int = 20,
+) -> dict:
+    """Inspect existing exports and human decisions without writing anything."""
+    _validate_quality_issue(issue)
+    if offset < 0 or not 1 <= limit <= 100:
+        raise ValueError("offset must be nonnegative and limit must be between 1 and 100")
+    export = Path(export_path)
+    short = (
+        Path(short_export_path)
+        if short_export_path is not None
+        else export.with_name("stories_short.jsonl.gz")
+    )
+    rows = load_story_export(export)
+    if short.resolve() == export.resolve():
+        short = None
+    elif short_export_path is not None or short.exists():
+        rows += load_story_export(short)
+    else:
+        short = None
+
+    # Prefer the primary export if both inputs include the same story ID.
+    by_id = {}
+    for row in rows:
+        story_id = row.get("story_id")
+        if not story_id:
+            raise ValueError("story export row is missing its story ID")
+        by_id.setdefault(story_id, row)
+
+    reviews = load_story_reviews(reviews_path)
+    issue_counts = Counter()
+    stories = flagged = 0
+    queue = []
+    for story_id, row in by_id.items():
+        if language and row.get("language") != language:
+            continue
+        stories += 1
+        check = inspect_story_quality(row)
+        issues = check["issues"]
+        if not issues:
+            continue
+        flagged += 1
+        issue_counts.update(issues.keys())
+        decision = reviews.get(story_id, {}).get("decision", "unreviewed")
+        if decision in ("selected", "rejected"):
+            continue
+        if issue not in ("", "flagged") and issue not in issues:
+            continue
+        seed = row.get("seed") or {}
+        queue.append(
+            {
+                "story_id": story_id,
+                "match_numbers": row.get("match_numbers") or [],
+                "language": row.get("language", "unknown"),
+                "domain": _domain(row),
+                "semantic_score": seed.get("semantic_score"),
+                "accepted_match_paragraph": seed.get("paragraph", ""),
+                "decision": decision,
+                **check,
+            }
+        )
+    priority = {code: index for index, code in enumerate(QUALITY_REVIEW_ISSUES)}
+    queue.sort(
+        key=lambda row: (
+            min(priority[code] for code in row["issues"]),
+            -len(row["issues"]),
+            -row["largest_gap_paragraphs"],
+            row["match_numbers"] or [10**12],
+            row["story_id"],
+        ),
+    )
+    return {
+        "schema_version": 1,
+        "read_only": True,
+        "generated_text": False,
+        "contains_source_text": True,
+        "inputs": {"export": str(export), "short_export": str(short) if short else None},
+        "language": language or None,
+        "issue": issue or "flagged",
+        "stories": stories,
+        "flagged": flagged,
+        "issue_counts": {code: issue_counts[code] for code in QUALITY_REVIEW_ISSUES},
+        "queue_total": len(queue),
+        "offset": offset,
+        "limit": limit,
+        "queue": queue[offset : offset + limit],
+    }
 
 
 def save_story_review(
@@ -214,6 +316,10 @@ class StoryReviewIndex:
         self.by_id = {
             str(row["story_id"]): row for row in self.rows if row.get("story_id")
         }
+        self.quality = {
+            story_id: inspect_story_quality(row, row["curation"])
+            for story_id, row in self.by_id.items()
+        }
         self._search = {
             story_id: " ".join(
                 (
@@ -263,6 +369,7 @@ class StoryReviewIndex:
             "deterministic_extraction": True,
             "generated_text": False,
             "curation": self.curation,
+            "quality_issues": QUALITY_REVIEW_ISSUES,
         }
 
     def query(
@@ -273,6 +380,7 @@ class StoryReviewIndex:
         domain: str = "",
         keyword: str = "",
         decision: str = "",
+        quality_issue: str = "",
         sort: str = "match",
         offset: int = 0,
         limit: int = 50,
@@ -281,6 +389,7 @@ class StoryReviewIndex:
             raise ValueError("offset cannot be negative")
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
+        _validate_quality_issue(quality_issue)
         if decision and decision not in {
             *STORY_REVIEW_DECISIONS,
             "unreviewed",
@@ -305,7 +414,12 @@ class StoryReviewIndex:
                 continue
             if decision and row_decision != decision:
                 continue
-            rows.append(_summary(row, review))
+            issues = self.quality.get(story_id, {}).get("issues", {})
+            if quality_issue == "flagged" and not issues:
+                continue
+            if quality_issue not in ("", "flagged") and quality_issue not in issues:
+                continue
+            rows.append({**_summary(row, review), "quality_issues": issues})
         if sort == "quality":
             rows.sort(
                 key=lambda row: (
@@ -364,6 +478,7 @@ class StoryReviewIndex:
             **row,
             "domain": _domain(row),
             "review": review,
+            "quality_review": self.quality[story_id],
             "deterministic_extraction": True,
             "generated_text": False,
         }

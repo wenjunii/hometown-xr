@@ -26,10 +26,12 @@ First create the Blackwell-compatible environment:
 .\scripts\setup.ps1 -Profile 5090 -Tune
 ```
 
-The 5090 setup uses the separate `requirements-lock-5090.txt` lock with stable
-PyTorch 2.12.1 and its CUDA 13.0 runtime. This is required because the CUDA 12.1
-PyTorch build retained for the 3080 and 4090 does not support the 5090's
-Blackwell architecture.
+The proposed 5090 setup uses `requirements-lock-5090.txt` with PyTorch
+`2.13.0+cu130`, Python 3.11 or 3.12, and a CUDA 13.0-compatible NVIDIA driver.
+The 3080 and 4090 lock now has the same package versions. Per-PC batch sizes
+remain separate. This is a migration candidate: the 5090 needs its own model
+comparison and real-source benchmark before rollout. See
+[validation and rollout](../docs/security-runtime-validation.md).
 
 Before resuming a checkpoint from another PC, receive and verify it with:
 

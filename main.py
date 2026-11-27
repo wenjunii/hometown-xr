@@ -197,9 +197,9 @@ def run(
 
     ownership_context = nullcontext(None)
     if workstation_guard:
-        from workstation_guard import WorkstationLease
+        from workstation_guard import get_workstation_lease
 
-        ownership_context = WorkstationLease(settings.profile_name)
+        ownership_context = get_workstation_lease(settings.profile_name)
 
     try:
         with CrawlerRunLock(settings.profile_name), ownership_context as ownership:
@@ -690,6 +690,27 @@ def _audit_command(args) -> None:
         _shutdown_signal_count = 0
 
 
+def _add_gpu_evidence_arguments(parser: argparse.ArgumentParser, *, require_commit=False) -> None:
+    parser.add_argument(
+        "--expected-commit",
+        required=require_commit,
+        help="exact 40-character runtime commit from the handoff, not the current branch head",
+    )
+    for profile in HARDWARE_PROFILES:
+        parser.add_argument(
+            f"--evidence-{profile}",
+            help=f"path to the {profile} bundle (default: its local checkpoint bundle)",
+        )
+
+
+def _gpu_evidence_paths(args: argparse.Namespace) -> dict[str, str]:
+    return {
+        profile: path
+        for profile in HARDWARE_PROFILES
+        if (path := getattr(args, f"evidence_{profile}"))
+    }
+
+
 def main() -> None:
     global _shutdown_event, _shutdown_signal_count
     parser = argparse.ArgumentParser(
@@ -820,6 +841,9 @@ def main() -> None:
             )
             owner_parser.add_argument("--force-recovery", action="store_true")
 
+    from portable_transfer import register_parser as register_transfer_parser
+
+    register_transfer_parser(subparsers)
     checkpoint_parser = subparsers.add_parser(
         "checkpoint",
         help="verify and compact durable state for handoff",
@@ -916,6 +940,7 @@ def main() -> None:
     benchmark_parser.add_argument("--sources", type=int, default=5)
     benchmark_parser.add_argument("--worker-count", type=int, action="append")
     benchmark_parser.add_argument("--apply", action="store_true")
+    benchmark_parser.add_argument("--precision", choices=["fp32", "fp16"])
 
     evidence_parser = subparsers.add_parser(
         "evidence",
@@ -934,6 +959,11 @@ def main() -> None:
     evidence_import = evidence_subparsers.add_parser("import")
     evidence_import.add_argument("--path", required=True)
     evidence_import.add_argument("--yes", action="store_true")
+    evidence_compare = evidence_subparsers.add_parser(
+        "compare", help="compare three pinned GPU bundles without importing or approving them"
+    )
+    _add_gpu_evidence_arguments(evidence_compare, require_commit=True)
+    evidence_compare.add_argument("--baseline", default=str(MODEL_BASELINE_PATH))
 
     model_parser = subparsers.add_parser(
         "model-validation",
@@ -950,6 +980,7 @@ def main() -> None:
         "--profile", choices=["auto", *HARDWARE_PROFILES], default="auto"
     )
     model_capture.add_argument("--limit", type=int)
+    model_capture.add_argument("--precision", choices=["fp32", "fp16"])
     model_compare = model_subparsers.add_parser("compare")
     model_compare.add_argument("--baseline", default=str(MODEL_BASELINE_PATH))
     model_compare.add_argument("--candidate", required=True)
@@ -968,6 +999,7 @@ def main() -> None:
     )
     for migration_action in ("plan", "validate", "approve"):
         migration_action_parser = migration_subparsers.add_parser(migration_action)
+        _add_gpu_evidence_arguments(migration_action_parser)
         migration_action_parser.add_argument(
             "--baseline",
             default=str(MODEL_BASELINE_PATH),
@@ -980,6 +1012,7 @@ def main() -> None:
                     / "evaluation"
                     / f"model-candidate-{migration_profile}.json"
                 ),
+                help="raw snapshot for diagnostics when comparable bundle evidence is missing",
             )
         if migration_action == "approve":
             migration_action_parser.add_argument(
@@ -1059,6 +1092,18 @@ def main() -> None:
         "report",
         help="write the story research-quality report",
     )
+    stories_quality_parser = stories_subparsers.add_parser(
+        "quality", help="read a flagged review queue from existing story exports"
+    )
+    stories_quality_parser.add_argument("--export", help="primary structured .jsonl.gz export")
+    stories_quality_parser.add_argument(
+        "--short-export", help="short excerpts (default: stories_short.jsonl.gz beside the export)"
+    )
+    stories_quality_parser.add_argument("--reviews", help="existing human story reviews")
+    stories_quality_parser.add_argument("--language", default="")
+    stories_quality_parser.add_argument("--issue", default="")
+    stories_quality_parser.add_argument("--offset", type=int, default=0)
+    stories_quality_parser.add_argument("--limit", type=int, default=20)
     stories_subparsers.add_parser(
         "verify",
         help="build and verify the story-fragment integrity catalog",
@@ -1347,14 +1392,21 @@ def main() -> None:
                     indent=2,
                 )
             )
+    elif args.command == "transfer":
+        from portable_transfer import execute
+
+        result = execute(args, DATA_DIR.parent)
+        print(json.dumps(result, indent=2))
+        if result.get("ready") is False:
+            raise SystemExit(1)
     elif args.command == "workstation":
-        from workstation_guard import WorkstationLease
+        from workstation_guard import get_workstation_lease
 
         profile = get_hardware_profile(args.profile)
         lease_hours = getattr(args, "lease_hours", WORKSTATION_LEASE_HOURS)
         if lease_hours <= 0:
             parser.error("--lease-hours must be positive")
-        lease = WorkstationLease(profile.name, lease_hours=lease_hours)
+        lease = get_workstation_lease(profile.name, lease_hours=lease_hours)
         if args.workstation_command == "status":
             result = lease.status(include_preflight=args.preflight)
         elif args.workstation_command == "preflight":
@@ -1386,6 +1438,8 @@ def main() -> None:
                 parser.error("--worker-count must be positive")
             if args.apply and not args.real:
                 parser.error("--apply is only valid with --real")
+            if args.precision and not args.real:
+                parser.error("--precision is only valid with --real")
             result = (
                 run_workload_benchmark(
                     args.profile,
@@ -1393,6 +1447,7 @@ def main() -> None:
                     source_count=args.sources,
                     worker_counts=args.worker_count,
                     write=args.apply,
+                    precision=args.precision,
                 )
                 if args.real
                 else run_benchmark(
@@ -1424,9 +1479,19 @@ def main() -> None:
                 candidate_path=args.candidate,
                 workload_path=args.workload,
             )
+        elif args.evidence_command == "compare":
+            from gpu_evidence import compare_gpu_evidence
+
+            result = compare_gpu_evidence(
+                args.expected_commit,
+                _gpu_evidence_paths(args),
+                baseline_path=args.baseline,
+            )
         else:
             result = import_evidence_bundle(args.path, apply=args.yes)
         print(json.dumps(result, indent=2))
+        if args.evidence_command == "compare" and not result["valid"]:
+            raise SystemExit(1)
     elif args.command == "model-validation":
         from model_regression import capture_model_snapshot, compare_model_snapshots
 
@@ -1437,6 +1502,7 @@ def main() -> None:
                 "output_path": args.output,
                 "profile_name": args.profile,
                 "limit": args.limit,
+                "precision": args.precision,
             }
             if args.annotations:
                 keyword_arguments["annotation_path"] = args.annotations
@@ -1473,6 +1539,8 @@ def main() -> None:
         result = build_model_migration_plan(
             baseline_path=args.baseline,
             candidate_paths=candidate_paths,
+            expected_commit=args.expected_commit,
+            evidence_paths=_gpu_evidence_paths(args),
         )
         if args.model_migration_command == "approve":
             if not args.yes:
@@ -1510,6 +1578,26 @@ def main() -> None:
         if port is not None and not 1 <= port <= 65535:
             parser.error("--port must be between 1 and 65535")
         _evaluation_command(args)
+    elif args.command == "stories" and args.stories_command == "quality":
+        from story_review import (
+            DEFAULT_STORY_EXPORT,
+            DEFAULT_STORY_REVIEWS,
+            build_quality_review_report,
+        )
+
+        try:
+            result = build_quality_review_report(
+                args.export or DEFAULT_STORY_EXPORT,
+                short_export_path=args.short_export,
+                reviews_path=args.reviews or DEFAULT_STORY_REVIEWS,
+                language=args.language,
+                issue=args.issue,
+                offset=args.offset,
+                limit=args.limit,
+            )
+        except (OSError, ValueError, EOFError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2))
     elif args.command == "stories":
         from full_source_recovery import (
             export_full_sources,
@@ -1591,9 +1679,9 @@ def main() -> None:
             try:
                 ownership_context = nullcontext(None)
                 if not args.no_workstation_guard:
-                    from workstation_guard import WorkstationLease
+                    from workstation_guard import get_workstation_lease
 
-                    ownership_context = WorkstationLease(
+                    ownership_context = get_workstation_lease(
                         get_hardware_profile("auto").name
                     )
                 with CrawlerRunLock("story-enrichment"), ownership_context as ownership:
@@ -1637,9 +1725,9 @@ def main() -> None:
                 parser.error("--limit must be positive")
             ownership_context = nullcontext(None)
             if not args.no_workstation_guard:
-                from workstation_guard import WorkstationLease
+                from workstation_guard import get_workstation_lease
 
-                ownership_context = WorkstationLease(get_hardware_profile("auto").name)
+                ownership_context = get_workstation_lease(get_hardware_profile("auto").name)
             _shutdown_event = threading.Event()
             _shutdown_signal_count = 0
             try:

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "method": "legacy runtime and model loader, current unchanged filter contract",
+  "old_libraries": {
+    "torch": "2.1.0+cu121",
+    "sentence-transformers": "2.7.0",
+    "transformers": "4.40.2"
+  },
+  "filter_signature": "6f84f73077a2d934c1e3b60e8d4310ebc8b9f1e0d8be5843922120065a2eb0c2",
+  "precision": "fp16",
+  "source_files": [
+    "crawl-data/CC-MAIN-2014-10/segments/1394011249133/wet/CC-MAIN-20140305092049-00083-ip-10-183-142-35.ec2.internal.warc.wet.gz",
+    "crawl-data/CC-MAIN-2014-23/segments/1404776401658.57/wet/CC-MAIN-20140707234001-00071-ip-10-180-212-248.ec2.internal.warc.wet.gz"
+  ],
+  "audit_id": "20261028T184305Z-591c8321",
+  "candidate_audit_id": "20261028T182920Z-0483ff8a",
+  "complete": true,
+  "summary": {
+    "selected_sources": 2,
+    "completed_sources": 2,
+    "historical_matches": 3,
+    "audit_matches": 8,
+    "normalized_overlap": 3,
+    "removed_matches": 0,
+    "added_matches": 5,
+    "normalized_text_repairs": 0,
+    "sources_with_match_delta": 2,
+    "equivalent_normalized_match_sets": false,
+    "historical_state_changed": false
+  },
+  "old_runtime_output_digest": "801c26a6cf9b3e6d4387bb2072f8f1128a5975017bd8a898dbe96d99bcdd5a37",
+  "candidate_runtime_output_digest": "801c26a6cf9b3e6d4387bb2072f8f1128a5975017bd8a898dbe96d99bcdd5a37",
+  "runtime_outputs_agree": true,
+  "production_state_changed": false
+}

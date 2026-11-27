@@ -66,6 +66,10 @@ def _safe_model_snapshot(payload: dict) -> dict:
         "profile": payload.get("profile"),
         "model": payload.get("model") or {},
         "libraries": payload.get("libraries") or {},
+        "runtime": {
+            key: value for key, value in (payload.get("runtime") or {}).items()
+            if key in {"device", "precision", "encoding_batch_size"}
+        },
         "samples": samples,
         "sample_count": len(samples),
         "sample_digest": payload.get("sample_digest"),
@@ -76,6 +80,8 @@ def _validate_model_snapshot(payload: dict, profile: str) -> None:
     if payload.get("profile") != profile:
         raise ValueError("model snapshot profile does not match the bundle profile")
     samples = payload.get("samples") or []
+    if not isinstance(samples, list):
+        raise ValueError("model snapshot samples must be a list")
     digest = hashlib.sha256(
         json.dumps(samples, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
@@ -109,7 +115,11 @@ def load_profile_evidence(profile: str) -> dict | None:
 def validate_evidence_bundle(path: str | Path) -> dict:
     source = Path(path)
     payload = json.loads(source.read_text(encoding="utf-8"))
-    if payload.get("schema_version") != SCHEMA_VERSION:
+    if (
+        not isinstance(payload, dict)
+        or type(payload.get("schema_version")) is not int
+        or payload["schema_version"] != SCHEMA_VERSION
+    ):
         raise ValueError("unsupported profile evidence schema")
     profile = str(payload.get("profile", ""))
     if profile not in HARDWARE_PROFILES:
@@ -122,14 +132,18 @@ def validate_evidence_bundle(path: str | Path) -> dict:
         raise ValueError("profile evidence contains prohibited keys: " + ", ".join(prohibited))
     snapshot = payload.get("model_snapshot")
     if snapshot is not None:
+        if not isinstance(snapshot, dict):
+            raise ValueError("model snapshot must be an object")
         _validate_model_snapshot(snapshot, profile)
     workload = payload.get("workload_benchmark")
     if workload is not None:
+        if not isinstance(workload, dict):
+            raise ValueError("workload benchmark must be an object")
         if workload.get("profile") != profile:
             raise ValueError("workload benchmark profile does not match the bundle")
         if workload.get("mode") != "isolated_real_sources":
             raise ValueError("workload evidence is not an isolated real-source benchmark")
-        if not workload.get("trial_outputs_agree"):
+        if workload.get("trial_outputs_agree") is not True:
             raise ValueError("workload benchmark trials do not have equivalent output")
     return payload
 
@@ -163,6 +177,7 @@ def export_evidence_bundle(
                 "profile",
                 "crawl_id",
                 "sources_per_trial",
+                "source_files",
                 "historical_state_changed",
                 "cache_enabled",
                 "trials",
@@ -170,6 +185,12 @@ def export_evidence_bundle(
                 "recommended_workers",
                 "warning",
             )
+        }
+        benchmark["runtime"] = {
+            key: value for key, value in (raw.get("runtime") or {}).items()
+            if key in {
+                "precision", "candidate_batch_size", "inference_batch_size", "encoding_batch_size",
+            }
         }
     if snapshot is None and benchmark is None:
         raise ValueError("no local model snapshot or workload benchmark is available")
