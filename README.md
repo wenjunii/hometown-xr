@@ -1135,9 +1135,10 @@ orchestration, representative sampling weights, tuning/holdout isolation,
 audit-gated signature adoption, cross-PC ownership races, guided campaigns,
 pipeline starvation telemetry, model-migration gates, real-workload recommendations,
 canonical/provenance deduplication, and Parquet export. GitHub
-Actions validates dependency-profile pins and the dated vulnerability policy,
-then runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing on
-both Windows and Ubuntu without downloading GPU models or Git LFS data.
+Actions runs lint, tests, compilation, CLI smoke checks, and PowerShell parsing
+on Windows and Ubuntu without downloading GPU models or Git LFS data. The
+dependency-profile and vulnerability checks still fail CI on policy violations,
+but they run after the ordinary checks so those results remain visible.
 
 ### Dependency Updates
 
@@ -1152,6 +1153,18 @@ model-migration workflow, then update `pyproject.toml`, `requirements.txt`,
 `requirements-test.txt`, and both hardware lock files together. CI rejects
 shared direct-pin drift and keeps security advisories visible through the
 dated dependency policy and `pip-audit` checks.
+
+The legacy exception expired on 2026-08-31. Passing tests or auditing only the
+changed pins does not renew it or clear the runtime for installation. For
+routine dependency PRs, verify the exact new versions, keep shared pins aligned,
+and report the full policy failure separately. Do not extend the date or merge
+around a failing security check to clear the queue. The patched runtime is
+tracked in [PR #45](https://github.com/wenjunii/hometown-xr/pull/45) and still
+requires migration validation before promotion.
+
+The `setuptools` pin in `[build-system]` is for the isolated package build,
+not an override of the CUDA locks. In particular, do not install it as a
+workaround for the retained 5090 PyTorch requirement of `setuptools<82`.
 
 ## Project Structure
 
